@@ -1,0 +1,87 @@
+---
+name: writing
+description: >-
+  Audits and refines technical prose for systems specifications and research papers.
+  Eliminates AI clichés, formulaic contrastive strawmen, and decorative filler while
+  preserving formal technical precision. Use when authoring or reviewing RFCs, ADRs,
+  research manuscripts, or performing adversarial writing critiques.
+---
+
+# Technical Writing and Review
+
+This skill provides an operational workflow, stylometric quality gate, and modular reference library for authoring and auditing technical prose. It enforces sentence variation, concrete technical anchoring, and concise reasoning across engineering documents.
+
+## Workflow
+
+### 1. Select the Register
+Identify the target document type and consult its specialized reference:
+- **Systems RFCs, ADRs, and specs**: Consult [technical_systems.md](references/technical_systems.md).
+- **Scientific papers and preprints**: Consult [scientific_papers.md](references/scientific_papers.md).
+- **Developer guides and tutorials**: Consult [guides_tutorials.md](references/guides_tutorials.md).
+- **Code reviews and technical pairing**: Consult [conversational_pairing.md](references/conversational_pairing.md).
+- **Core principles and stylistic invariants**: Consult [global_guidance.md](references/global_guidance.md).
+
+### 2. Draft the Technical Core
+State concrete invariants, numbers, and decisions first:
+- Ground abstract statements in physical referents (such as file paths, system calls, or benchmark metrics) within two sentences.
+- Anchor demonstrative pronouns to explicit nouns (*"this trade-off"*, not *"this is"*).
+- Syntactically integrate inline code and formulas so sentences remain grammatical if symbols are replaced with standard nouns.
+
+### 3. Review and Self-Audit
+Audit drafts against common AI anti-patterns:
+- Consult [anti_patterns_catalog.md](resources/anti_patterns_catalog.md) for banned clichés and direct human alternatives.
+- Check metric thresholds and qualitative heuristics in [metric_cheat_sheet.md](resources/metric_cheat_sheet.md).
+- Compare against the side-by-side golden benchmarks in [before_after_transformations.md](examples/before_after_transformations.md).
+
+Run the automated stylometric quality gate:
+```bash
+# Audit an RFC or ADR
+python3 writing/scripts/quality_gate.py --profile rfc path/to/doc.md
+
+# Audit a scientific paper or research note
+python3 writing/scripts/quality_gate.py --profile paper path/to/paper.md
+
+# Audit a developer guide or tutorial
+python3 writing/scripts/quality_gate.py --profile tutorial path/to/guide.md
+
+# Inspect machine-readable diagnostics
+python3 writing/scripts/quality_gate.py --profile rfc --json path/to/doc.md
+```
+
+### 4. Apply Adversarial Critique Posture
+When reviewing or auditing existing prose:
+- **Audit adversarially**: Actively search for domain laundry lists, unearned contrastive strawmen, and pseudo-intellectual buzzwords. Do not defend text simply because it exists in the repository.
+- **Look beyond automated scores**: Automated scripts verify syntactic baselines. They cannot judge technical clarity, epistemic honesty, or conversational tone. Evaluate whether the text explains ideas clearly or merely uses jargon to simulate depth.
+
+---
+
+## Universal Invariants
+
+All technical prose produced or audited under this skill must uphold five structural invariants:
+
+1. **Syntactic variation (profile target $0.30 \le CV \le 0.70$):** Vary sentence lengths. Avoid metronomic blocks where every sentence spans 20–25 words. Follow complex technical statements with short, direct sentences.
+2. **Demonstrative anchoring (profile target $DAI \ge 0.75 - 0.85$):** Anchor demonstratives ("this", "these") to an explicit governing noun (*"this invariant"*, *"this race condition"*).
+3. **Grammatical symbol integration:** Inline identifiers, formulas, and code tokens must flow naturally within normal grammatical sentence structure.
+4. **Zero meta-commentary:** Remove self-referential commentary, conversational cheerleading, and theatrical preamble.
+5. **Concrete grounding:** Connect theoretical claims to empirical referents (such as source locations or system metrics) within two sentences.
+
+---
+
+## Quality Gate Thresholds
+
+The executable script [`scripts/quality_gate.py`](scripts/quality_gate.py) enforces three stages of validation:
+- **Stage 1 (Hard Invariants):** Fast-fails on AI clichés, domain laundry lists, unearned contrastive reframes, participial tailing clauses, and leading mathematical symbols.
+- **Stage 2 (Stylometric Bands):** Verifies burstiness ($CV$), syntactic overhead ($M_{\text{ov}}$), zombie nominalizations ($Z_{\text{nom}}$), demonstrative anchoring ($DAI$), and em-dash frequency.
+- **Stage 3 (Composite Indices):** Reports Human Voice Index ($HVI$) and Technical Precision Index ($TPI$).
+
+| Metric | `rfc` (Specs / ADRs) | `paper` (Research) | `essay` (Architecture) | `tutorial` (Guides) | `chat` (Pairing) | `briefing` (Summaries) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Burstiness ($CV$)** | $0.32 - 0.65$ | $0.40 - 0.70$ | $0.38 - 0.70$ | $0.30 - 0.60$ | $0.30 - 0.75$ | $0.35 - 0.65$ |
+| **Max Syntactic Overhead ($M_{\text{ov}}$)** | $\le 6.5$ | $\le 6.5$ | $\le 5.5$ | $\le 4.5$ | $\le 4.0$ | $\le 4.5$ |
+| **Max Zombie Nominals ($Z_{\text{nom}}$)** | $\le 1.5\%$ | $\le 2.0\%$ | $\le 1.0\%$ | $\le 0.8\%$ | $\le 1.0\%$ | $\le 1.0\%$ |
+| **Demonstrative Anchoring ($DAI$)** | $\ge 0.80$ | $\ge 0.85$ | $\ge 0.80$ | $\ge 0.75$ | $\ge 0.85$ | $\ge 0.85$ |
+| **Max Em-Dashes per 100w** | $\le 0.20$ | $\le 0.15$ | $\le 0.25$ | $\le 0.15$ | $\le 0.10$ | $\le 0.10$ |
+| **Min Punctuation Balance ($PBR$)** | $\ge 1.5$ | $\ge 2.0$ | $\ge 1.5$ | $\ge 1.0$ | $\ge 1.0$ | $\ge 1.5$ |
+| **Max Concrete Anchor Lag** | $\le 200$w | $\le 300$w | $\le 250$w | $\le 150$w | N/A | N/A |
+| **Min Human Voice Index ($HVI$)** | $80.0$ | $85.0$ | $85.0$ | $80.0$ | $85.0$ | $80.0$ |
+| **Min Precision Index ($TPI$)** | $85.0$ | $85.0$ | $80.0$ | $75.0$ | $80.0$ | $80.0$ |
