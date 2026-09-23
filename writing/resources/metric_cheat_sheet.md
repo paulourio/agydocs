@@ -18,8 +18,8 @@ $$CV = \frac{\sigma}{\mu} = \frac{\sqrt{\frac{1}{N-1}\sum_{i=1}^N (L_i - \mu)^2}
 - **$\mu$:** Mean sentence length across the document.
 - **Diagnostic Bands:**
   - **$CV < 0.30$:** Metronomic pacing (sentences march mechanically at roughly the same length).
-  - **$0.35 \le CV \le 0.70$:** Target human range (short punchy conclusions alternating with detailed explanations).
-  - **$CV > 0.75$:** Run-on or fragmented stream of consciousness.
+  - **$0.30 \le CV \le 0.75$:** Target human range across profiles, spanning RFCs (0.32–0.65), papers (0.40–0.70), and pairing chat (0.30–0.75).
+  - **$CV > 0.75$:** Run-on sprawling or fragmented stream of consciousness.
 
 ---
 
@@ -28,8 +28,8 @@ $$CV = \frac{\sigma}{\mu} = \frac{\sqrt{\frac{1}{N-1}\sum_{i=1}^N (L_i - \mu)^2}
 #### Syntactic Memory Overhead ($M_{\text{overhead}}$)
 Approximates the cognitive load imposed by sentence structure:
 $$M_{\text{overhead}} = 0.6 \times \overline{\text{SVD}} + 0.8 \times \min(\text{PPD}_{\text{max}}, 6) + 1.0$$
-- **$\overline{\text{SVD}}$:** Mean word distance separating subject from its finite verb.
-- **$\text{PPD}_{\text{max}}$:** Longest consecutive chain of prepositional phrases without an intervening verb (capped at 6).
+- **$\overline{\text{SVD}}$:** Mean subject-verb distance estimated using sentence-initial clausal prefixes (defaults to 2.0).
+- **$\text{PPD}_{\text{max}}$:** Longest consecutive chain of prepositional phrases lacking an intervening verb (capped at 6).
 - **$+1.0$:** Baseline syntactic intercept representing root clause processing cost.
 - **Guideline:** Keep $M_{\text{overhead}} \le 6.5$ for technical specs; $\le 4.5$ for guides.
 
@@ -40,7 +40,7 @@ $$M_{\text{overhead}} = 0.6 \times \overline{\text{SVD}} + 0.8 \times \min(\text
 #### Zombie Nominalization Ratio ($Z_{\text{nom}}$)
 Measures bureaucratic nouns (*-tion, -ment, -ance, -ence, -ity, -ization*) that obscure actors and actions:
 The ratio is defined as $Z_{\text{nom}} = (\text{Count of Non-Domain Zombie Nominals} / \text{Total Word Count}) \times 100\%$.
-- **Target:** $\le 1.0\%$ in essays and tutorials; $\le 1.5\%$ in systems specs; $\le 2.0\%$ in scientific papers.
+- **Target:** $\le 0.8\%$ in tutorials; $\le 1.0\%$ in essays, chat, and briefings; $\le 1.5\%$ in systems specs; $\le 2.0\%$ in scientific papers.
 - **Exclusion Policy:** Canonical technical terms (*idempotency, linearizability, authentication, partition, configuration*) are excluded.
 
 ---
@@ -57,7 +57,7 @@ The index is defined as $\text{DAI} = \text{Sentence-Initial } (\text{"This/Thes
 #### Punctuation Balance Ratio ($PBR$)
 Compares deliberate structural punctuation (colons and semicolons) against breathy em-dashes:
 The ratio is defined as $PBR = (\text{Count of Colons} + \text{Count of Semicolons}) / (\text{Count of Em-Dashes} + 1)$.
-- **Target:** $PBR \ge 1.5$ in formal systems and academic papers.
+- **Target:** $PBR \ge 1.5$ in systems RFCs, essays, and briefings; $PBR \ge 2.0$ in academic research papers.
 - **Enforcement:** Punctuation balance violations trigger only when a document contains 3 or more em-dashes, avoiding false alarms on documents that use em-dashes sparingly.
 
 #### Concrete Anchor Lag

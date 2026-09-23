@@ -25,16 +25,16 @@ Prose sounds bureaucratic or artificial when simple ideas are buried under tangl
     "Monotonic counters         │ "The orchestration of operational
      prevent replay attacks."   │  resilience facilitates alignment."
   ──────────────────────────────┼─────────────────────────────► [SENTENCE COMPLEXITY]
-    Direct Conversational       │ Infantilized Dumbing Down
-    (Clean, punchy speech)      │ (Circumlocutions & infantilized phrasing)
-    "Turn off the power         │ "The big box with lights tells
-     before swapping cards."    │  the little boxes to be safe."
+    Direct Conversational       │ Circumlocutory Oversimplification
+    (Clean, punchy speech)      │ (Vague circumlocutions; domain terms omitted)
+    "Turn off the power         │ "The coordination server tells the
+     before swapping cards."    │  worker nodes to remain safe."
                                 │
 ```
 
 - **Top-Left (Clear Technical Precision):** Exact domain terminology combined with simple, active sentence structure. Short, punchy statements using precise primitives.
 - **Top-Right (Corporate Jargon & AI Slop):** Chained prepositional phrases, passive voice, and abstract nouns ending in *-tion*, *-ment*, or *-ance* where actors and physical actions disappear.
-- **Bottom-Right (Infantilized Dumbing Down):** Unnatural circumlocutions created when exact domain terms are banned by blunt readability rules.
+- **Bottom-Right (Circumlocutory Oversimplification):** Imprecise phrasing produced when domain-specific invariants are replaced with generic descriptions to satisfy blunt readability scores.
 - **Bottom-Left (Direct Conversational):** Everyday vocabulary with simple syntax. Ideal for conversational instructions, but insufficient for formal protocol specifications or compiler passes.
 
 ### Hayakawa’s Ladder of Abstraction & The Concrete Trace
@@ -50,7 +50,7 @@ S. I. Hayakawa’s (1939) Ladder of Abstraction explains how effective technical
 
 ## 2. The Conditional Style Guide
 
-Style rules should not be rigid, blunt bans. Rhetorical devices (such as contrastive framing, em-dashes, or elevated technical vocabulary) are useful when they resolve ambiguity or convey essential constraints, but damaging when used as decorative padding or conversational crutches.
+Rhetorical devices, including contrastive framing, em-dashes, and domain vocabulary, clarify technical trade-offs when applied to essential constraints, but obscure meaning when used as decorative filler.
 
 Before using a rhetorical device, apply two tests:
 1. **The Pruning Test:** If you cut the device, does the sentence lose essential technical meaning? If not, cut it.
@@ -86,7 +86,7 @@ Practitioners do not treat programming as a typing contest or systems terms as d
 ### Directive 2: The Em-Dash (`—`)
 
 #### The Problem
-Language models often deploy the em-dash as an escape hatch to defer grammatical closure, producing a fragmented cadence.
+Language models often deploy the em-dash as an escape hatch to defer grammatical closure. This habit fragments sentence cadence.
 
 #### Cut by Default:
 - **The Keynote Synthesis Pause:** Using an em-dash to deliver an emotional punchline or synthetic profundity (*"Distributed consensus requires coordination—and that changes everything"*).
@@ -99,7 +99,7 @@ Language models often deploy the em-dash as an escape hatch to defer grammatical
 - **Hardware Metric Details:** Expanding a formal noun with immediate concrete numbers or hardware registers:
   > *"The L1 data cache—32 KB, 8-way set associative per core—cannot hold the entire working set."*
 
-**Quantitative Guardrail:** Maximum **1 instance per 500 words**; strictly 0 instances of theatrical emotional conclusions.
+**Quantitative Guardrails:** Maximum **1 instance per 500 words** ($\le 0.20/100$w) in systems RFCs, tightened to **$\le 0.15/100$w** in scientific papers and tutorials, and **$\le 0.10/100$w** in chat and briefings; strictly 0 instances of theatrical emotional conclusions.
 
 ---
 
@@ -139,7 +139,7 @@ Deploying rare, high-register words (*parsimoniously, bifurcate, obfuscate, ubiq
 ### Directive 5: Participial Tailing Clauses (*"-ing"* Present Participle Clauses)
 
 #### Cut by Default:
-- Moralizing, summarizing, or teleological appendages (*highlighting, underscoring, fostering, ensuring, showcasing, paving the way*). End the sentence cleanly at the period.
+- Moralizing, summarizing, or purposive appendages (*highlighting, underscoring, fostering, ensuring, showcasing, paving the way*). End the sentence cleanly at the period.
   - *Avoid:* *"We migrated the database to PostgreSQL, ensuring that the team remains agile and paving the way for future scale."*
   - *Prefer:* *"We migrated the database to PostgreSQL. Connection pooling now handles up to 5,000 concurrent sessions."*
 
@@ -223,7 +223,7 @@ Technical documentation often serves two distinct purposes:
 1. **The Human Engineer:** Needs rapid, high-density truth, invariants, failure modes, and trade-offs.
 2. **The Compliance Auditor / Tooling:** Needs exhaustive schema diffs, checklists, and machine-readable definitions.
 
-Combining these into running prose results in unreadable corporate filler. The solution is the **Two-Section Specification Model**:
+Combining these two documentation functions into running prose produces unreadable filler. Partition major specifications using the **Two-Section Specification Model**:
 
 ```markdown
 # [SYSTEM COMPONENT / RFC TITLE]
@@ -231,7 +231,7 @@ Combining these into running prose results in unreadable corporate filler. The s
 ## SECTION 1: THE CORE SPECIFICATION (Gated for Human Systems Engineers)
 - Maximum 300 words.
 - Explicit invariant summary, architectural decisions, and trade-offs.
-- Zero corporate fluff, minimal non-domain nominalizations (Z_nom <= 1.0%).
+- Zero corporate fluff, minimal non-domain nominalizations (Z_nom <= 1.5%).
 - Explicit failure modes and negative controls.
 
 ---

@@ -54,7 +54,7 @@ CLAUDISMS: list[tuple[str, str, str]] = [
     (
         r"\bcompounds? over time\b",
         "Metaphorical Compounding ('compounds over time')",
-        "Specify the exact mechanical accumulation or technical debt.",
+        "Specify the exact mechanical accumulation, such as lock contention or unmaintained code paths.",
     ),
 ]
 
@@ -1853,7 +1853,7 @@ def audit_stage2_tolerance_bands(
                     message=f"Concrete anchor lag ({metrics.concrete_anchor_lag_words} words) exceeds profile limit ({profile.max_concrete_anchor_lag_words} words).",
                     line=None,
                     snippet="Preamble length before first code fence or table",
-                    recommendation="Introduce a concrete code example or data schema within the first 150 words.",
+                    recommendation=f"Introduce a concrete code example or data schema within the first {profile.max_concrete_anchor_lag_words} words.",
                 )
             )
 

@@ -11,19 +11,21 @@ Scientific writing demands high semantic density and rigorous formal definitions
 | Metric | Profile Target | Rule / Rationale |
 | :--- | :--- | :--- |
 | **Burstiness ($CV = \frac{\sigma}{\mu}$)** | $0.40 - 0.70$ | Alternates short assertions with detailed mathematical derivation. |
-| **Mean Sentence Length ($\mu$)** | $20 - 30$ words | Maintains sustained academic argument without run-on sentences. |
 | **Syntactic Overhead ($M_{\text{ov}}$)** | $\le 6.5$ | Bounds subject-verb distance and preposition chaining. |
 | **Zombie Nominals ($Z_{\text{nom}}$)** | $\le 2.0\%$ | Limits Latinate noun endings while permitting established domain terminology. |
 | **Demonstrative Anchoring ($DAI$)** | $\ge 0.85$ | Requires sentence-initial "This" or "These" to bind to an explicit noun. |
 | **Punctuation Balance Ratio ($PBR$)** | $\ge 2.0$ | Balances structural colons and semicolons against em-dashes. |
 | **Em-Dashes per 100 words** | $\le 0.15$ | Prevents fragmented clause sprawl. |
+| **Max Concrete Anchor Lag** | $\le 300$ words | Grounds derivations in concrete numbers within 300 words of a section header. |
+| **Composite Indices** | $HVI \ge 85.0$, $TPI \ge 85.0$ | Enforces authentic cadence and formal mathematical grounding. |
+| *Mean Sentence Length (Advisory)* | $20 - 30$ words | Advisory guideline for sustained academic exposition (un-gated). |
 
 ---
 
 ## 2. Voice & Agency: The Participatory "We" vs. Cold Bureaucracy
 
 ### The Knuth-Halmos Principle
-Scientific tradition often defaults to cold, agentless passive voice (*"It was observed that the bound holds..."*), creating an artificial distance that obscures the reasoning process. 
+Scientific tradition often defaults to cold, agentless passive voice (*"It was observed that the bound holds..."*). This artificial distance obscures the reasoning process. 
 
 Donald Knuth and Paul Halmos established the modern gold standard:
 > *"The word 'we' is often useful to avoid passive voice... But this use of 'we' should be used in contexts where it means 'you and me together', not a formal equivalent of 'I'. Think of a dialog between author and reader."* (Knuth, *Mathematical Writing*, Stanford CS 209)
@@ -33,16 +35,16 @@ Donald Knuth and Paul Halmos established the modern gold standard:
   - *"If we set $\epsilon = 1 / \sqrt{n}$, the error term vanishes as $n \to \infty$."*
 - **The Accountable "I" (Encouraged for Single Authors):** Used when acknowledging specific intellectual choices, conjectures, or historical credit:
   - *"I conjecture that $\mathsf{BQP} \not\subseteq \mathsf{BPP}$ even in the presence of advice."*
-- **The Imperial "We" (Prohibited):** Using "we" to puff up a solo author's importance or simulate consensus where none exists.
+- **The Imperial "We" (Prohibited):** Using "we" to puff up a solo author's status or simulate consensus where none exists.
 
 ### Discourse-Appropriate Agentless Passives (The Given-New Contract)
-Do not take Strunk & White's *"Use active voice"* dogmatically. In scientific writing, agentless passive is linguistically necessary when the experimental apparatus, specimen, or formal mathematical structure is the **thematic Given**:
+In scientific writing, agentless passive is linguistically necessary when the experimental apparatus, specimen, or formal mathematical structure is the **thematic Given**:
 - **Correct Thematic Passive:**
   - *"The quantum state $|\psi\rangle$ was prepared using Hadamard gates. It was then measured in the computational basis."*
   - *(The state is the focus. Writing "I prepared the quantum state" shifts focus needlessly to the operator).*
 - **Defective Agent-Evasion Passive:**
   - *"Mistakes in data collection were made during trial 4."*
-  - *(Obscures accountability; rewrite as "We miscalibrated the sensor in trial 4").*
+  - *(Hides who is responsible; rewrite as "We miscalibrated the sensor in trial 4").*
 
 ---
 
@@ -54,7 +56,7 @@ Presenting mathematics in the sterile format of **Definition $\to$ Lemma $\to$ T
 In *Surreal Numbers*, Knuth demonstrated the power of motivating definitions through constructive discovery:
 1. **Show the Naive Approach First:** Walk the reader through the intuitive first attempt that almost works.
 2. **Expose the Structural Failure:** Demonstrate the concrete edge case or contradiction that breaks the naive approach.
-3. **Introduce the Invariant as the Inevitable Resolution:** State the formal definition not as a bolt from the blue, but as the unique mathematical structure that repairs the failure.
+3. **Introduce the Invariant as the Resolution:** Introduce the formal definition as the exact mathematical structure required to resolve the failure mode demonstrated in step 2.
 
 ### Framing Fundamental Impossibility Results
 When introducing profound theoretical results, do not treat them as mere manipulations of formal symbols. Frame them as **foundational trade-offs forcing a fundamental choice**:
@@ -94,11 +96,11 @@ Before presenting abstract asymptotic proofs, trace the algorithm or formula on 
 
 ---
 
-## 5. Game-Theoretic Proof Structuring
-
-When proving lower bounds, separation results, or distributed invariants, convert dry index manipulations into **games between human adversaries**:
-- Follow Scott Aaronson's canonical construction: Introduce **Alice** (choosing an algorithm, query index, or strategy) and **Bob** (crafting an adversarial input or oracle response).
-- By framing lower bounds via von Neumann’s **minimax theorem** on the payoff matrix, optimal strategies emerge as intuitive geometric equilibria before formal algebraic derivations begin.
+## 5. Adversarial and Game-Theoretic Proof Structuring
+ 
+When proving computational lower bounds or distributed separation results, structure arguments around formal adversary methods:
+- **Yao's Minimax Principle (Randomized Complexity):** Model algorithm execution as a two-player zero-sum game between an algorithm designer selecting query strategies and an adversary constructing input distributions. Applying von Neumann's minimax theorem establishes that randomized query complexity corresponds to the optimal distributional lower bound against deterministic algorithms.
+- **Quantum Adversary Bounds:** Model distinguishing oracle inputs as tracking inner-product deviation between superpositions. Bounding the rate at which queries diminish state overlaps (the BBBV hybrid argument or Ambainis adversary method) establishes unconditional quantum query lower bounds.
 
 ---
 
@@ -138,6 +140,6 @@ Scientific rigor requires precise epistemic stance. Distinguish clearly between 
 Authors frequently use footnotes to provide high-information-gain remarks that illuminate technical subtleties:
 - *Scott Aaronson on Quantum Factoring:*
   > *"The most celebrated practical achievement of quantum computation to date is the factoring of 15 into $3 \times 5$."*
-- *Donald Knuth on Computational Complexity:*
+- *Donald Knuth on Algorithm Verification:*
   > *"Beware of bugs in the above code; I have only proved it correct, not tried it."*
 - **The Rule:** Technical wit is permitted only if it has **high information gain** and is intelligible only to someone who understands the technical subtlety. Performative keynote cheerleading and theatrical suspense are strictly prohibited.

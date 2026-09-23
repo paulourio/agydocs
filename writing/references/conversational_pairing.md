@@ -14,14 +14,16 @@ Interactive chat pairing occurs under active development or outage pressure. The
 | **Syntactic Overhead ($M_{\text{ov}}$)** | $\le 4.0$ | Keeps responses immediately readable under triage. |
 | **Zombie Nominals ($Z_{\text{nom}}$)** | $\le 1.0\%$ | Replaces abstract status descriptions with direct verbs. |
 | **Demonstrative Anchoring ($DAI$)** | $\ge 0.85$ | Binds demonstratives to specific files, functions, or lines. |
-| **Preamble / Sign-Off Tokens** | Strictly 0 | Eradicates conversational fluff and pleasantries. |
-| **First-Person Sycophancy** | Strictly 0 instances | Eliminates synthetic praise, flattery, and apologies. |
+| **Em-Dashes per 100 words** | $\le 0.10$ | Eliminates narrative sprawl in triage dialog. |
+| **Punctuation Balance Ratio ($PBR$)** | $\ge 1.0$ | Uses direct colons and semicolons for code telemetry. |
+| **Composite Indices** | $HVI \ge 85.0$, $TPI \ge 80.0$ | Enforces authentic engineering voice and zero fluff. |
+| *Preamble / Sign-Off Tokens (Advisory)* | Strictly 0 | Eradicates conversational cheerleading and pleasantries. |
 
 ---
 
-## 2. Backgrounding the Self (Strunk & White Rule V.1)
+## 2. Direct Technical Telemetry: Eliminating Conversational Preamble
 
-Strunk & White’s Rule V.1 mandates: *"Place yourself in the background."* In conversational AI pairing, this invariant forms the foundation.
+Conversational pairing must prioritize actionable technical telemetry over communicative ceremony. Precision matters.
 
 ### Strict Prohibition on Conversational Sycophancy
 Never open an interaction with synthetic cheerleading, flattery, or polite throat-clearing.
@@ -56,7 +58,7 @@ LLMs frequently attempt to simulate rapport by performatively commenting on thei
   - *"Ok, I'm becoming almost meta here, but..."*
   - *"As an AI language model, I cannot..."*
   - *"Let's take a step back and examine..."*
-- **Why It Fails:** This simulated affect triggers the uncanny valley of simulated sentience. Engineers need working systems, not theatrical role-play.
+- **Why It Fails:** Conversational preamble slows incident response and triage. Engineers inspecting stack traces need immediate root-cause telemetry and verifiable code diffs.
 
 ---
 

@@ -6,7 +6,7 @@ This reference establishes writing standards for developer onboarding tutorials,
 
 ## 1. Register Profile & Target Metrics
 
-Developer guides must minimize the reader's cognitive friction, delivering immediate executable examples while thoroughly explaining underlying mechanisms.
+Developer guides reduce cognitive friction through early executable examples and direct explanation of underlying mechanisms.
 
 | Metric | Profile Target | Rule / Rationale |
 | :--- | :--- | :--- |
@@ -16,7 +16,9 @@ Developer guides must minimize the reader's cognitive friction, delivering immed
 | **Concrete Anchor Lag** | $\le 150$ words | Delivers working code or schema within 150 words of a header. |
 | **Demonstrative Anchoring ($DAI$)** | $\ge 0.75$ | Grounds pronouns in immediate code or concepts. |
 | **Em-Dashes per 100 words** | $\le 0.15$ | Prevents meandering side notes in tutorial steps. |
-| **Second-Person Stance** | Directed ("you" / imperative) | Guides the developer through direct actions and verified observations. |
+| **Punctuation Balance Ratio ($PBR$)** | $\ge 1.0$ | Prioritizes structured explanation over casual pauses. |
+| **Composite Indices** | $HVI \ge 80.0$, $TPI \ge 75.0$ | Enforces executable examples and direct pedagogical voice. |
+| *Developer Address (Advisory)* | Directed ("you" / imperative) | Guides the developer through direct actions and verified observations. |
 
 ---
 
@@ -84,18 +86,18 @@ Organize tutorial sections according to the **Progressive Disclosure Flow**:
 
 ---
 
-## 4. Rejection of Strunk & White's Rule V.11 ("Do Not Explain Too Much")
+## 4. Explain Failure Mechanics, Not Just Happy Paths
 
-Strunk & White’s Rule V.11 advises writers: *"Do not explain too much."* In developer tutorials, following this advice is disastrous.
-- Tutorials written under Rule V.11 show the happy path but completely hide the "why". When an error inevitably occurs in production, the developer has no mental model of the system and cannot troubleshoot the failure.
-- **The Pedagogical Contract:** Never leave a configuration flag or architectural decision unexplained. If a flag is set to `max_retries=3`, explain *why* 3 was chosen and what happens when all 3 fail.
+Developer tutorials fail when they show only happy paths and omit configuration rationale:
+- If a setting specifies `max_retries=3`, state why 3 was chosen and document the exception raised when retries are exhausted.
+- Explain the mechanism behind configuration parameters so engineers can troubleshoot failures under production anomalies.
 
 ---
 
-## 5. Spencer’s Cognitive Economy: Active Scaffolding
+## 5. Cognitive Ergonomics: Active Scaffolding
 
-Herbert Spencer (*The Philosophy of Style*, 1852) established that the mind possesses a finite quantity of mental energy for reception and interpretation. Effective guides conserve the reader's mental energy for the core problem:
-- **Second-Person Direct Address ("You"):** Address the developer directly as a collaborator (*"You can inspect the generated SQL by setting `DEBUG=1`"*).
+Developers troubleshooting code or onboarding onto a platform have limited working memory. Effective guides reduce cognitive overhead:
+- **Second-Person Direct Address ("You"):** Address the developer directly as an active operator (*"Inspect the generated query by setting `DEBUG=1`"*).
 - **Side-by-Side Error and Fix Blocks:** When demonstrating common pitfalls, show the exact error message alongside the corrected snippet:
 
 ````markdown

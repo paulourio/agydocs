@@ -1,6 +1,6 @@
 # Golden Benchmarks: Side-by-Side Before & After Transformations
 
-This reference provides canonical before-and-after transformations across six critical technical domains. Each example contrasts **AI Slop / Claude-ese**, **Infantilized Dumbing Down ("Simple English")**, and **Authentic Human Technical Voice**, accompanied by empirical metric audits from `quality_gate.py`.
+This reference provides canonical transformations across six critical technical domains. It demonstrates how to eliminate AI clichés, avoid lossy oversimplifications, and structure high-density systems specifications.
 
 | Domain | Focus Topic | Target Register | Canonical Principle |
 | :--- | :--- | :--- | :--- |
@@ -24,31 +24,31 @@ This reference provides canonical before-and-after transformations across six cr
 - **AI Tells:** `orchestration`, `crucial foundation`.
 - **Tailing Clauses:** `, highlighting the ongoing need...`, `, ensuring that...`.
 - **Trivial Reframe:** `"not about raw speed; it is about fostering alignment"` (trivial strawman).
-- **Zombie Nominals:** $6.41\%$ non-domain nominals (*orchestration, contextualization, mitigation, divergence, visibility*).
+- **Zombie Nominals:** Non-domain nominals detected (*orchestration, contextualization, mitigation, resilience*).
 - **Human Voice Index ($HVI$):** $0.0$ | **Technical Precision Index ($TPI$):** $85.0$.
 
 ---
 
-### Variant B: Infantilized Simple English Ban (REJECTED_INFANTILIZED)
+### Variant B: Circumlocutory Oversimplification (REJECTED_OVERSIMPLIFIED)
 > *"Computers talk to other computers. When one box breaks, the other boxes must agree on what is true. We do not use big words here. If you ask a box for a number twice, it gives you the same number twice. Many boxes help keep things going even when one box catches fire. We make sure all the boxes write down the same words in their little books before they tell the user okay."*
 
 #### Stylometric Diagnostic:
 - **Quality Gate:** 🟢 **PASSED** (0 violations, $HVI = 100.0$, $TPI = 100.0$).
-- **Editorial Assessment:** 🔴 **REJECTED** by human critique. Syntactic and AST regex gates cannot evaluate semantic depth or conceptual precision; infantilized simple-English phrasing passes automated syntactic gates and requires human editorial review.
+- **Editorial Assessment:** 🔴 **REJECTED** by human critique. Syntactic and AST regex gates cannot evaluate semantic depth or conceptual precision; simple-English phrasing passes automated syntactic gates and requires human editorial review.
 - **Fatal Defect:** Circumlocutions (*"little books"*, *"boxes"*) replace formal invariants (*append-only log*, *idempotence*, *majority quorum*).
-- **Shannon Information Loss:** Fails to specify network partitions, crash-recovery models, or serialization orders. Completely unexecutable in production.
+- **Omission of Specification Invariants:** Fails to specify network partitions, crash-recovery models, or serialization orders. Completely unexecutable in production.
 
 ---
 
 ### Variant C: Authentic Human Technical Master (PASSED_AUTHENTIC_HUMAN)
-> *"State machine replication requires an immutable sequence of state transitions across all operational nodes. In an asynchronous network with crash-recovery failures, consensus requires a majority quorum. Raft does not guarantee zero latency; it guarantees linearizability across surviving honest replicas. The leader serializes client mutations to an append-only log, persisting entries to non-volatile disk before dispatching RPC acknowledgments. If the network partitions, progress halts on the minority partition. This invariant preserves safety. Liveness resumes once a quorum reconnects."*
+> *"State machine replication requires an immutable sequence of state transitions across all operational nodes. In an asynchronous network with crash-recovery failures, consensus requires a majority quorum. Raft does not guarantee write availability during minority network partitions; it guarantees linearizable state replication across a surviving majority quorum. The leader serializes client mutations to an append-only log, persisting entries to non-volatile disk before dispatching RPC acknowledgments. If the network partitions, progress halts on the minority partition. This invariant preserves safety. Liveness resumes once a quorum reconnects."*
 
 #### Stylometric Diagnostic:
 - **Quality Gate:** 🟢 **PASSED** (`--profile rfc`).
 - **Linguistic Virtues:** Retains full formal precision (*linearizability, majority quorum, asynchronous, mutation, append-only log*).
-- **Information Gain:** Valid contrastive reframe correcting an active misconception (Raft guarantees linearizability, not zero latency).
+- **Information Gain:** Valid contrastive reframe correcting an active misconception (Raft guarantees linearizability, not write availability during minority network partitions).
 - **Demonstrative Anchoring:** *"This invariant preserves safety"* ($DAI = 1.0$).
-- **Burstiness:** $CV = 0.44$ (sentences range from 4 words to 24 words).
+- **Burstiness:** $CV = 0.44$ (sentences range from 4 words to 18 words).
 - **Zombie Nominals:** $0.0\%$ non-domain nominals.
 - **Human Voice Index ($HVI$):** $100.0$ | **Technical Precision Index ($TPI$):** $100.0$.
 
@@ -95,11 +95,11 @@ This reference provides canonical before-and-after transformations across six cr
 ---
 
 ### Variant B: Authentic Human Technical Master (PASSED_AUTHENTIC_HUMAN)
-> *"Static single assignment (SSA) form guarantees that every variable is assigned exactly once in the intermediate representation. The control flow graph defines dominance frontiers for placing $\phi$-nodes at merge points. SSA simplifies dataflow analysis. Register allocation uses graph coloring heuristics to assign virtual registers to physical machine registers while minimizing memory spill code. Loop-invariant code motion hoists loop computations outside the loop header. These transformations do not alter program semantics; they maximize instruction-level parallelism."*
+> *"Static single assignment (SSA) form guarantees that every variable is assigned exactly once in the intermediate representation. The control flow graph defines dominance frontiers for placing $\phi$-nodes at merge points. SSA simplifies dataflow analysis. Register allocation uses graph coloring heuristics to assign virtual registers to physical machine registers while minimizing memory spill code. Loop-invariant code motion hoists loop computations outside the loop header. These transformations preserve program semantics while maximizing instruction-level parallelism."*
 
 #### Stylometric Diagnostic:
 - **Quality Gate:** 🟢 **PASSED** (`--profile paper`).
-- **Linguistic Virtues:** Mathematical micro-syntax respected; valid disambiguating semicolon reframe; precise graph theory primitives (*dominance frontiers, $\phi$-nodes, graph coloring, instruction-level parallelism*).
+- **Linguistic Virtues:** Mathematical micro-syntax respected; precise graph theory primitives (*dominance frontiers, $\phi$-nodes, graph coloring, instruction-level parallelism*).
 - **Burstiness:** $CV = 0.43$ | **Zombie Nominals:** $0.0\%$.
 - **Human Voice Index ($HVI$):** $100.0$ | **Technical Precision Index ($TPI$):** $100.0$.
 
@@ -116,15 +116,15 @@ Leaves the reader with zero physical intuition or geometric insight; completely 
 ---
 
 ### Variant B: Authentic Socratic Master (Scott Aaronson Approach)
-> *"Can a quantum computer search an unsorted database of $N$ items in fewer than $\sqrt{N}$ steps? Classical searches inspect $N/2$ items on average. Grover’s algorithm achieves $O(\sqrt{N})$, but proving that this bound is optimal requires understanding how quantum states evolve under unitary rotations.
+> *"Can a quantum computer search an unsorted database of $N$ items in fewer than $\sqrt{N}$ queries? Classical algorithms examine $N/2$ entries on average. Grover’s algorithm succeeds in $O(\sqrt{N})$, but proving that this quadratic speedup is optimal requires bounding how rapidly unitary queries can perturb a quantum state.
 >
-> Model the computation as a game: Alice queries index $i$, while Bob crafts database entry $y_i$. Alice wins if and only if she detects the marked item. Applying von Neumann's minimax theorem to Alice's strategy reveals the geometric constraint: each query rotates the state vector by at most $O(1/\sqrt{N})$ within the two-dimensional target subspace. Rotating the state from orthogonal to parallel therefore requires $\Omega(\sqrt{N})$ discrete steps.
+> Consider the Bennett-Bernstein-Brassard-Vazirani hybrid argument. Let $|\psi^T\rangle$ denote the state of the computer after $T$ queries to an empty database, and let $|\psi_k^T\rangle$ denote the state when item $k$ is marked. Each query to oracle $O_k$ perturbs the amplitude of state $|k\rangle$ by at most $2|\alpha_{k,t}|$. Applying the Cauchy-Schwarz inequality across all $N$ potential marked items bounds the cumulative Euclidean deviation: $\sum_{k=1}^N \| |\psi_k^T\rangle - |\psi^T\rangle \|^2 \le 4T^2 / N$. Distinguishing the marked item with probability bounded away from zero requires the sum to equal $\Omega(1)$. Therefore, $T$ must satisfy $T = \Omega(\sqrt{N})$.
 >
-> This bound is not an artifact of matrix algebra; it represents a physical speed limit on quantum state evolution."*
+> This lower bound establishes that quantum superposition cannot inspect unordered data in sub-polynomial time."*
 
 #### Stylometric Diagnostic:
 - **Quality Gate:** 🟢 **PASSED** (`--profile paper`).
-- **Linguistic Virtues:** Participatory, Socratic adversary game (Alice vs. Bob); rapid progression from formal rotations to physical geometry; anchored demonstrative conclusion.
+- **Linguistic Virtues:** Authentic BBBV hybrid argument; explicit Cauchy-Schwarz bound on oracle perturbations; anchored demonstrative conclusion (*"This lower bound establishes..."*).
 
 ---
 

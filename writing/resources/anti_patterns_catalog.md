@@ -1,12 +1,12 @@
 # Anti-Patterns Catalog: Lexical Tells, Claudisms, and Human Replacements
 
-This catalog indexes formulaic AI writing motifs, pseudo-intellectual Claudisms, bureaucratic zombie verbs, and conversational fluff. It provides direct, authoritative human replacements for every pattern. Cut the fluff. Clear technical writing demands concrete terms and active verbs.
+This catalog indexes formulaic AI writing motifs, pseudo-intellectual Claudisms, bureaucratic zombie verbs, and conversational fluff. It provides direct, authoritative human replacements for every pattern. Cut decorative padding. Clear technical prose requires concrete nouns and active verbs. Replace formulaic stock phrases with direct mechanical statements.
 
 ---
 
 ## 1. Formulaic Corporate AI Motifs
 
-These phrases stem from RLHF length biases, constitutional critique loops, and corporate defensive culture. Avoid them. State your engineering claims directly.
+These phrases arise frequently in corporate communications and automated completions. Replace them with specific systems boundaries and empirical measurements.
 
 | Claudism Motif | Why It Fails | Authentic Human Replacement |
 | :--- | :--- | :--- |
@@ -16,7 +16,7 @@ These phrases stem from RLHF length biases, constitutional critique loops, and c
 | **"doing [the / real] work"** | Vague epistemic validator; erases the actual mechanism. | State the exact action: *"serializes mutations"*, *"enforces linearizability"*, *"bounds lock contention"*. |
 | **"the honest take" / "an honest conversation"** | Performative candor preceding a diplomatic summary. | Cut entirely. Deliver the unhedged technical finding. |
 | **"exact grain"** | Vague pseudo-technical jargon. | *"byte offset"*, *"time resolution"*, *"granularity"*, *"metric sampling interval"*. |
-| **"compounds over time"** *(applied metaphorically to abstract concepts)* | Misappropriates financial or biological growth models to describe ordinary drift. | *"accumulates technical debt"*, *"degrades throughput"*, *"increases cache miss rates"*. |
+| **"compounds over time"** *(applied metaphorically to abstract concepts)* | Misappropriates financial or biological growth models to describe ordinary drift. | *"degrades throughput"*, *"increases lock contention"*, *"accumulates unmaintained code paths"*. |
 
 ---
 
@@ -74,7 +74,7 @@ In pair programming and agent chats, sycophancy consumes token bandwidth and red
 
 ## 5. Tailing Participial Clauses (-ing Present Participle Clauses)
 
-Autoregressive models avoid ending sentences by appending dangling participial clauses that moralize or summarize.
+Tailing participial clauses frequently appear as ungrounded summaries appended to the ends of sentences without introducing new empirical data.
 - *Defect:* *"We refactored the query planner, highlighting our commitment to database efficiency and paving the way for future scalability."*
 - *Defect Mechanics:* Adds 14 tokens without adding a single new empirical measurement or technical invariant.
 - *Remediation:* End cleanly at the period. If the secondary action is real, state it in an independent sentence with concrete numbers.
@@ -84,7 +84,7 @@ Autoregressive models avoid ending sentences by appending dangling participial c
 
 ## 6. Light-Verb Nominalizations (Smothered Verbs)
 
-Burying active verbs inside abstract nominal constructions inflated by generic helper verbs (*perform, facilitate, conduct, make, achieve*).
+Smothered verbs bury active operations inside abstract nouns paired with generic helper verbs (*perform, facilitate, conduct, make, achieve*). This practice converts direct actions into bureaucratic ceremonies that hide responsible actors. Prefer active verbs.
 
 | Smothered Verb Construction | Direct Active Human Equivalent |
 | :--- | :--- |
@@ -101,7 +101,7 @@ Burying active verbs inside abstract nominal constructions inflated by generic h
 
 ## 7. Mathematical Micro-Syntax Violations
 
-Violations that cause cognitive backtrack and phonological friction when reading mathematical or technical prose.
+The following syntax patterns interrupt phonological reading flow in formal mathematical and systems prose.
 
 | Violation | Defective Code / Math | Authentic Knuth Formulation |
 | :--- | :--- | :--- |
@@ -120,6 +120,6 @@ Negating an absurd proposition that no competent practitioner would argue produc
   - *(The negated premise is self-evident; cut the negation and state the technical objective directly).*
 - *Strawman Semicolon Reveal:* *"Terms are not decorative ornamentation; they are formal axiomatic compression operators."*
   - *(The negated premise sets up an artificial foil to create a contrastive reveal; state the technical role directly).*
-- *Valid Disambiguation:* *"Raft does not guarantee zero latency during partitions; it guarantees linearizability across surviving replicas."*
+- *Valid Disambiguation:* *"Raft does not guarantee write availability during minority network partitions; it guarantees linearizable state replication across a surviving majority quorum."*
   - *(Corrects an active engineering misconception that causes production outages).*
 

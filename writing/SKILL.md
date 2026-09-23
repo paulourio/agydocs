@@ -33,19 +33,25 @@ Audit drafts against common AI anti-patterns:
 - Check metric thresholds and qualitative heuristics in [metric_cheat_sheet.md](resources/metric_cheat_sheet.md).
 - Compare against the side-by-side golden benchmarks in [before_after_transformations.md](examples/before_after_transformations.md).
 
-Run the automated stylometric quality gate:
+Run the automated stylometric quality gate using either the high-performance Go binary or the Python script:
 ```bash
-# Audit an RFC or ADR
-python3 writing/scripts/quality_gate.py --profile rfc path/to/doc.md
+# Audit an RFC or ADR using the compiled Go binary
+writing/bin/quality_gate --profile rfc path/to/doc.md
 
 # Audit a scientific paper or research note
-python3 writing/scripts/quality_gate.py --profile paper path/to/paper.md
+writing/bin/quality_gate --profile paper path/to/paper.md
 
 # Audit a developer guide or tutorial
-python3 writing/scripts/quality_gate.py --profile tutorial path/to/guide.md
+writing/bin/quality_gate --profile tutorial path/to/guide.md
 
-# Inspect machine-readable diagnostics
-python3 writing/scripts/quality_gate.py --profile rfc --json path/to/doc.md
+# Concurrent batch audit across a directory
+writing/bin/quality_gate references/ --profile essay --workers 8
+
+# Structured JSON output for agent pipelines
+writing/bin/quality_gate --profile rfc --json path/to/doc.md
+
+# Portable Python fallback
+python3 writing/scripts/quality_gate.py --profile rfc path/to/doc.md
 ```
 
 ### 4. Apply Adversarial Critique Posture
@@ -59,7 +65,7 @@ When reviewing or auditing existing prose:
 
 All technical prose produced or audited under this skill must uphold five structural invariants:
 
-1. **Syntactic variation (profile target $0.30 \le CV \le 0.70$):** Vary sentence lengths. Avoid metronomic blocks where every sentence spans 20–25 words. Follow complex technical statements with short, direct sentences.
+1. **Syntactic variation (profile target $0.30 \le CV \le 0.75$):** Vary sentence lengths. Avoid metronomic blocks where every sentence spans 20–25 words. Follow complex technical statements with short, direct sentences.
 2. **Demonstrative anchoring (profile target $DAI \ge 0.75 - 0.85$):** Anchor demonstratives ("this", "these") to an explicit governing noun (*"this invariant"*, *"this race condition"*).
 3. **Grammatical symbol integration:** Inline identifiers, formulas, and code tokens must flow naturally within normal grammatical sentence structure.
 4. **Zero meta-commentary:** Remove self-referential commentary, conversational cheerleading, and theatrical preamble.
@@ -69,9 +75,9 @@ All technical prose produced or audited under this skill must uphold five struct
 
 ## Quality Gate Thresholds
 
-The executable script [`scripts/quality_gate.py`](scripts/quality_gate.py) enforces three stages of validation:
-- **Stage 1 (Hard Invariants):** Fast-fails on AI clichés, domain laundry lists, unearned contrastive reframes, participial tailing clauses, and leading mathematical symbols.
-- **Stage 2 (Stylometric Bands):** Verifies burstiness ($CV$), syntactic overhead ($M_{\text{ov}}$), zombie nominalizations ($Z_{\text{nom}}$), demonstrative anchoring ($DAI$), and em-dash frequency.
+The quality gate tools ([`bin/quality_gate`](bin/quality_gate) and [`scripts/quality_gate.py`](scripts/quality_gate.py)) enforce three stages of validation:
+- **Stage 1 (Hard Invariants):** Fast-fails on AI clichés, winks, sycophancy, domain laundry lists, participial tailing clauses, smothered verbs, and sentence-initial mathematical/code symbols.
+- **Stage 2 (Stylometric Bands):** Verifies burstiness ($CV$), syntactic overhead ($M_{\text{ov}}$), zombie nominalizations ($Z_{\text{nom}}$), demonstrative anchoring ($DAI$), em-dash frequency, punctuation balance ($PBR$), concrete anchor lag, and low-information contrastive reframes.
 - **Stage 3 (Composite Indices):** Reports Human Voice Index ($HVI$) and Technical Precision Index ($TPI$).
 
 | Metric | `rfc` (Specs / ADRs) | `paper` (Research) | `essay` (Architecture) | `tutorial` (Guides) | `chat` (Pairing) | `briefing` (Summaries) |

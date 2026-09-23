@@ -1,0 +1,4 @@
+.quality_gate_cache/
+.pytest_cache/
+.ruff_cache/
+__pycache__/

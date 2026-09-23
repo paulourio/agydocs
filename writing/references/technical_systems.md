@@ -16,7 +16,9 @@ Systems documentation communicates high-stakes operational constraints where amb
 | **Demonstrative Anchoring ($DAI$)** | $\ge 0.80$ | Ensures demonstratives point to concrete components or invariants. |
 | **Punctuation Balance Ratio ($PBR$)** | $\ge 1.5$ | Prioritizes structural punctuation over parenthetical dashes. |
 | **Em-Dashes per 100 words** | $\le 0.20$ | Eliminates breathless narrative cadence. |
-| **First-Person Agency** | Imperative / "We" | Authors take direct ownership of operational trade-offs and choices. |
+| **Max Concrete Anchor Lag** | $\le 200$ words | Delivers schema, CLI invocation, or code within 200 words of a header. |
+| **Composite Indices** | $HVI \ge 80.0$, $TPI \ge 85.0$ | Enforces concrete systems grounding and direct engineer voice. |
+| *Author Agency (Advisory)* | Imperative / "We" | Authors take direct ownership of operational trade-offs and choices. |
 
 ---
 
@@ -85,12 +87,11 @@ When specifying system components and API contracts, follow John Ousterhout’s 
 
 ---
 
-## 6. Rejection of Strunk & White's Rule V.17 ("Do Not Inject Opinion")
+## 6. Authoritative Technical Stance in Decision Records
 
-Strunk & White’s Rule V.17 states *"Do not inject opinion."* In software systems, this rule is completely counter-productive:
-- Architecture Decision Records (ADRs) exist **specifically to document an authoritative technical opinion**.
-- An ADR that provides an equidistant, non-committal summary of three options without choosing an option and defending that choice does not help the engineering team.
-- **Rule for ADRs:** Take a definitive architectural stand. Detail the trade-offs honestly, explain why the chosen approach wins for your specific constraints, and record the explicit risks accepted.
+Architecture Decision Records (ADRs) must take an explicit, authoritative technical stance:
+- An ADR that provides an equidistant, non-committal summary of three options without choosing an option and defending that choice forces downstream engineers to guess architectural intent.
+- Take a definitive architectural stand. Detail the trade-offs honestly, explain why the chosen approach wins for your specific constraints, and record the explicit risks accepted.
 
 ---
 
