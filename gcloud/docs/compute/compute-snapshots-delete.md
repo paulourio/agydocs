@@ -1,0 +1,48 @@
+# gcloud compute snapshots delete
+
+## NAME
+
+    gcloud compute snapshots delete - delete Compute Engine snapshots
+
+## SYNOPSIS
+
+```bash
+    gcloud compute snapshots delete SNAPSHOT_NAME [SNAPSHOT_NAME ...]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    gcloud compute snapshots delete deletes one or more Compute Engine
+    snapshots.
+
+## EXAMPLES
+
+    To delete Compute Engine snapshots with the names 'snapshot-1' and
+    'snapshot-2', run:
+
+        $ gcloud compute snapshots delete snapshot-1 snapshot-2
+
+    To list all snapshots that were created before a specific date, use the
+    --filter flag with the gcloud compute snapshots list command.
+
+        $ gcloud compute snapshots list \
+            --filter="creationTimestamp<'2017-01-01'"
+
+    For more information on how to use --filter with the list command, run $
+    [`gcloud topic filters`](../topic/topic-filters.md).
+
+## POSITIONAL ARGUMENTS
+
+     SNAPSHOT_NAME [SNAPSHOT_NAME ...]
+        Names of the snapshots to delete.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

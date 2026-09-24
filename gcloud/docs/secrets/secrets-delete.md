@@ -1,0 +1,80 @@
+# gcloud secrets delete
+
+## NAME
+
+    gcloud secrets delete - delete a secret
+
+## SYNOPSIS
+
+```bash
+    gcloud secrets delete SECRET [--etag=ETAG] [--location=LOCATION]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Delete a secret and destroy all secret versions. This action is
+    irreversible. If the given secret does not exist, this command will
+    succeed, but the operation will be a no-op.
+
+## EXAMPLES
+
+    Delete a secret my-secret:
+
+        $ gcloud secrets delete my-secret
+
+    Delete a secret my-secret using an etag:
+
+        $ gcloud secrets delete my-secret --etag=123
+
+## POSITIONAL ARGUMENTS
+
+     Secret resource - The secret to delete. This represents a Cloud resource.
+     (NOTE) Some attributes are not given arguments in this group but can be
+     set in other ways.
+
+     To set the project attribute:
+      * provide the argument SECRET on the command line with a fully
+        specified name;
+      * provide the argument --project on the command line;
+      * set the property core/project.
+
+     This must be specified.
+
+       SECRET
+          ID of the secret or fully qualified identifier for the secret.
+
+          To set the secret attribute:
+          + provide the argument SECRET on the command line.
+
+## FLAGS
+
+     --etag=ETAG
+        Current entity tag (ETag) of the secret. If specified, the secret is
+        deleted only if the ETag provided matches the current secret's ETag.
+
+     Location resource - The location to delete secret. This represents a Cloud
+     resource. (NOTE) Some attributes are not given arguments in this group but
+     can be set in other ways.
+
+     To set the project attribute:
+      * provide the argument --location on the command line with a fully
+        specified name;
+      * provide the argument --project on the command line;
+      * set the property core/project.
+
+       --location=LOCATION
+          ID of the location or fully qualified identifier for the location.
+
+          To set the location attribute:
+          + provide the argument --location on the command line.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

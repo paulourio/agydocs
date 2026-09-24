@@ -1,0 +1,83 @@
+# gcloud storage objects compose
+
+## NAME
+
+    gcloud storage objects compose - concatenate a sequence of objects into a
+        new composite object
+
+## SYNOPSIS
+
+```bash
+    gcloud storage objects compose SOURCE [SOURCE ...] DESTINATION
+        [--additional-headers=HEADER=VALUE]
+        [--if-generation-match=GENERATION
+          --if-metageneration-match=METAGENERATION]
+        [--retain-until=DATETIME --retention-mode=RETENTION_MODE]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    gcloud storage objects compose creates a new object whose content is the
+    concatenation of a given sequence of source objects in the same bucket. For
+    more information, please see: composite objects documentation
+    (https://cloud.google.com/storage/docs/composite-objects).
+
+    There is a limit (currently 32) to the number of components that can be
+    composed in a single operation.
+
+## EXAMPLES
+
+    The following command creates a new object target.txt by concatenating
+    a.txt and b.txt:
+
+        $ gcloud storage objects compose gs://bucket/a.txt \
+            gs://bucket/b.txt gs://bucket/target.txt
+
+## POSITIONAL ARGUMENTS
+
+     SOURCE [SOURCE ...]
+        The list of source objects that will be concatenated into a single
+        object.
+
+     DESTINATION
+        The destination object.
+
+## FLAGS
+
+     --additional-headers=HEADER=VALUE
+        Includes arbitrary headers in storage API calls. Accepts a comma
+        separated list of key=value pairs, e.g. header1=value1,header2=value2.
+        Overrides the default storage/additional_headers property value for
+        this command invocation.
+
+## PRECONDITION FLAGS
+
+     --if-generation-match=GENERATION
+        Execute only if the generation matches the generation of the requested
+        object.
+
+     --if-metageneration-match=METAGENERATION
+        Execute only if the metageneration matches the metageneration of the
+        requested object.
+
+## RETENTION FLAGS
+
+     --retain-until=DATETIME
+        Ensures the destination object is retained until the specified time in
+        RFC 3339 format.
+
+     --retention-mode=RETENTION_MODE
+        Sets the destination object retention mode to either "Locked" or
+        "Unlocked". When retention mode is "Locked", the retain until time can
+        only be increased. RETENTION_MODE must be one of: Locked, Unlocked.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

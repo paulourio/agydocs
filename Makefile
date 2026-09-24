@@ -1,4 +1,4 @@
-.PHONY: all clean build test test-writing test-bigquery audit help
+.PHONY: all clean build test test-writing test-bigquery test-tool-skill-engineering test-gcloud audit help
 
 SHELL := /bin/bash
 
@@ -21,7 +21,7 @@ build:
 	@echo "Build completed: writing/bin/quality_gate"
 
 ## test: Execute all Go and Python test suites
-test: test-writing test-bigquery
+test: test-writing test-bigquery test-tool-skill-engineering test-gcloud
 
 test-writing:
 	@echo "==> Running writing Go tests..."
@@ -31,6 +31,15 @@ test-bigquery:
 	@echo "==> Running bigquery-googlesql Go and Python tests..."
 	@cd bigquery-googlesql/examples && go test -count=1 ./...
 	@cd bigquery-googlesql/examples && python3 -m unittest test_schema_extraction.py
+	@python3 -m unittest bigquery-googlesql/scripts/test_fetch_docs.py
+
+test-tool-skill-engineering:
+	@echo "==> Running tool-skill-engineering verification checks..."
+	@bash tool-skill-engineering/scripts/verify.sh
+
+test-gcloud:
+	@echo "==> Running gcloud verification checks..."
+	@bash gcloud/scripts/verify.sh
 
 ## audit: Run stylometric quality gate across all documentation files
 audit: build
@@ -38,6 +47,10 @@ audit: build
 	@writing/bin/quality_gate writing/references/ writing/resources/ writing/examples/ writing/benchmarks/ writing/SKILL.md --profile essay --workers 8 || true
 	@echo "==> Auditing bigquery-googlesql documentation..."
 	@writing/bin/quality_gate bigquery-googlesql/references/ bigquery-googlesql/resources/ bigquery-googlesql/SKILL.md --profile rfc --workers 8
+	@echo "==> Auditing tool-skill-engineering documentation..."
+	@writing/bin/quality_gate tool-skill-engineering/references/ tool-skill-engineering/resources/anti_patterns_catalog.md tool-skill-engineering/SKILL.md tool-skill-engineering/README.md tool-skill-engineering/examples/README.md --profile rfc --workers 8
+	@echo "==> Auditing gcloud documentation..."
+	@writing/bin/quality_gate gcloud/references/ gcloud/resources/anti_patterns_catalog.md gcloud/resources/cheat_sheet.md gcloud/SKILL.md gcloud/README.md gcloud/examples/README.md --profile rfc --workers 8
 
 ## help: Display available targets
 help:

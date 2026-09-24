@@ -1,0 +1,44 @@
+# {{TOOL_DISPLAY_NAME}} Syntax and Operators Reference
+
+This specification defines core declarative grammar, statements, operators, and expressions for {{TOOL_DISPLAY_NAME}}.
+
+---
+
+## 1. Declarative Statements and Execution Model
+
+Commands and queries in {{TOOL_DISPLAY_NAME}} follow declarative specifications executed against physical compute engines:
+- **Statement Structure:** High-level clauses must follow canonical keyword ordering.
+- **Identifier Scoping:** Attribute names must resolve against explicit tables or aliases to prevent ambiguous bindings.
+- **Strict Projection:** Wildcard projections (`*`) are prohibited in production pipelines; explicit column lists must be declared.
+
+---
+
+## 2. Supported Operators and Expressions
+
+| Category | Operators / Functions | Usage Guidance |
+| :--- | :--- | :--- |
+| **Comparison** | `=`, `!=`, `<`, `<=`, `>`, `>=` | Sargable comparisons against indexed or partitioned attributes |
+| **Logical** | `AND`, `OR`, `NOT` | Parenthesize compound boolean expressions to ensure deterministic precedence |
+| **Nullability** | `IS NULL`, `IS NOT NULL`, `COALESCE` | Explicit null handling across nullable attributes |
+| **Arithmetic** | `+`, `-`, `*`, `/` | Use safe arithmetic operators to prevent division-by-zero crashes |
+
+---
+
+## 3. Idiomatic Query Patterns
+
+```
+-- Canonical query anatomy
+SELECT entity_id,
+       attribute_nm,
+       metric_amt
+  FROM domain_schema.target_table_fact
+ WHERE partition_dt >= '2026-01-01'
+   AND status_cd = 'ACTIVE';
+```
+
+---
+
+## 4. Omission and Dialect Hygiene Rules
+
+- **Omit Foreign Constructs:** Do not include syntax constructs or clauses belonging to foreign engines.
+- **Positive Modeling:** Provide only valid idiomatic statements supported natively by {{TOOL_DISPLAY_NAME}}.

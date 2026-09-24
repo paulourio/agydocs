@@ -29,13 +29,12 @@ OPTIONS (
   require_partition_filter  = TRUE,
   partition_expiration_days = 730,
   default_rounding_mode     = 'ROUND_HALF_AWAY_FROM_ZERO',
-  storage_billing_model     = 'PHYSICAL',
   labels                    = [
                                 ('env', 'prod'),
                                 ('domain', 'sales'),
                                 ('tier', 'p1')
                               ]
-)
+);
 ```
 
 ---
@@ -50,7 +49,8 @@ Column parameters define field documentation, numerical rounding modes, and poli
 | :--- | :--- | :--- | :--- | :--- |
 | **`description`** | `STRING` | Top-level columns and nested `STRUCT` fields | UTF-8 text string (maximum 1,024 characters) | `NULL` |
 | **`rounding_mode`** | `STRING` | `NUMERIC` and `BIGNUMERIC` columns | `'ROUND_HALF_AWAY_FROM_ZERO'`, `'ROUND_HALF_EVEN'` | Table default or `'ROUND_HALF_AWAY_FROM_ZERO'` |
-| **`policy_tags`** | `ARRAY<STRING>` | Top-level columns and nested `STRUCT` fields | Fully qualified Dataplex taxonomy tag resource paths | `NULL` |
+| **`data_policies`** | `ARRAY<STRING>` | Top-level columns and nested `STRUCT` fields | Data policy resource names for column masking | `NULL` |
+| **`data_governance_tags`** | `ARRAY<STRUCT<STRING, STRING>>` | Top-level columns and nested `STRUCT` fields | Key-value pairs matching `[("tag_key", "tag_val")]` | `[]` |
 
 ### 1.2 Operational Guidance for Column Settings
 
@@ -69,9 +69,10 @@ Column parameters define field documentation, numerical rounding modes, and poli
 - **Arithmetic Rounding (`'ROUND_HALF_AWAY_FROM_ZERO'`):** Rounds half-way values away from zero, such as rounding 3.5 to 4, and -3.5 to -4. Apply this mode for retail billing, customer invoices, and commercial contracts where standard commercial arithmetic is mandated.
 - **Banker's Rounding (`'ROUND_HALF_EVEN'`):** Rounds half-way values toward the nearest even integer, such as rounding 3.5 to 4, 2.5 to 2, and -2.5 to -2. Apply this mode for high-frequency accounting ledgers, banking clearing houses, and statistical summaries to eliminate positive cumulative drift.
 
-#### `policy_tags`
-- **Scope:** Attach Dataplex policy tags to protect sensitive attributes such as PII, credit card tokens, and salary values.
-- **Access Verification:** BigQuery checks column access against the user role during query planning, masking or denying access based on the tag policy.
+#### `data_policies` and `data_governance_tags`
+- **Data Policies:** Attach data policies with `data_policies = ["projects/PROJECT/locations/LOCATION/dataPolicies/POLICY"]` to mask columns dynamically. The `ALTER TABLE ALTER COLUMN` statement supports appending policies with `+=`.
+- **Data Governance Tags:** Apply fine-grained tags with `data_governance_tags = [("tag_key", "tag_value")]` to track metadata.
+- **REST API Differences:** BigQuery REST API payloads represent column policy tags in `schema.fields[].policyTags.names`. In GoogleSQL DDL statements, engineers cannot set policy tags through a `policy_tags` parameter. Instead, declare `data_policies` or `data_governance_tags`, or manage policy tags through the Cloud Console, API, or `bq` CLI.
 
 ---
 
@@ -89,7 +90,6 @@ Storage and policy parameters dictate data lifecycle windows, scan pruning rules
 | **`require_partition_filter`** | `BOOL` | `TRUE`, `FALSE` | `FALSE` |
 | **`partition_expiration_days`** | `FLOAT64` | Positive decimal or integer day count | `NULL` (never expires) |
 | **`expiration_timestamp`** | `TIMESTAMP` | Explicit UTC timestamp string | `NULL` (never expires) |
-| **`storage_billing_model`** | `STRING` | `'LOGICAL'`, `'PHYSICAL'` | Dataset default or `'LOGICAL'` |
 | **`kms_key_name`** | `STRING` | Cloud KMS crypto key resource path | Google-managed encryption |
 | **`default_rounding_mode`** | `STRING` | `'ROUND_HALF_AWAY_FROM_ZERO'`, `'ROUND_HALF_EVEN'` | `'ROUND_HALF_AWAY_FROM_ZERO'` |
 
@@ -100,12 +100,13 @@ Storage and policy parameters dictate data lifecycle windows, scan pruning rules
 - **Production Standard:** Mandate `require_partition_filter = TRUE` on all production partitioned tables exceeding $10\text{ GB}$. This rule prevents accidental full-table scans that exhaust slot capacity and generate billable byte waste.
 
 #### `partition_expiration_days`
-- **Mechanics:** BigQuery tracks the age of individual partitions based on the partition key value. Partitions older than the expiration threshold undergo automatic background purge by Colossus garbage workers.
-- **Guidance:** Apply partition expiration to bronze ingestion zones, staging scratch tables, and raw telemetry streams (for example, 90 to 365 days). Never configure partition expiration on immutable financial audit ledgers.
+- **Mechanics:** BigQuery tracks the age of individual partitions based on the partition key value. Partitions older than this threshold undergo automatic background purge by Colossus garbage workers.
+- **Guidance:** Apply partition expiration to bronze ingestion zones, staging scratch tables, and raw telemetry streams (for example, 90 to 365 days). Never expire partitions on immutable financial audit ledgers.
 
-#### `storage_billing_model = 'PHYSICAL'`
-- **Cost Foundations:** Logical billing charges for uncompressed table bytes plus time-travel storage. Physical storage billing charges for compressed Capacitor blocks on Colossus plus 7-day time travel and 7-day fail-safe storage.
-- **Guidance:** Switch tables to physical storage billing when column compression ratios exceed $2:1$. Wide analytical tables containing repetitive strings, JSON documents, or sparse arrays often achieve $3:1$ to $5:1$ compression ratios, cutting storage expenditure by 50% or more.
+#### Storage Billing Model (Dataset-Level Setting)
+- **Dataset Configuration:** The `storage_billing_model` parameter (`'LOGICAL'` or `'PHYSICAL'`) is configured at the dataset level via `CREATE SCHEMA ... OPTIONS (storage_billing_model = 'PHYSICAL')` or `ALTER SCHEMA ... SET OPTIONS (storage_billing_model = 'PHYSICAL')`. Tables inherit this configuration from their parent dataset.
+- **Cost Foundations:** Logical billing charges for uncompressed active bytes plus time-travel storage. Physical storage billing charges for compressed Capacitor blocks on Colossus plus 7-day time travel and 7-day fail-safe storage.
+- **Guidance:** Switch datasets to physical storage billing when column compression ratios exceed $2:1$. Wide analytical tables containing repetitive strings or nested JSON records often achieve $3:1$ to $5:1$ compression ratios, cutting storage expenditure significantly.
 
 #### `kms_key_name`
 - **Security Compliance:** Binds the table to an external customer-managed encryption key (CMEK) managed in Cloud KMS.
@@ -226,10 +227,11 @@ SELECT table_name, option_name, option_type, option_value
 -- Inspect all column-level options across a dataset
 SELECT table_name,
        column_name,
-       option_name,
-       option_type,
-       option_value
-  FROM `enterprise.warehouse.INFORMATION_SCHEMA.COLUMN_OPTIONS`
+       field_path,
+       description,
+       rounding_mode,
+       policy_tags
+  FROM `enterprise.warehouse.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS`
  WHERE table_name = 'orders_ledger';
 ```
 

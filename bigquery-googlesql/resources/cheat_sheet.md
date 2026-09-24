@@ -61,7 +61,9 @@ GoogleSQL provides native binary `JSON` support, permitting schema-agnostic extr
 | **Extract Integer** | `INT64(json_col.user.age)` | `INT64` |
 | **Extract Float** | `FLOAT64(json_col.metrics.score)` | `FLOAT64` |
 | **Extract Boolean** | `BOOL(json_col.flags.is_active)` | `BOOL` |
-| **Array Extraction** | `JSON_EXTRACT_ARRAY(json_col.items)` | `ARRAY<STRING>` |
+| **Array Extraction** | `JSON_QUERY_ARRAY(json_col.items)` | `ARRAY<JSON>` |
+| **String Array** | `JSON_VALUE_ARRAY(json_col.tags)` | `ARRAY<STRING>` |
+| **Lax Integer** | `LAX_INT64(json_col.user.age)` | `INT64` |
 | **Serialize to Text** | `TO_JSON_STRING(struct_expr)` | `STRING` |
 
 ### 1.4 Vector Search and Nearest Neighbor Retrieval
@@ -70,8 +72,8 @@ Vector search calculates approximate nearest neighbor distances across high-dime
 | Search Pattern | Invocation Syntax | Primary Options |
 | :--- | :--- | :--- |
 | **Create Vector Index** | `CREATE VECTOR INDEX idx ON tbl(col) OPTIONS (...)` | `index_type = 'IVF'`, `distance_type = 'COSINE'` |
-| **Batch Vector Search** | `VECTOR_SEARCH(TABLE base, 'vec', TABLE query, 'vec')` | `top_k => 10`, `distance_type => 'COSINE'` |
-| **Inline Vector Search** | `VECTOR_SEARCH(TABLE base, 'vec', (query_subquery))` | `top_k => 5`, `options => '{"fraction_lists_to_search": 0.05}'` |
+| **Batch Vector Search** | `VECTOR_SEARCH(TABLE base, 'vec', TABLE q, query_column_to_search => 'vec')` | `top_k => 10`, `distance_type => 'COSINE'` |
+| **Inline Vector Search** | `VECTOR_SEARCH(TABLE base, 'vec', query_value => [0.12, 0.45, ...])` | `top_k => 5`, `distance_type => 'COSINE'` |
 
 ---
 
@@ -191,7 +193,7 @@ System views report catalog schemas, storage bytes, query runtime telemetry, and
 | **Partition Skew** | `PARTITIONS` | `dataset.INFORMATION_SCHEMA.PARTITIONS` | Filter out `__NULL__` and `__UNPARTITIONED__` |
 | **Nested Structs** | `COLUMN_FIELD_PATHS` | `dataset.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS` | Flattens nested paths (`user.address.street`) |
 | **Table Options** | `TABLE_OPTIONS` | `dataset.INFORMATION_SCHEMA.TABLE_OPTIONS` | Check `require_partition_filter` and retention days |
-| **Column Options** | `COLUMN_OPTIONS` | `dataset.INFORMATION_SCHEMA.COLUMN_OPTIONS` | Check `description`, `rounding_mode`, `policy_tags` |
+| **Column Options** | `COLUMN_FIELD_PATHS` | `dataset.INFORMATION_SCHEMA.COLUMN_FIELD_PATHS` | Check `description`, `rounding_mode`, `policy_tags` |
 | **Slot Commitments** | `RESERVATIONS` | `region-*.INFORMATION_SCHEMA.RESERVATIONS` | Track baseline slots and autoscale ceilings |
 
 ---
@@ -207,6 +209,22 @@ The table below outlines built-in predictive modeling routines:
 | **Batch Inference** | `SELECT * FROM ML.PREDICT(MODEL m, (SELECT ...))` | Generates predictions across input feature sets |
 | **Time Series** | `SELECT * FROM ML.FORECAST(MODEL m, STRUCT(30 AS horizon))` | Computes forward forecasts with confidence bands |
 | **Feature Weights** | `SELECT * FROM ML.WEIGHTS(MODEL m)` | Inspects linear coefficients and categorical offsets |
+
+### 8.1 Model-Less Direct Inference (`AI.*` Family)
+
+The `AI.*` function family executes foundation model inference directly across table rows without declaring relational model objects.
+
+| Routine | Purpose | Invocation Syntax | Key Parameters |
+| :--- | :--- | :--- | :--- |
+| **`AI.GENERATE`** | LLM text generation | `AI.GENERATE(prompt, connection_id => '...')` | `output_schema`, `temperature`, `max_output_tokens` |
+| **`AI.EMBED`** | Vector embedding generation | `AI.EMBED(text, connection_id => '...')` | `model_name`, `task_type` |
+| **`AI.SIMILARITY`** | Vector distance metric | `AI.SIMILARITY(vec_a, vec_b, metric => 'COSINE')` | `metric => 'COSINE' \| 'EUCLIDEAN'` |
+| **`AI.CLASSIFY`** | Zero-shot text classification | `AI.CLASSIFY(text, labels => [...], connection_id => '...')` | Target category list |
+| **`AI.SCORE`** | Quality scoring | `AI.SCORE(text, connection_id => '...')` | Normalized float score output |
+| **`AI.FORECAST`** | Foundation time-series model | `AI.FORECAST(TABLE tbl, timestamp_col => '...', ...)` | Uses TimesFM foundation model |
+| **`AI.PREDICT`** | Foundation tabular prediction | `AI.PREDICT(TABLE tbl, label_col => '...', ...)` | Uses TabFM foundation model |
+| **`AI.DETECT_ANOMALIES`** | Foundation anomaly detection | `AI.DETECT_ANOMALIES(TABLE tbl, ...)` | Multivariate anomaly identification |
+| **`AI.SEARCH`** | Direct semantic search | `AI.SEARCH(TABLE tbl, 'col', 'query', ...)` | Searches generated embedding columns |
 
 ---
 
@@ -235,5 +253,102 @@ Engineers adhere to strict service thresholds during analytical pipeline design:
 | **Query Duration** | 6 hours maximum execution timeout | Split complex pipelines into intermediate tables |
 | **Query String Size** | 1 megabyte maximum text length | Parameterize queries and reference shared views |
 | **Referenced Tables** | 1,000 tables maximum per SQL query | Union intermediate tables before final analysis |
+
+---
+
+## 11. Common Semantic Gotchas and Execution Pitfalls
+
+The table below summarizes common traps and their corrective patterns:
+
+| Operational Domain | Failure Mode / Symptom | Root Mechanism | Recommended Production Pattern |
+| :--- | :--- | :--- | :--- |
+| **FinOps & Cost** | `LIMIT` does not reduce billable scan bytes | `LIMIT` evaluates at Stage 12 after full storage scan | Project explicit columns; filter on partition/cluster keys |
+| **Three-Valued Logic** | `NOT IN (subquery)` returns zero rows | Subquery contains `NULL`, yielding `UNKNOWN` boolean | Use `NOT EXISTS (SELECT 1 ...)` or anti-join |
+| **Array Unnesting** | Comma `UNNEST` silently drops parent rows | Inner cross join drops rows with empty or `NULL` arrays | Use `FROM table LEFT JOIN UNNEST(arr)` |
+| **Array Subscripting** | `arr[OFFSET(i)]` halts query at runtime | Index out-of-bounds raises query failure | Use `arr[SAFE_OFFSET(i)]` or `arr[SAFE_ORDINAL(i)]` |
+| **Numeric Division** | `x / 0` halts query; `5 / 2` yields `2.5` | `/` evaluates `FLOAT64` and fails on zero divisors | Use `SAFE_DIVIDE(x, y)`; use `DIV(x, y)` for `INT64` division |
+| **String Operations** | `CONCAT('a', NULL)` evaluates to `NULL` | String concatenation propagates nulls strictly | Wrap in `IFNULL(col, '')` or use `FORMAT('%s%s', ...)` |
+| **Temporal Policy** | `CURRENT_DATE()` off-by-one calendar drift | Default timezone is UTC | Standardize queries on UTC; pass civil zone only if documented |
+| **Date Arithmetic** | `DATE_DIFF` returns 1 month for a 1-day interval | Function counts crossed calendar boundaries, not elapsed time | Use day-level arithmetic for precise durations |
+| **Table Constraints** | Duplicate keys pass into tables with `PRIMARY KEY` | Primary and foreign keys are `NOT ENFORCED` on writes | Validate upstream or deduplicate with `QUALIFY ROW_NUMBER() = 1` |
+
+---
+
+## 12. Property Graph Query Language (GQL) Syntax
+
+GoogleSQL executes graph queries over relational tables configured as property graphs.
+
+| Operation | Statement Syntax | Key Semantics |
+| :--- | :--- | :--- |
+| **Create Graph** | `CREATE PROPERTY GRAPH g NODE TABLES (...) EDGE TABLES (...)` | Defines graph model over relational tables |
+| **Query Pattern** | `SELECT * FROM GRAPH_TABLE(g MATCH (a)-[e]->(b) RETURN a.id, b.id)` | Queries graph structures within SQL |
+| **Path Quantifiers**| `MATCH p = (a)-[e]->{1, 3}(b)` | Bounded variable-length traversal |
+| **Path Filters** | `WHERE IS_ACYCLIC(p) AND ALL_DIFFERENT(NODES(p))` | Cycle suppression and unique element assertions |
+| **Shortest Paths** | `MATCH SHORTEST (a)-[e]->+(b)` | Evaluates minimal hop trajectories |
+| **Cheapest Paths** | `MATCH ANY CHEAPEST (a)-[e COST weight]->{1, 5}(b)` | Evaluates minimum cumulative edge weight |
+| **Graph Predicates**| `WHERE a IS SOURCE OR b IS DESTINATION OR SAME(a, b)` | Validates element directionality and identity |
+| **Graph Functions** | `NODES(p)`, `EDGES(p)`, `PATH_LENGTH(p)`, `LABELS(n)` | Extracts arrays of vertices, edges, and counts |
+| **Graph Expand** | `SELECT * FROM GRAPH_EXPAND('FinGraph')` | TVF that expands graph edges into relational rows |
+
+---
+
+## 13. Procedural Scripting Statements
+
+Procedural SQL orchestrates multi-step workflows, variable states, and conditional branching within scripts.
+
+| Scripting Construct | Canonical Syntax | Operational Behavior |
+| :--- | :--- | :--- |
+| **Block Scoping** | `BEGIN ... END;` | Defines variable and exception scope boundaries |
+| **Variable Decl** | `DECLARE var_name INT64 DEFAULT 0;` | Declares typed session variables |
+| **Tuple Assignment**| `SET (x, y) = (10, 'alpha');` | Assigns scalar or tuple values atomically |
+| **Branching** | `IF cond THEN ... ELSEIF cond THEN ... END IF;` | Conditional execution path selection |
+| **Iteration Loop** | `LOOP ... IF done THEN LEAVE; END IF; END LOOP;` | Unbounded iterative loop with manual break |
+| **While Loop** | `WHILE cond DO ... END WHILE;` | Pre-checked conditional loop execution |
+| **Repeat Loop** | `REPEAT ... UNTIL cond END REPEAT;` | Post-checked loop executing at least once |
+| **Cursor Loop** | `FOR row IN (SELECT id FROM tbl) DO ... END FOR;` | Iterates over relational query results |
+| **Dynamic SQL** | `EXECUTE IMMEDIATE query_str USING param INTO var;` | Compiles and executes parameterized SQL at runtime |
+| **Exception Block** | `BEGIN ... EXCEPTION WHEN ERROR THEN ... END;` | Traps runtime errors and executes recovery |
+| **User Exception** | `RAISE USING MESSAGE = 'Custom error';` | Raises explicit exception terminating block |
+| **Assertion Gating**| `ASSERT condition AS 'Assertion failed description';` | Validates pipeline data invariants |
+
+---
+
+## 14. Administrative Procedures and System Variables
+
+BigQuery exposes administrative routines under `BQ.*` and system telemetry through `@@` variables.
+
+### 14.1 System Procedures (`BQ.*`)
+
+System procedures perform operational administration across jobs, sessions, and caches.
+
+| System Procedure | Signature and Arguments | Administrative Purpose |
+| :--- | :--- | :--- |
+| **`BQ.ABORT_SESSION`** | `CALL BQ.ABORT_SESSION('session_id');` | Terminates active multi-statement session |
+| **`BQ.JOBS.CANCEL`** | `CALL BQ.JOBS.CANCEL('job_id');` | Cancels running query job asynchronously |
+| **`BQ.CANCEL_INDEX_ALTERATION`** | `CALL BQ.CANCEL_INDEX_ALTERATION('tbl', 'idx');` | Halts vector or search index mutation job |
+| **`BQ.REFRESH_EXTERNAL_METADATA_CACHE`** | `CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('tbl');` | Synchronizes metadata cache for BigLake tables |
+| **`BQ.REFRESH_MATERIALIZED_VIEW`** | `CALL BQ.REFRESH_MATERIALIZED_VIEW('mv_name');` | Forces immediate refresh of materialized view |
+| **`BQ.SHOW_GRAPH_EXPAND_SCHEMA`** | `CALL BQ.SHOW_GRAPH_EXPAND_SCHEMA('graph', out);` | Displays column schema emitted by `GRAPH_EXPAND` |
+
+### 14.2 System Variables (`@@*`)
+
+System variables provide contextual metadata and execution telemetry within procedural scripts.
+
+| Variable Name | Data Type | Contextual Value |
+| :--- | :--- | :--- |
+| **`@@project_id`** | `STRING` | Current billing project identifier |
+| **`@@dataset_id`** | `STRING` | Default dataset identifier for unadorned references |
+| **`@@current_job_id`** | `STRING` | Job identifier of the currently executing statement |
+| **`@@last_job_id`** | `STRING` | Job identifier of the immediately preceding statement |
+| **`@@row_count`** | `INT64` | Rows modified by the most recent DML statement |
+| **`@@time_zone`** | `STRING` | Session default time zone for timestamp parsing |
+| **`@@script.bytes_billed`** | `INT64` | Cumulative billable bytes across current script |
+| **`@@script.slot_ms`** | `INT64` | Cumulative slot execution milliseconds in script |
+| **`@@script.num_child_jobs`** | `INT64` | Number of child jobs executed within script |
+| **`@@error.message`** | `STRING` | Error message captured inside exception block |
+| **`@@error.statement_text`** | `STRING` | Text of SQL statement that raised exception |
+| **`@@error.formatted_stack_trace`** | `STRING` | Complete call stack of procedural error |
+
+
 
 

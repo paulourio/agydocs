@@ -1,0 +1,30 @@
+# {{TOOL_DISPLAY_NAME}} Engine Architecture Reference
+
+This reference documents the physical storage formats, compute allocation, worker scheduling, and memory topology of {{TOOL_DISPLAY_NAME}}.
+
+---
+
+## 1. Physical Storage and Encodings
+
+{{TOOL_DISPLAY_NAME}} organizes data into optimized storage structures:
+- **Columnar Layouts:** Fields are stored independently with dictionary and run-length encodings to minimize I/O bus saturation.
+- **Compression:** Data blocks apply lightweight compression algorithms calibrated for fast decompression during sequential scans.
+- **Partition Layout:** Data files are partitioned across physical directory boundaries, enabling metadata-level file pruning during query evaluation.
+
+---
+
+## 2. Compute Allocation and Worker Scheduling
+
+Execution plans compile into directed acyclic graphs executed across distributed worker pools:
+- **Worker Slots:** Compute units process intermediate data partitions concurrently.
+- **Shuffle Network:** Data redistribution occurs over high-speed networks during joins and aggregations.
+- **Memory Thresholds:** Each worker allocates a fixed memory quota for hash tables and sorting buffers.
+
+---
+
+## 3. Persistent Disk Spills and Straggler Mitigation
+
+When intermediate partition sizes exceed allocated worker memory:
+- **Spill Behavior:** Unsorted or non-fitting partitions spill to persistent local disk storage.
+- **Performance Impact:** Disk spills introduce orders-of-magnitude latency increases compared to in-memory processing.
+- **Mitigation Protocol:** Ensure join keys are evenly distributed, filter unneeded partitions early, and avoid cartesian product transformations.

@@ -1,0 +1,24 @@
+# {{TOOL_DISPLAY_NAME}} Anti-Patterns Catalog
+
+This catalog documents mechanical failure modes, anti-patterns, and corrected production patterns for {{TOOL_DISPLAY_NAME}}.
+
+---
+
+## 1. Dialect Bleed and Negative Lecturing
+- **Anti-Pattern:** Emitting foreign syntax tokens or adding negative explanations ("Clause X is not supported in {{TOOL_DISPLAY_NAME}}").
+- **Failure Mechanism:** Token priming causes language models to emit the forbidden token during subsequent turns.
+- **Corrected Pattern:** Apply complete omission. Purge foreign syntax completely and document only supported native patterns.
+
+---
+
+## 2. Wildcard Projection Across Wide Tables
+- **Anti-Pattern:** Emitting `SELECT *` against columnar physical tables.
+- **Failure Mechanism:** Forces the engine to read and decompress every column on disk, saturating worker memory and bus bandwidth.
+- **Corrected Pattern:** Project explicit attribute lists containing only required fields.
+
+---
+
+## 3. Unsargable Partition Predicates
+- **Anti-Pattern:** Wrapping partition keys in scalar functions (`WHERE DATE(event_ts) = ...`).
+- **Failure Mechanism:** Prevents metadata-level file pruning, triggering a full table scan.
+- **Corrected Pattern:** Use bounded comparison operators on the raw partition attribute (`WHERE event_ts >= ... AND event_ts < ...`).

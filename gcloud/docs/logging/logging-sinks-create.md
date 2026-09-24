@@ -1,0 +1,180 @@
+# gcloud logging sinks create
+
+## NAME
+
+    gcloud logging sinks create - create a log sink
+
+## SYNOPSIS
+
+```bash
+    gcloud logging sinks create SINK_NAME DESTINATION
+        [--custom-writer-identity=SERVICE_ACCOUNT_EMAIL]
+        [--description=DESCRIPTION] [--disabled]
+        [--exclusion=[description=DESCRIPTION],
+          [disabled=DISABLED],[filter=FILTER],[name=NAME]] [--include-children]
+        [--intercept-children] [--log-filter=LOG_FILTER]
+        [--use-partitioned-tables]
+        [--billing-account=BILLING_ACCOUNT_ID | --folder=FOLDER_ID
+          | --organization=ORGANIZATION_ID | --project=PROJECT_ID]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Create a log sink used to route log entries to a destination. The sink
+    routes all log entries that match its --log-filter flag.
+
+    An empty filter matches all logs.
+
+    Detailed information about filters can be found at:
+    https://cloud.google.com/logging/docs/view/logging-query-language
+
+    The sink's destination can be a Cloud Logging log bucket, a Cloud Storage
+    bucket, a BigQuery dataset, a Cloud Pub/Sub topic, or a Google Cloud
+    project.
+
+    The destination must already exist.
+
+### If creating a log sink to route logs to a destination outside of Cloud
+
+    Logging or to a Cloud Logging log bucket in another project, the log sink's
+    service account must be granted permission to write to the destination.
+
+    For more information about destination permissions, see:
+    https://cloud.google.com/logging/docs/export/configure_export_v2#dest-auth
+
+### Matching log entries are routed to the destination after the sink is
+
+    created.
+
+## EXAMPLES
+
+    To route all Google Compute Engine logs to BigQuery, run:
+
+        $ gcloud logging sinks create my-bq-sink \
+            bigquery.googleapis.com/projects/my-project/datasets/\
+        my_dataset --log-filter='resource.type="gce_instance"'
+
+    To route "syslog" from App Engine Flexible to a Cloud Storage bucket, run:
+
+        $ gcloud logging sinks create my-gcs-sink \
+            storage.googleapis.com/my-bucket \
+            --log-filter='logName="projects/my-project/appengine.googleapis.\
+        com%2Fsyslog"'
+
+    To route Google App Engine logs with ERROR severity, run:
+
+        $ gcloud logging sinks create my-error-logs \
+            bigquery.googleapis.com/projects/my-project/datasets/\
+        my_dataset --log-filter='resource.type="gae_app" AND severity=ERROR'
+
+    To route all logs to a log bucket in a different project, run:
+
+        $ gcloud logging sinks create my-sink \
+            logging.googleapis.com/projects/my-central-project/locations/\
+        global/buckets/my-central-bucket
+
+    To route all logs to another project, run:
+
+        $ gcloud logging sinks create my-sink \
+            logging.googleapis.com/projects/my-destination-project
+
+## POSITIONAL ARGUMENTS
+
+     SINK_NAME
+        The name for the sink.
+
+     DESTINATION
+        The destination for the sink.
+
+## FLAGS
+
+     --custom-writer-identity=SERVICE_ACCOUNT_EMAIL
+        Writer identity for the sink. This flag can only be used if the
+        destination is a log bucket in a different project. The writer identity
+        is automatically generated when it is not provided for a sink.
+
+     --description=DESCRIPTION
+        Description of the sink.
+
+     --disabled
+        Sink will be disabled. Disabled sinks do not export logs.
+
+     --exclusion=[description=DESCRIPTION],[disabled=DISABLED],[filter=FILTER],[name=NAME]
+        Specify an exclusion filter for a log entry that is not to be exported.
+        This flag can be repeated.
+
+        The name and filter attributes are required. The following keys are
+        accepted:
+
+         name
+            An identifier, such as load-balancer-exclusion. Identifiers are
+            limited to 100 characters and can include only letters, digits,
+            underscores, hyphens, and periods.
+
+         description
+            A description of this exclusion.
+
+         filter
+            An advanced log filter that matches the log entries to be excluded.
+
+         disabled
+            If this exclusion should be disabled and not exclude the log
+            entries.
+
+     --include-children
+        Whether to export logs from all child projects and folders. Only
+        applies to sinks for organizations and folders.
+
+     --intercept-children
+        Whether to intercept logs from all child projects and folders. Only
+        applies to sinks for organizations and folders.
+
+     --log-filter=LOG_FILTER
+        A filter expression for the sink. If present, the filter specifies
+        which log entries to export.
+
+     Settings for sink exporting data to BigQuery.
+
+       --use-partitioned-tables
+          If specified, use BigQuery's partitioned tables. By default, Logging
+          creates dated tables based on the log entries' timestamps, e.g.
+          'syslog_20170523'. Partitioned tables remove the suffix and special
+          query syntax
+          (https://cloud.google.com/bigquery/docs/querying-partitioned-tables)
+          must be used.
+
+     At most one of these can be specified:
+
+       --billing-account=BILLING_ACCOUNT_ID
+          Billing account of the sink to create.
+
+       --folder=FOLDER_ID
+          Folder of the sink to create.
+
+       --organization=ORGANIZATION_ID
+          Organization of the sink to create.
+
+       --project=PROJECT_ID
+          Project of the sink to create.
+
+          The Google Cloud project ID to use for this invocation. If omitted,
+          then the current project is assumed; the current project can be
+          listed using gcloud config list --format='text(core.project)' and can
+          be set using gcloud config set project PROJECTID.
+
+          --project and its fallback core/project property play two roles in
+          the invocation. It specifies the project of the resource to operate
+          on. It also specifies the project for API enablement check, quota,
+          and billing. To specify a different project for quota and billing,
+          use --billing-project or billing/quota_project property.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

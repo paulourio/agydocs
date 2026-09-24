@@ -1,0 +1,53 @@
+# gcloud run services replace
+
+## NAME
+
+    gcloud run services replace - create or replace a service from a YAML
+        service specification
+
+## SYNOPSIS
+
+```bash
+    gcloud run services replace FILE [--async] [--dry-run] [--region=REGION]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Creates or replaces a service from a YAML service specification.
+
+## EXAMPLES
+
+    To replace the specification for a service defined in myservice.yaml
+
+        $ gcloud run services replace myservice.yaml
+
+## POSITIONAL ARGUMENTS
+
+     FILE
+        The absolute path to the YAML file with a Knative service definition
+        for the service to update or deploy.
+
+## FLAGS
+
+     --async
+        Return immediately, without waiting for the operation in progress to
+        complete.
+
+     --dry-run
+        If set to true, only validates the configuration. The configuration
+        will not be applied.
+
+     --region=REGION
+        Region in which the resource can be found. Alternatively, set the
+        property [run/region].
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

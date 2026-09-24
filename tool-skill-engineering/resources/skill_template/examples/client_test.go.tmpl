@@ -1,0 +1,49 @@
+package examples
+
+import (
+	"context"
+	"testing"
+	"time"
+)
+
+func TestNewClient(t *testing.T) {
+	_, err := NewClient(Config{})
+	if err == nil {
+		t.Fatal("expected error for empty endpoint")
+	}
+
+	cli, err := NewClient(Config{Endpoint: "mock://localhost:9000"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cli.config.Timeout != 30*time.Second {
+		t.Errorf("expected default timeout 30s, got %v", cli.config.Timeout)
+	}
+}
+
+func TestValidateColumnNaming(t *testing.T) {
+	colValid := ColumnMetadata{Name: "user_id", DataType: "INT64"}
+	if err := ValidateColumnNaming(colValid); err != nil {
+		t.Errorf("expected valid, got: %v", err)
+	}
+
+	colInvalid := ColumnMetadata{Name: "user_name", DataType: "STRING"}
+	if err := ValidateColumnNaming(colInvalid); err == nil {
+		t.Error("expected error for non-standard suffix user_name")
+	}
+}
+
+func TestExecuteQuery(t *testing.T) {
+	cli, err := NewClient(Config{Endpoint: "mock://localhost:9000"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	res, err := cli.ExecuteQuery(context.Background(), "SELECT user_id FROM events_fact")
+	if err != nil {
+		t.Fatalf("unexpected execution error: %v", err)
+	}
+	if res.RowsScanned != 10 {
+		t.Errorf("expected 10 rows, got %d", res.RowsScanned)
+	}
+}

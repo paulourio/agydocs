@@ -1,0 +1,48 @@
+# gcloud pubsub subscriptions delete
+
+## NAME
+
+    gcloud pubsub subscriptions delete - deletes one or more Cloud Pub/Sub
+        subscriptions
+
+## SYNOPSIS
+
+```bash
+    gcloud pubsub subscriptions delete SUBSCRIPTION [SUBSCRIPTION ...]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Deletes one or more Cloud Pub/Sub subscriptions.
+
+## POSITIONAL ARGUMENTS
+
+     Subscription resource - One or more subscriptions to delete. This
+     represents a Cloud resource. (NOTE) Some attributes are not given
+     arguments in this group but can be set in other ways.
+
+     To set the project attribute:
+      * provide the argument subscription on the command line with a fully
+        specified name;
+      * provide the argument --project on the command line;
+      * set the property core/project.
+
+     This must be specified.
+
+       SUBSCRIPTION [SUBSCRIPTION ...]
+          IDs of the subscriptions or fully qualified identifiers for the
+          subscriptions.
+
+          To set the subscription attribute:
+          + provide the argument subscription on the command line.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

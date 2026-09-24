@@ -1,0 +1,66 @@
+# gcloud auth print-access-token
+
+## NAME
+
+    gcloud auth print-access-token - print an access token for the specified
+        account
+
+## SYNOPSIS
+
+```bash
+    gcloud auth print-access-token [ACCOUNT] [--lifetime=LIFETIME]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Print an access token for the specified account. See RFC6749
+    (https://tools.ietf.org/html/rfc6749) for more information about access
+    tokens.
+
+    Note that token itself may not be enough to access some services. If you
+    use the token with curl or similar tools, you may see permission errors
+    similar to "API has not been used in project 32555940559 before or it is
+    disabled.". If it happens, you may need to provide a quota project in the
+    "X-Goog-User-Project" header. For example,
+
+        $ curl -H "X-Goog-User-Project: your-project" \
+            -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+            foo.googleapis.com
+
+    The identity that granted the token must have the serviceusage.services.use
+    permission on the provided project. See
+    https://cloud.google.com/apis/docs/system-parameters for more information.
+
+## EXAMPLES
+
+    To print access tokens:
+
+        $ gcloud auth print-access-token
+
+## POSITIONAL ARGUMENTS
+
+     [ACCOUNT]
+        Account to get the access token for. If not specified, the current
+        active account will be used.
+
+## FLAGS
+
+     --lifetime=LIFETIME
+        Access token lifetime. The default access token lifetime is 3600
+        seconds, but you can use this flag to reduce the lifetime or extend it
+        up to 43200 seconds (12 hours). The org policy constraint
+        constraints/iam.allowServiceAccountCredentialLifetimeExtension must be
+        set if you want to extend the lifetime beyond 3600 seconds. Note that
+        this flag is for service account impersonation only, so it must be used
+        together with the --impersonate-service-account flag.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

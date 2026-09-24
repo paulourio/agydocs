@@ -25,7 +25,7 @@ OPTIONS (
   description               = 'Canonical customer order ledger',
   require_partition_filter  = TRUE,
   partition_expiration_days = 730
-)
+);
 ```
 
 ---
@@ -79,7 +79,7 @@ CREATE TABLE `enterprise.crm.customers`
   PRIMARY KEY (customer_id) NOT ENFORCED,
   CONSTRAINT fk_companies FOREIGN KEY (company_id)
   REFERENCES `enterprise.crm.companies` (company_id) NOT ENFORCED
-)
+);
 ```
 
 - **`NOT NULL`:** Rejects write records containing `NULL` values for the declared column.
@@ -93,7 +93,7 @@ Column definitions accept an `OPTIONS(...)` block declaring field metadata and a
 
 - **`description`:** String documentation describing attribute semantics. Supported on top-level columns and nested `STRUCT` attributes.
 - **`rounding_mode`:** Arithmetic rounding behavior for `NUMERIC` and `BIGNUMERIC` types (`'ROUND_HALF_AWAY_FROM_ZERO'` vs `'ROUND_HALF_EVEN'`).
-- **`policy_tags`:** Array of Dataplex taxonomy tag resource identifiers for column security and dynamic data masking.
+- **`data_policies`:** Array of Dataplex policy resource identifiers for column security and dynamic data masking.
 
 For the exhaustive catalog of all field and table parameters with performance guidance and alteration syntax, consult the [Table and Field Parameters Reference](table_and_field_options.md).
 
@@ -115,10 +115,9 @@ OPTIONS (
   description                       = 'Primary enterprise general ledger repository',
   default_table_expiration_days     = 1095,
   default_partition_expiration_days = 730,
-  kms_key_name                      = 'projects/corp-sec/locations/us-east4/keyRings/hsm/cryptoKeys/ledger-key',
-  storage_billing_model             = 'PHYSICAL',
-  max_staleness                     = INTERVAL '0 1:0:0' DAY TO SECOND
-)
+  default_kms_key_name              = 'projects/corp-sec/locations/us-east4/keyRings/hsm/cryptoKeys/ledger-key',
+  storage_billing_model             = 'PHYSICAL'
+);
 ```
 
 ### 2.2 Operational Dataset Invariants
@@ -156,7 +155,7 @@ PARTITION BY ingest_date
 OPTIONS (
   require_partition_filter  = TRUE,
   partition_expiration_days = 180
-)
+);
 ```
 
 - **Partitioning Strategies:**
@@ -226,7 +225,7 @@ AS (
          `enterprise.analytics.customer_orders` AS o
          ON c.customer_id = o.customer_id
    WHERE o.order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 90 DAY)
-)
+);
 ```
 
 ### 4.2 Materialized Views and Automatic Query Rewriting
@@ -249,7 +248,7 @@ AS (
          ROUND(SUM(order_amount), 2) AS daily_revenue
     FROM `enterprise.analytics.customer_orders`
    GROUP BY report_date, customer_id
-)
+);
 ```
 
 - **Incremental Refresh:** BigQuery updates materialized view partitions when underlying base table partitions absorb incoming data.
@@ -303,7 +302,7 @@ OPTIONS (
 
 - **Index Types:** `IVF` (Inverted File Index) partitions high-dimensional vectors into Voronoi cells to accelerate nearest neighbor queries.
 - **Distance Metrics:** Supported distance types include `COSINE`, `EUCLIDEAN`, and `DOT_PRODUCT`.
-- **Vector Requirements:** The indexed column must represent an `ARRAY<FLOAT64>` or `ARRAY<FLOAT32>` containing consistent dimensional lengths across all rows.
+- **Vector Requirements:** The indexed column must represent an `ARRAY<FLOAT64>` containing consistent dimensional lengths across all rows.
 
 ---
 
@@ -368,7 +367,7 @@ AS (
     FROM `enterprise.analytics.customer_orders`
    GROUP BY customer_id
   HAVING lifetime_value >= min_spend
-)
+);
 ```
 
 Queries invoke TVFs directly within the `FROM` clause: `SELECT customer_id, customer_name, lifetime_value FROM enterprise.analytics.get_high_value_customers(10000.0)`.
@@ -403,7 +402,7 @@ BEGIN
    WHERE order_date < cutoff_date;
 
   COMMIT TRANSACTION;
-END
+END;
 ```
 
 ---
@@ -450,10 +449,12 @@ ALTER TABLE `enterprise.analytics.customer_orders`
 
 -- Modifying Column Attributes
 ALTER TABLE `enterprise.analytics.customer_orders`
-  ALTER COLUMN shipping_cost
-    DROP DEFAULT,
-  ALTER COLUMN tracking_number
-    SET DATA TYPE STRING,
+  ALTER COLUMN shipping_cost DROP DEFAULT;
+
+ALTER TABLE `enterprise.analytics.customer_orders`
+  ALTER COLUMN tracking_number SET DATA TYPE STRING;
+
+ALTER TABLE `enterprise.analytics.customer_orders`
   DROP COLUMN IF EXISTS legacy_notes;
 
 -- Renaming Columns

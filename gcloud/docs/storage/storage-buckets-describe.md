@@ -1,0 +1,54 @@
+# gcloud storage buckets describe
+
+## NAME
+
+    gcloud storage buckets describe - describes Cloud Storage buckets
+
+## SYNOPSIS
+
+```bash
+    gcloud storage buckets describe URL [--additional-headers=HEADER=VALUE]
+        [--raw] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Describe a Cloud Storage bucket.
+
+## EXAMPLES
+
+    Describe a Google Cloud Storage bucket named "my-bucket":
+
+        $ gcloud storage buckets describe gs://my-bucket
+
+    Describe bucket with JSON formatting, only returning the "name" key:
+
+        $ gcloud storage buckets describe gs://my-bucket \
+            --format="json(name)"
+
+## POSITIONAL ARGUMENTS
+
+     URL
+        Specifies URL of bucket to describe.
+
+## FLAGS
+
+     --additional-headers=HEADER=VALUE
+        Includes arbitrary headers in storage API calls. Accepts a comma
+        separated list of key=value pairs, e.g. header1=value1,header2=value2.
+        Overrides the default storage/additional_headers property value for
+        this command invocation.
+
+     --raw
+        Shows metadata in the format returned by the API instead of
+        standardizing it.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

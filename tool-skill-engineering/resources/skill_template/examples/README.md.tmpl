@@ -1,0 +1,31 @@
+# {{TOOL_DISPLAY_NAME}} Reference SDK Clients and Examples
+
+This directory provides working reference implementations demonstrating SDK client connections, naming taxonomy checks, and automated unit test coverage for {{TOOL_DISPLAY_NAME}}.
+
+---
+
+## 1. Directory Structure
+
+```
+examples/
+├── README.md              # Setup and verification instructions
+├── dot_formatter.toml     # Canonical formatter configuration
+├── go.mod                 # Go module definition
+├── client.go              # Go client implementation
+├── client_test.go         # Go client unit tests
+├── client.py              # Python client implementation
+└── test_client.py         # Python client unit tests
+```
+
+---
+
+## 2. Verification Commands
+
+```bash
+# Verify Go client
+go -C examples vet ./...
+go -C examples test -v -count=1 ./...
+
+# Verify Python client
+python3 -m unittest discover -s examples -p "test_*.py"
+```

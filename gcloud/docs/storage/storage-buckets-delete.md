@@ -1,0 +1,56 @@
+# gcloud storage buckets delete
+
+## NAME
+
+    gcloud storage buckets delete - deletes Cloud Storage buckets
+
+## SYNOPSIS
+
+```bash
+    gcloud storage buckets delete URLS [URLS ...]
+        [--additional-headers=HEADER=VALUE] [--continue-on-error, -c]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Deletes one or more Cloud Storage buckets.
+
+## EXAMPLES
+
+    Delete a Google Cloud Storage bucket named "my-bucket":
+
+        $ gcloud storage buckets delete gs://my-bucket
+
+    Delete two buckets:
+
+        $ gcloud storage buckets delete gs://my-bucket gs://my-other-bucket
+
+## POSITIONAL ARGUMENTS
+
+     URLS [URLS ...]
+        Specifies the URLs of the buckets to delete.
+
+## FLAGS
+
+     --additional-headers=HEADER=VALUE
+        Includes arbitrary headers in storage API calls. Accepts a comma
+        separated list of key=value pairs, e.g. header1=value1,header2=value2.
+        Overrides the default storage/additional_headers property value for
+        this command invocation.
+
+     --continue-on-error, -c
+        If any operations are unsuccessful, the command will exit with a
+        non-zero exit status after completing the remaining operations. This
+        flag takes effect only in sequential execution mode (i.e. processor and
+        thread count are set to 1). Parallelism is default.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

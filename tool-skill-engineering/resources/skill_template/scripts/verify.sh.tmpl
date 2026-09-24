@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# {{TOOL_DISPLAY_NAME}} Skill Verification Smoke Test
+# Validates shell syntax, SDK example implementations, and naming invariants.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
+EXAMPLES_DIR="$SKILL_ROOT/examples"
+RESOURCES_DIR="$SKILL_ROOT/resources"
+
+PASS=0
+FAIL=0
+
+run_check() {
+  local label="$1"
+  shift
+  printf "  %-45s" "$label"
+  if "$@" >/dev/null 2>&1; then
+    echo "✅ PASS"
+    PASS=$((PASS + 1))
+  else
+    echo "❌ FAIL"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+echo "=== {{TOOL_DISPLAY_NAME}} Skill Verification ==="
+echo ""
+
+# Shell syntax checks
+echo "[Shell Scripts]"
+if command -v bash >/dev/null 2>&1; then
+  for script_file in "$SCRIPT_DIR"/*.sh; do
+    if [[ -f "$script_file" ]]; then
+      run_check "bash syntax check ($(basename "$script_file"))" bash -n "$script_file"
+    fi
+  done
+fi
+
+# Formatter configuration checks
+echo ""
+echo "[Formatter Configuration]"
+if [[ -f "$EXAMPLES_DIR/dot_formatter.toml" ]]; then
+  run_check "formatter configuration present" test -s "$EXAMPLES_DIR/dot_formatter.toml"
+else
+  echo "  SKIP: no dot_formatter.toml found in examples/"
+fi
+
+# Go example verification
+echo ""
+echo "[Go SDK Client]"
+if command -v go >/dev/null 2>&1 && [[ -f "$EXAMPLES_DIR/go.mod" ]]; then
+  run_check "go vet" go -C "$EXAMPLES_DIR" vet ./...
+  run_check "go test" go -C "$EXAMPLES_DIR" test ./... -count=1 -short
+else
+  echo "  SKIP: Go runtime not available or no go.mod in examples/"
+fi
+
+# Python example verification
+echo ""
+echo "[Python SDK Client]"
+if command -v python3 >/dev/null 2>&1 && [[ -d "$EXAMPLES_DIR" ]]; then
+  py_files=$(find "$EXAMPLES_DIR" -maxdepth 1 -name "*.py" 2>/dev/null || true)
+  if [[ -n "$py_files" ]]; then
+    run_check "python3 syntax check" python3 -m py_compile $py_files
+    run_check "python3 unit tests" python3 -m unittest discover -s "$EXAMPLES_DIR" -p "test_*.py"
+  else
+    echo "  SKIP: no Python files found in examples/"
+  fi
+else
+  echo "  SKIP: Python3 runtime not available"
+fi
+
+# Eval runner verification
+echo ""
+echo "[Automated Evaluation Runner]"
+if [[ -f "$RESOURCES_DIR/eval_runner.py" ]] && [[ -f "$RESOURCES_DIR/test_eval_runner.py" ]]; then
+  run_check "eval runner unit tests" python3 -m unittest discover -s "$RESOURCES_DIR" -p "test_*.py"
+fi
+
+echo ""
+echo "=== Results: $PASS passed, $FAIL failed ==="
+
+if [[ "$FAIL" -gt 0 ]]; then
+  exit 1
+fi

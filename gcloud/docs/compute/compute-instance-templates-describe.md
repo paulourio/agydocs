@@ -1,0 +1,50 @@
+# gcloud compute instance-templates describe
+
+## NAME
+
+    gcloud compute instance-templates describe - describe a virtual machine
+        instance template
+
+## SYNOPSIS
+
+```bash
+    gcloud compute instance-templates describe NAME
+        [--global | --region=REGION] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    gcloud compute instance-templates describe displays all data associated
+    with a Google Compute Engine virtual machine instance template.
+
+## EXAMPLES
+
+    To describe the instance template named 'INSTANCE-TEMPLATE', run:
+
+        $ gcloud compute instance-templates describe INSTANCE-TEMPLATE
+
+## POSITIONAL ARGUMENTS
+
+     NAME
+        Name of the instance template to describe.
+
+## FLAGS
+
+     At most one of these can be specified:
+
+       --global
+          If set, the instance template is global.
+
+       --region=REGION
+          Region of the instance template to describe. Overrides the default
+          compute/region property value for this command invocation.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

@@ -1,0 +1,66 @@
+# gcloud logging sinks describe
+
+## NAME
+
+    gcloud logging sinks describe - display information about a sink
+
+## SYNOPSIS
+
+```bash
+    gcloud logging sinks describe SINK_NAME
+        [--billing-account=BILLING_ACCOUNT_ID | --folder=FOLDER_ID
+          | --organization=ORGANIZATION_ID | --project=PROJECT_ID]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Display information about a sink.
+
+## EXAMPLES
+
+    To describe a sync 'my-bq-sync':
+
+        $ gcloud logging sinks describe my-bq-sink
+
+## POSITIONAL ARGUMENTS
+
+     SINK_NAME
+        The name of the sink to describe.
+
+## FLAGS
+
+     At most one of these can be specified:
+
+       --billing-account=BILLING_ACCOUNT_ID
+          Billing account of the sink to describe.
+
+       --folder=FOLDER_ID
+          Folder of the sink to describe.
+
+       --organization=ORGANIZATION_ID
+          Organization of the sink to describe.
+
+       --project=PROJECT_ID
+          Project of the sink to describe.
+
+          The Google Cloud project ID to use for this invocation. If omitted,
+          then the current project is assumed; the current project can be
+          listed using gcloud config list --format='text(core.project)' and can
+          be set using gcloud config set project PROJECTID.
+
+          --project and its fallback core/project property play two roles in
+          the invocation. It specifies the project of the resource to operate
+          on. It also specifies the project for API enablement check, quota,
+          and billing. To specify a different project for quota and billing,
+          use --billing-project or billing/quota_project property.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

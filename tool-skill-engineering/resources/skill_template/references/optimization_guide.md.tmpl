@@ -1,0 +1,30 @@
+# {{TOOL_DISPLAY_NAME}} Optimization Guide
+
+This specification defines partitioning, indexing, caching, and straggler triage protocols for {{TOOL_DISPLAY_NAME}} workloads.
+
+---
+
+## 1. Partition and Boundary Pruning
+
+Partition pruning eliminates unneeded data blocks at the metadata level prior to worker execution:
+- **Sargable Predicates:** Filters on partitioned columns must use direct comparison operators (`=`, `<`, `<=`, `>`, `>=`).
+- **Prohibit Scalar Wrappers:** Do not wrap partitioned columns in functions (`DATE(ts) = ...`); use bounded range predicates (`ts >= ... AND ts < ...`).
+- **Cluster Key Alignment:** Order clustering keys from highest to lowest cardinality filter predicates.
+
+---
+
+## 2. Projection and Memory Footprint Discipline
+
+To maximize throughput across distributed workers:
+- **Explicit Column Lists:** Project only the precise attributes needed by downstream consumers.
+- **Avoid Unused Analytical Columns:** Columnar engines bill and scan per column accessed; unreferenced columns waste memory bandwidth.
+- **Filter Pushdown:** Place filtering predicates as early in the execution graph as possible to reduce intermediate join cardinality.
+
+---
+
+## 3. Straggler Triage Protocol
+
+Long-tail execution stragglers occur when data skew concentrates volume onto single worker slots:
+- **Inspect Execution Stages:** Identify stages where maximum worker execution time significantly exceeds average execution time.
+- **Resolve Join Skew:** Break apart skewed join keys or pre-aggregate high-frequency keys before performing distributed joins.
+- **Materialize Expensive Views:** Cache repeated subquery computations into temporary tables.

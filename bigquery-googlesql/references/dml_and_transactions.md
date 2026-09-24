@@ -39,7 +39,7 @@ USING `enterprise.staging.orders_delta` AS source
  WHEN NOT MATCHED BY SOURCE AND
         target.order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)
       THEN
-      DELETE
+      DELETE;
 ```
 
 ---
@@ -102,18 +102,19 @@ The `DELETE` statement purges rows satisfying a filter predicate from target tab
 
 ```sql
 DELETE FROM `enterprise.warehouse.customer_orders`
- WHERE order_date = '2024-01-01' AND order_status = 'CANCELLED'
+ WHERE order_date = '2024-01-01' AND order_status = 'CANCELLED';
 ```
 
-- Omitting the `WHERE` clause drops all rows from the table while preserving schema rules, table settings, and access bindings.
+- In GoogleSQL, the `WHERE` clause is mandatory in a `DELETE` statement. Unqualified deletes without a `WHERE` clause trigger compile-time syntax errors. To delete all rows using `DELETE`, provide an unconditional predicate such as `WHERE true`.
 - To clear an entire table, prefer `TRUNCATE TABLE` over an unqualified `DELETE` statement.
+- **Zero-Cost Metadata Partition Deletion:** When a `DELETE` statement targets a partitioned table and the `WHERE` condition aligns strictly with partition boundaries (for example, `WHERE order_date = '2024-01-01'`) without evaluating non-partition column expressions, BigQuery executes the deletion as an instantaneous catalog metadata update. No Capacitor storage blocks are decompressed or rewritten, slot utilization remains negligible, and zero scan bytes are billed.
 
 ### 1.4 `TRUNCATE TABLE` Statement
 
 The `TRUNCATE TABLE` statement empties a table completely without scanning underlying Capacitor files:
 
 ```sql
-TRUNCATE TABLE `enterprise.staging.daily_scratch_buffer`
+TRUNCATE TABLE `enterprise.staging.daily_scratch_buffer`;
 ```
 
 - The engine updates table metadata in the Colossus catalog to reference an empty file set.
@@ -173,7 +174,7 @@ UPDATE `enterprise.warehouse.customer_orders`
 
 ### 3.2 Partition Pruning in `MERGE` Queries
 
-To prune target partitions during a `MERGE`, place partition boundary predicates directly into the `ON` join clause:
+To prune target partitions during a basic `MERGE` lacking a `WHEN NOT MATCHED BY SOURCE` clause, place partition boundary predicates directly into the `ON` join clause:
 
 ```sql
 MERGE INTO `enterprise.warehouse.customer_orders` AS target
@@ -183,12 +184,28 @@ USING `enterprise.staging.recent_updates` AS source
       AND target.order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 3 DAY)
  WHEN MATCHED THEN
       UPDATE SET
-        target.order_status = source.order_status
+        target.order_status = source.order_status;
 ```
 
 - When the partition column appears on both sides of the equijoin (`target.order_date = source.order_date`), the query planner performs dynamic partition pruning based on the distinct dates present in the source dataset.
 - Adding a static boundary condition (`target.order_date >= DATE_SUB(...)`) ensures that the planner limits the physical scan window before evaluating source rows.
 - If the table sets `require_partition_filter = TRUE`, any DML query lacking an explicit target partition filter fails during query compilation.
+
+### 3.3 The Catastrophic `WHEN NOT MATCHED BY SOURCE` Partition Purge Hazard
+
+A destructive failure occurs when combining partition boundary predicates in the `ON` clause with a `WHEN NOT MATCHED BY SOURCE THEN DELETE` or `UPDATE` clause.
+
+Under GoogleSQL join mechanics, any target row where the `ON` predicate evaluates to `FALSE` is classified as `NOT MATCHED BY SOURCE`. If an engineer places a partition boundary like `target.order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 3 DAY)` in the `ON` clause, every historical partition older than 3 days evaluates to `FALSE`. Consequently, the query engine marks every historical row across the entire table as unmatched by the source relation and purges all historical data.
+
+To safely prune partitions when using `WHEN NOT MATCHED BY SOURCE`:
+1. **Confine `ON` predicates to key equality:** Match on business keys and partition keys (`target.order_date = source.order_date AND target.order_id = source.order_id`).
+2. **Attach boundary conditions to the match clause:** Place the partition lookback filter directly on the `WHEN NOT MATCHED BY SOURCE` clause:
+```sql
+WHEN NOT MATCHED BY SOURCE
+     AND target.order_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 3 DAY)
+THEN DELETE;
+```
+3. **Pre-filter target scope:** Alternatively, supply target partitions via an explicit parameterized array (`target.order_date IN UNNEST(g_target_dates)`).
 
 ---
 
@@ -228,7 +245,7 @@ SELECT person_bk,
            CAST(IFNULL(active_ind, FALSE) AS STRING)
          )
        ) AS data_hd
-  FROM `enterprise.lend_debt_02_str.customer_debt_rec`
+  FROM `enterprise.lend_debt_02_str.customer_debt_rec`;
 ```
 
 - **Struct Serialization Pattern (Wide or Nested Schemas):**
@@ -245,14 +262,14 @@ SELECT a.person_bk,
                    a.* EXCEPT(person_bk, month_dt))
          )
        ) AS data_hd
-  FROM `enterprise.lend_debt_02_str.customer_debt_rec` AS a
+  FROM `enterprise.lend_debt_02_str.customer_debt_rec` AS a;
 ```
 
 ### 4.3 Mandatory Target Partition Pruning via Parameterized Arrays
 Merging without explicit target partition predicates scans the entire target table across historical years. In recurrent pipelines, declare target partition arrays to restrict scan bounds:
 
 ```sql
-DECLARE g_months ARRAY<DATE> DEFAULT [DATE '2026-03-01', DATE '2026-03-02']
+DECLARE g_months ARRAY<DATE> DEFAULT [DATE '2026-03-01', DATE '2026-03-02'];
 ```
 
 Place the partition predicate first in the `ON` join condition:
@@ -277,7 +294,7 @@ IF
   ) = 0
 THEN
   RETURN;
-END IF
+END IF;
 ```
 
 ### 4.5 Change Tracking via Hash Comparison
@@ -377,8 +394,6 @@ BEGIN
 
   -- Verify that deduction affected exactly one row
   IF @@row_count != 1 THEN
-    ROLLBACK TRANSACTION;
-
     RAISE USING MESSAGE = 'Transfer failed: Insufficient funds or account missing.';
   END IF;
 
@@ -395,13 +410,15 @@ BEGIN
 
   COMMIT TRANSACTION;
 EXCEPTION WHEN ERROR THEN
-  -- Clean up uncommitted writes upon unexpected runtime failures
-  IF @@error.statement_text IS NOT NULL THEN
+  -- Safely absorb OCC collision aborts where the transaction was terminated upstream
+  BEGIN
     ROLLBACK TRANSACTION;
-  END IF;
+  EXCEPTION WHEN ERROR THEN
+    -- Absorb error if transaction was already aborted or rolled back
+  END;
 
   RAISE USING MESSAGE = CONCAT('Transaction aborted due to error: ', @@error.message);
-END
+END;
 ```
 
 ### 5.2 Snapshot Read Semantics

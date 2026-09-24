@@ -1,0 +1,87 @@
+# gcloud logging sinks list
+
+## NAME
+
+    gcloud logging sinks list - list the defined sinks
+
+## SYNOPSIS
+
+```bash
+    gcloud logging sinks list [--sink-filter=SINK_FILTER]
+        [--billing-account=BILLING_ACCOUNT_ID | --folder=FOLDER_ID
+          | --organization=ORGANIZATION_ID | --project=PROJECT_ID]
+        [--filter=EXPRESSION] [--limit=LIMIT] [--sort-by=[FIELD,...]]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    List the defined sinks.
+
+## EXAMPLES
+
+    To list all defined sinks:
+
+        $ gcloud logging sinks list --limit=10
+
+## FLAGS
+
+     --sink-filter=SINK_FILTER
+        A filter expression passed to the Logging API to constrain the sinks
+        returned. For information on accepted values, see
+        https://cloud.google.com/logging/docs/reference/v2/rpc/google.logging.v2#listsinksrequest
+
+     At most one of these can be specified:
+
+       --billing-account=BILLING_ACCOUNT_ID
+          Billing account of the sinks to list.
+
+       --folder=FOLDER_ID
+          Folder of the sinks to list.
+
+       --organization=ORGANIZATION_ID
+          Organization of the sinks to list.
+
+       --project=PROJECT_ID
+          Project of the sinks to list.
+
+          The Google Cloud project ID to use for this invocation. If omitted,
+          then the current project is assumed; the current project can be
+          listed using gcloud config list --format='text(core.project)' and can
+          be set using gcloud config set project PROJECTID.
+
+          --project and its fallback core/project property play two roles in
+          the invocation. It specifies the project of the resource to operate
+          on. It also specifies the project for API enablement check, quota,
+          and billing. To specify a different project for quota and billing,
+          use --billing-project or billing/quota_project property.
+
+## LIST COMMAND FLAGS
+
+     --filter=EXPRESSION
+        Apply a Boolean filter EXPRESSION to each resource item to be listed.
+        If the expression evaluates True, then that item is listed. For more
+        details and examples of filter expressions, run [`gcloud topic filters`](../topic/topic-filters.md).
+        This flag interacts with other flags that are applied in this order:
+        --flatten, --sort-by, --filter, --limit.
+
+     --limit=LIMIT
+        Maximum number of resources to list. The default is unlimited. This
+        flag interacts with other flags that are applied in this order:
+        --flatten, --sort-by, --filter, --limit.
+
+     --sort-by=[FIELD,...]
+        Comma-separated list of resource field key names to sort by. The
+        default order is ascending. Prefix a field with ``~'' for descending
+        order on that field. This flag interacts with other flags that are
+        applied in this order: --flatten, --sort-by, --filter, --limit.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

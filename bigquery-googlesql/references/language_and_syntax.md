@@ -10,7 +10,7 @@ SELECT customer_id, SUM(order_amount) AS total_revenue
  GROUP BY customer_id
 HAVING total_revenue > 1000.00
  ORDER BY total_revenue DESC
- LIMIT 50
+ LIMIT 50;
 ```
 
 ---
@@ -69,30 +69,42 @@ SELECT AS STRUCT
 
 ### 2.2 Relational Join Topologies
 - **Standard Joins:** Supports `[INNER] JOIN`, `LEFT [OUTER] JOIN`, `RIGHT [OUTER] JOIN`, `FULL [OUTER] JOIN`, and `CROSS JOIN`.
-- **`LATERAL` Subquery Joins:** Evaluates the right-hand relation independently for each row produced by the left-hand input. This mechanism enables correlated column references inside nested subqueries or table functions:
+- **Correlated Subquery Joins:** GoogleSQL does not support the `LATERAL` keyword. To execute correlated subqueries that reference outer columns for each row, combine `CROSS JOIN` or `LEFT JOIN` with `UNNEST(ARRAY(SELECT AS STRUCT ...))`:
 
 ```sql
 SELECT a.account_id, recent_tx.transaction_id, recent_tx.amount
   FROM `finance.accounts` AS a
        CROSS JOIN
-       (
-         SELECT tx.transaction_id, tx.amount
+       UNNEST(ARRAY(
+         SELECT AS STRUCT tx.transaction_id, tx.amount
            FROM `finance.transactions` AS tx
           WHERE tx.account_id = a.account_id
           ORDER BY tx.transaction_timestamp DESC
           LIMIT 3
-       ) AS recent_tx
+       )) AS recent_tx;
 ```
 
-### 2.3 Array Unnesting and Offsets
+### 2.3 Array Unnesting, Offsets, and Subscripting
 The `UNNEST` operator flattens an `ARRAY` expression into an independent relation containing one row per element.
 - **`WITH OFFSET [AS alias]`:** Emits a zero-indexed `INT64` ordinal indicating array position.
-- Unnesting empty or `NULL` arrays produces zero rows.
+- **Null and Empty Array Unnesting:** Unnesting empty (`[]`) or `NULL` arrays produces zero rows. When using comma cross-join syntax (`FROM orders, UNNEST(items)`), the inner join silently drops the entire parent row if the array is empty or `NULL`. To preserve parent rows, engineers must specify `LEFT JOIN UNNEST(items)`.
+- **Array Element Restrictions:** Arrays cannot contain `NULL` elements directly. Defining an array literal containing `NULL` (such as `[1, 2, NULL]`) triggers a compilation error.
+- **Safe Subscripting:** Accessing elements with `array_expr[OFFSET(0)]` (zero-based) or `array_expr[ORDINAL(1)]` (one-based) throws a runtime boundary error if the index is out of bounds. To return `NULL` safely instead of halting query execution, engineers must invoke `array_expr[SAFE_OFFSET(0)]` or `array_expr[SAFE_ORDINAL(1)]`.
 
 ```sql
-SELECT order_id, line_item.product_name, line_item.quantity, item_position
-  FROM `retail.orders` AS o,
-       UNNEST(o.line_items) AS line_item WITH OFFSET item_position
+-- Unnest with LEFT JOIN to preserve parent rows with empty arrays
+SELECT c.customer_id,
+       t.transaction_id,
+       t.amount
+  FROM `retail.customers` AS c
+       LEFT JOIN
+       UNNEST(c.transactions) AS t;
+
+-- Safe array subscripting protecting against out-of-bounds crashes
+SELECT order_id,
+       items[SAFE_OFFSET(0)].sku         AS primary_sku,
+       items[SAFE_ORDINAL(1)].unit_price AS primary_price
+  FROM `retail.orders`;
 ```
 
 ### 2.4 Reshaping Operators: `PIVOT` and `UNPIVOT`
@@ -134,7 +146,7 @@ The `TABLESAMPLE` operator reduces scan volume by reading a probabilistic sample
 ```sql
 SELECT event_id, user_id, event_payload
   FROM `telemetry.raw_events`
-       TABLESAMPLE SYSTEM (1.0 PERCENT)
+       TABLESAMPLE SYSTEM (1.0 PERCENT);
 ```
 
 ### 2.6 `MATCH_RECOGNIZE` Row Pattern Recognition
@@ -164,7 +176,7 @@ SELECT ticker,
          DEFINE
            up   AS price > PREV(price),
            down AS price < PREV(price)
-       )
+       );
 ```
 
 ---
@@ -189,7 +201,7 @@ In a chained call, each function treats the output of the preceding expression a
 ```sql
 -- Equivalent: SUBSTR(CONCAT(prefix, base_token), 1, 8)
 SELECT (prefix).CONCAT(base_token).SUBSTR(1, 8) AS short_token
-  FROM `enterprise.security.keys`
+  FROM `enterprise.security.keys`;
 ```
 
 ### 3.2 Syntactic Invariants and Requirements
@@ -202,7 +214,7 @@ Chained function calls must satisfy explicit parser rules:
   ```sql
 SELECT (account_balance).(SAFE.SQRT)()              AS root_balance,
        (event_payload).(analytics.extract_geo_ip)() AS geo_location
-  FROM `enterprise.finance.accounts`
+  FROM `enterprise.finance.accounts`;
   ```
 
 ### 3.3 Aggregate Functions in Chains
@@ -213,7 +225,7 @@ SELECT department_id,
        (employee_id).COUNT(DISTINCT) AS distinct_staff,
        (salary).AVG().ROUND(2)       AS average_salary
   FROM `enterprise.corp.employees`
- GROUP BY department_id
+ GROUP BY department_id;
 ```
 
 ### 3.4 Distinction from Pipe Syntax (`|>`)
@@ -229,7 +241,7 @@ FROM `enterprise.retail.orders`
 |> EXTEND (order_notes).TRIM().UPPER()                    AS clean_notes,
           (order_amount * (1.0 - discount_rate)).ROUND(2) AS final_amount
 |> AGGREGATE (final_amount).SUM().ROUND(2) AS total_revenue
-   GROUP BY clean_notes
+   GROUP BY clean_notes;
 ```
 
 ---
@@ -251,15 +263,32 @@ SELECT region,
        GROUPING(region) AS is_region_subtotal,
        SUM(revenue)     AS total_revenue
   FROM `retail.sales`
- GROUP BY ROLLUP (region, sales_channel)
+ GROUP BY ROLLUP (region, sales_channel);
 ```
 
-### 4.2 Window Functions and the `QUALIFY` Clause
+### 4.2 Window Functions, Frames, and the `QUALIFY` Clause
 Window functions compute calculations across partitions without collapsing individual rows into groups.
 - The `WINDOW` clause defines named, reusable window specifications.
 - The `QUALIFY` clause filters rows directly using window function results, eliminating nested wrapper subqueries.
 
+#### 4.2.1 Window Analytic Frames and Ordering Ties (`RANGE` vs. `ROWS`)
+When an analytic window function includes an `ORDER BY` clause without an explicit frame specification, GoogleSQL applies the default frame `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`.
+
+This default behaves differently than many developers anticipate when ordering keys contain duplicate values (ties):
+- **`RANGE` Frame (Default):** Values identical to the current row in the ordering key are considered peers. The aggregation lumps all tied rows into the intermediate calculation simultaneously, emitting identical running totals for all duplicate keys.
+- **`ROWS` Frame (Explicit):** Evaluates physical rows sequentially. To accumulate metrics strictly row-by-row regardless of duplicate ordering values, engineers must specify `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW`.
+
 ```sql
+SELECT customer_id,
+       order_date,
+       order_amount,
+       SUM(order_amount) OVER (
+         PARTITION BY customer_id
+             ORDER BY order_date
+              ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+       ) AS cumulative_amount
+  FROM `retail.orders`;
+
 SELECT customer_id,
         order_id,
         order_amount,
@@ -269,7 +298,7 @@ QUALIFY purchase_rank <= 3
  WINDOW w AS (
           PARTITION BY customer_id
               ORDER BY order_amount DESC
-        )
+        );
 ```
 
 ### 4.3 Multi-Level Aggregation (Nested Aggregations with GROUP BY Modifier)
@@ -351,7 +380,9 @@ WITH RECURSIVE
     SELECT employee_id, manager_id, 1 AS organizational_depth
       FROM `corp.employees`
      WHERE manager_id IS NULL
-     UNION ALL
+
+    UNION ALL
+
     -- Recursive member
     SELECT e.employee_id, e.manager_id, h.organizational_depth + 1
       FROM `corp.employees` AS e
@@ -362,11 +393,11 @@ WITH RECURSIVE
   )
 SELECT employee_id, manager_id, organizational_depth
   FROM OrgHierarchy
- ORDER BY organizational_depth, employee_id
+ ORDER BY organizational_depth, employee_id;
 ```
 
 *Structural Invariants:*
-- Anchor and recursive branches must be combined via `UNION ALL` or `UNION DISTINCT`.
+- Anchor and recursive branches must be combined via `UNION ALL` (`UNION DISTINCT` is prohibited in recursive CTEs).
 - The recursive member must reference the recursive target CTE exactly once in its `FROM` clause.
 - Recursive members cannot include aggregate functions or window functions.
 
@@ -397,7 +428,7 @@ OPTIONS (
   description               = 'Partitioned user telemetry events',
   require_partition_filter  = TRUE,
   partition_expiration_days = 365
-)
+);
 ```
 
 ### 6.2 Materialized Views
@@ -414,7 +445,7 @@ AS (
          SUM(order_value) AS aggregate_revenue
     FROM `analytics.user_events`
    GROUP BY report_date, tenant_id
-)
+);
 ```
 
 ---
@@ -491,22 +522,27 @@ SELECT STRING(payload_json.user.email) AS user_email,
   FROM `enterprise.telemetry_01_raw.events_fact`;
 ```
 
-### 8.3 Safe Parsing and Lax Extraction Functions
+### 8.3 Safe Parsing and Lax Conversion Functions
 - **`PARSE_JSON(string_expr)`:** Parses a JSON-formatted string into native `JSON`. If the string is malformed, evaluation fails.
 - **`SAFE.PARSE_JSON(string_expr)`:** Returns `NULL` if the input string contains invalid JSON syntax.
 - **`JSON_VALUE(json_expr [, json_path])`:** Extracts a scalar value as SQL `STRING`.
 - **`JSON_QUERY(json_expr [, json_path])`:** Extracts a sub-object or array as native `JSON`.
 - **`JSON_QUERY_ARRAY(json_expr [, json_path])`:** Extracts a JSON array as `ARRAY<JSON>`.
+- **`JSON_VALUE_ARRAY(json_expr [, json_path])`:** Extracts a JSON array of scalar strings as `ARRAY<STRING>`.
+- **`LAX_INT64(json_expr)`:** Extracts an integer or parses a numeric string as `INT64`, returning `NULL` on type mismatch.
+- **`LAX_STRING(json_expr)`:** Converts scalar JSON strings, numbers, or booleans into SQL `STRING`.
+- **`LAX_BOOL(json_expr)`:** Parses boolean literals or string boolean tokens into SQL `BOOL`.
+- **`LAX_FLOAT64(json_expr)`:** Parses floating-point numbers or numeric strings into SQL `FLOAT64`.
 
 ### 8.4 Array Unnesting with JSON
-Engineers combine `JSON_EXTRACT_ARRAY()` with `UNNEST()` to iterate over dynamic JSON collections:
+Engineers combine `JSON_QUERY_ARRAY()` with `UNNEST()` to iterate over dynamic JSON collections:
 
 ```sql
 SELECT event_id,
        STRING(item.sku) AS sku_cd,
        INT64(item.qty)  AS item_qty
   FROM `enterprise.telemetry_01_raw.events_fact`,
-       UNNEST(JSON_EXTRACT_ARRAY(payload_json.items)) AS item;
+       UNNEST(JSON_QUERY_ARRAY(payload_json.items)) AS item;
 ```
 
 ---
@@ -548,6 +584,28 @@ Engineers select numeric representations based on dynamic range and precision re
 | **`BIGNUMERIC`** | 32 bytes | 77 digits (39 integer, 38 fractional) | Exact decimal fixed-point (Scale $10^{38}$) |
 
 When converting `NUMERIC` to `FLOAT64`, the engine preserves least-significant-bit rounding invariants to ensure IEEE-754 round-to-nearest-even tie-breaking never mistakes inexact quotients for exact halfway points.
+
+### 9.4 Division Operators and Zero Divisor Protection
+GoogleSQL differentiates between floating-point division and integer division:
+- **Floating-Point Division (`/`):** The `/` operator always evaluates floating-point division returning `FLOAT64` (for example, `5 / 2` yields `2.5`).
+- **Integer Division (`DIV`):** For integer division that truncates towards zero and returns an `INT64`, engineers must invoke `DIV(dividend, divisor)`. The expression `DIV(5, 2)` returns `2`.
+- **Zero-Divisor Safety (`SAFE_DIVIDE`):** Dividing by zero via `/` or `DIV()` halts query execution with a runtime `division by zero` error. Use `SAFE_DIVIDE(x, y)` to return `NULL` cleanly when the divisor evaluates to zero or overflow occurs.
+
+```sql
+SELECT 5 / 2              AS float_div,
+       DIV(5, 2)          AS int_div,
+       SAFE_DIVIDE(10, 0) AS safe_div;
+```
+
+### 9.5 String Concatenation and Null Propagation in `CONCAT`
+In GoogleSQL, `CONCAT(str1, str2, ...)` returns `NULL` if any argument evaluates to `NULL`. Concatenating nullable attributes (such as middle initials or secondary address lines) nullifies the entire resulting string. To preserve non-null fragments, wrap nullable columns in `IFNULL(col, '')` or use `FORMAT('%s%s', str1, IFNULL(str2, ''))`.
+
+### 9.6 Temporal Functions, Timezones, and Boundary Crossings
+Production queries in BigQuery execute in UTC by standard engineering policy (`CURRENT_DATE('UTC')`, `CURRENT_TIMESTAMP()`) unless explicitly documented in the query header that logic deliberately operates within a designated local civil timezone (such as `CURRENT_DATE('America/New_York')`).
+
+- **Timezone Drift:** Omitting timezone parameters from `CURRENT_DATE()` defaults to UTC. Depending on the time of day, querying `CURRENT_DATE()` can evaluate to the subsequent calendar date relative to local civil business time.
+- **Boundary Crossings in `DATE_DIFF`:** The `DATE_DIFF(later_date, earlier_date, date_part)` function counts the number of date part boundaries crossed between two dates, rather than elapsed time spans. For instance, `DATE_DIFF('2026-04-01', '2026-03-31', MONTH)` evaluates to `1` because a calendar month boundary was crossed, despite only twenty-four hours elapsing.
+- **Daylight Saving Time Transitions:** Adding intervals via `TIMESTAMP_ADD(ts, INTERVAL 1 DAY)` increments absolute time by exactly 86,400 seconds. On days with Daylight Saving Time shifts (23 or 25 hours), timestamp arithmetic alters the wall-clock hour. In contrast, `DATETIME_ADD` increments civil calendar days while preserving wall-clock hours.
 
 ---
 

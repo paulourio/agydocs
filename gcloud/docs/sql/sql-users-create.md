@@ -1,0 +1,82 @@
+# gcloud sql users create
+
+## NAME
+
+    gcloud sql users create - creates a user in a given instance
+
+## SYNOPSIS
+
+```bash
+    gcloud sql users create USERNAME --instance=INSTANCE, -i INSTANCE [--async]
+        [--host=HOST] [--password=PASSWORD]
+        [--password-policy-allowed-failed-attempts=PASSWORD_POLICY_ALLOWED_FAILED_ATTEMPTS]
+        [--[no-]password-policy-enable-failed-attempts-check]
+        [--[no-]password-policy-enable-password-verification]
+        [--password-policy-password-expiration-duration=PASSWORD_POLICY_PASSWORD_EXPIRATION_DURATION]
+        [--type=TYPE] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Creates a user in a given instance with specified username, host, type, and
+    password.
+
+## POSITIONAL ARGUMENTS
+
+     USERNAME
+        Cloud SQL username.
+
+## REQUIRED FLAGS
+
+     --instance=INSTANCE, -i INSTANCE
+        Cloud SQL instance ID.
+
+## OPTIONAL FLAGS
+
+     --async
+        Return immediately, without waiting for the operation in progress to
+        complete.
+
+     --host=HOST
+        Cloud SQL user's hostname expressed as a specific IP address or address
+        range. % denotes an unrestricted hostname. Applicable flag for MySQL
+        instances; ignored for all other engines. Note, if you connect to your
+        instance using IP addresses, you must add your client IP address as an
+        authorized address, even if your hostname is unrestricted. For more
+        information, see Configure IP
+        (https://cloud.google.com/sql/docs/mysql/configure-ip).
+
+     --password=PASSWORD
+        Cloud SQL user's password.
+
+     --password-policy-allowed-failed-attempts=PASSWORD_POLICY_ALLOWED_FAILED_ATTEMPTS
+        Number of failed login attempts allowed before a user is locked out.
+
+     --[no-]password-policy-enable-failed-attempts-check
+        Enables the failed login attempts check if set to true. Use
+        --password-policy-enable-failed-attempts-check to enable and
+        --no-password-policy-enable-failed-attempts-check to disable.
+
+     --[no-]password-policy-enable-password-verification
+        The current password must be specified when altering the password. Use
+        --password-policy-enable-password-verification to enable and
+        --no-password-policy-enable-password-verification to disable.
+
+     --password-policy-password-expiration-duration=PASSWORD_POLICY_PASSWORD_EXPIRATION_DURATION
+        Expiration duration after a password is updated, for example, 2d for 2
+        days. See [`gcloud topic datetimes`](../topic/topic-datetimes.md) for information on duration formats.
+
+     --type=TYPE
+        Cloud SQL user's type. It determines the method to authenticate the
+        user during login. See the list of user types at
+        https://cloud.google.com/sql/docs/postgres/admin-api/rest/v1beta4/SqlUserType
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

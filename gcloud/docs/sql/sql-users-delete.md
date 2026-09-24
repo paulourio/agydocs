@@ -1,0 +1,53 @@
+# gcloud sql users delete
+
+## NAME
+
+    gcloud sql users delete - deletes a Cloud SQL user in a given instance
+
+## SYNOPSIS
+
+```bash
+    gcloud sql users delete USERNAME --instance=INSTANCE, -i INSTANCE [--async]
+        [--host=HOST] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+### Deletes a Cloud SQL user in a given instance specified by username and
+
+    host.
+
+## POSITIONAL ARGUMENTS
+
+     USERNAME
+        Cloud SQL username.
+
+## REQUIRED FLAGS
+
+     --instance=INSTANCE, -i INSTANCE
+        Cloud SQL instance ID.
+
+## OPTIONAL FLAGS
+
+     --async
+        Return immediately, without waiting for the operation in progress to
+        complete.
+
+     --host=HOST
+        Cloud SQL user's hostname expressed as a specific IP address or address
+        range. % denotes an unrestricted hostname. Applicable flag for MySQL
+        instances; ignored for all other engines. Note, if you connect to your
+        instance using IP addresses, you must add your client IP address as an
+        authorized address, even if your hostname is unrestricted. For more
+        information, see Configure IP
+        (https://cloud.google.com/sql/docs/mysql/configure-ip).
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

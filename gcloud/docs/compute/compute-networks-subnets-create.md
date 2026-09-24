@@ -1,0 +1,232 @@
+# gcloud compute networks subnets create
+
+## NAME
+
+    gcloud compute networks subnets create - define a subnet for a network in
+        custom subnet mode
+
+## SYNOPSIS
+
+```bash
+    gcloud compute networks subnets create NAME --network=NETWORK
+        [--description=DESCRIPTION] [--enable-flow-logs]
+        [--enable-private-ip-google-access]
+        [--external-ipv6-prefix=EXTERNAL_IPV6_PREFIX]
+        [--ip-collection=IP_COLLECTION] [--ipv6-access-type=IPV6_ACCESS_TYPE]
+        [--logging-aggregation-interval=LOGGING_AGGREGATION_INTERVAL]
+        [--logging-filter-expr=LOGGING_FILTER_EXPR]
+        [--logging-flow-sampling=LOGGING_FLOW_SAMPLING]
+        [--logging-metadata=LOGGING_METADATA]
+        [--logging-metadata-fields=[METADATA_FIELD,...]]
+        [--private-ipv6-google-access-type=PRIVATE_IPV6_GOOGLE_ACCESS_TYPE]
+        [--purpose=PURPOSE] [--range=RANGE] [--region=REGION]
+        [--reserved-internal-range=RESERVED_INTERNAL_RANGE]
+        [--resource-manager-tags=[KEY=VALUE,...]] [--role=ROLE]
+        [--secondary-range=PROPERTY=VALUE,[...]]
+        [--secondary-range-with-reserved-internal-range=RANGE_NAME=INTERNAL_RANGE_URL,
+          [...]] [--stack-type=STACK_TYPE] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    gcloud compute networks subnets create define a subnetwork for a network in
+    custom subnet mode. Subnets must be uniquely named per region.
+
+## EXAMPLES
+
+    To create the subnetwork subnet-1 with address range 10.10.0.0/24 in the
+    network network-0, run:
+
+        $ gcloud compute networks subnets create subnet-1 \
+            --network=network-0 --range=10.10.0.0/24 --region=us-central1
+
+## POSITIONAL ARGUMENTS
+
+     NAME
+        Name of the subnetwork to create.
+
+## REQUIRED FLAGS
+
+     --network=NETWORK
+        The network to which the subnetwork belongs.
+
+## OPTIONAL FLAGS
+
+     --description=DESCRIPTION
+        An optional description of this subnetwork.
+
+     --enable-flow-logs
+        Enable/disable VPC Flow Logs for this subnet. More information for VPC
+        Flow Logs can be found at
+        https://cloud.google.com/vpc/docs/using-flow-logs.
+
+     --enable-private-ip-google-access
+        Enable/disable access to Google Cloud APIs from this subnet for
+        instances without a public ip address.
+
+     --external-ipv6-prefix=EXTERNAL_IPV6_PREFIX
+        The /64 external IPv6 CIDR range to assign to this subnet. The range
+        must be associated with an IPv6 BYOIP sub-prefix that is defined by the
+        --ip-collection flag. If you specify --ip-collection but not
+        --external-ipv6-prefix, a random /64 range is allocated from the
+        sub-prefix.
+
+        For example, --external-ipv6-prefix=2600:1901:0:0:0:0:0:0/64
+
+     --ip-collection=IP_COLLECTION
+        Resource reference to a public delegated prefix. The
+        PublicDelegatedPrefix must be a sub-prefix in
+        EXTERNAL_IPV6_SUBNETWORK_CREATION mode.
+
+     --ipv6-access-type=IPV6_ACCESS_TYPE
+        IPv6 access type can be specified only when the subnet is created, or
+        when the subnet is first updated to have a stack type of IPV4_IPV6.
+        Once set, the access type is immutable. IPV6_ACCESS_TYPE must be one
+        of:
+
+         EXTERNAL
+            VMs in this subnet can have external IPv6.
+         INTERNAL
+            VMs in this subnet can have internal IPv6.
+
+     --logging-aggregation-interval=LOGGING_AGGREGATION_INTERVAL
+        Can only be specified if VPC Flow Logs for this subnetwork is enabled.
+        Toggles the aggregation interval for collecting flow logs. Increasing
+        the interval time will reduce the amount of generated flow logs for
+        long lasting connections. Default is an interval of 5 seconds per
+        connection. LOGGING_AGGREGATION_INTERVAL must be one of:
+        interval-10-min, interval-15-min, interval-1-min, interval-30-sec,
+        interval-5-min, interval-5-sec.
+
+     --logging-filter-expr=LOGGING_FILTER_EXPR
+        Can only be specified if VPC Flow Logs for this subnetwork is enabled.
+        Export filter used to define which logs should be generated.
+
+     --logging-flow-sampling=LOGGING_FLOW_SAMPLING
+        Can only be specified if VPC Flow Logs for this subnetwork is enabled.
+        The value of the field must be in [0, 1]. Set the sampling rate of VPC
+        flow logs within the subnetwork where 1.0 means all collected logs are
+        reported and 0.0 means no logs are reported. Default is 0.5 which means
+        half of all collected logs are reported.
+
+     --logging-metadata=LOGGING_METADATA
+        Can only be specified if VPC Flow Logs for this subnetwork is enabled.
+        Configures whether metadata fields should be added to the reported
+        logs. Default is to exclude all metadata. LOGGING_METADATA must be one
+        of: custom, exclude-all, include-all.
+
+     --logging-metadata-fields=[METADATA_FIELD,...]
+        Can only be specified if VPC Flow Logs for this subnetwork is enabled
+        and "metadata" is set to CUSTOM_METADATA. The comma-separated list of
+        metadata fields that should be added to reported logs.
+
+     --private-ipv6-google-access-type=PRIVATE_IPV6_GOOGLE_ACCESS_TYPE
+        The private IPv6 google access type for the VMs in this subnet.
+        PRIVATE_IPV6_GOOGLE_ACCESS_TYPE must be one of: disable,
+        enable-bidirectional-access, enable-outbound-vm-access.
+
+     --purpose=PURPOSE
+        The purpose of this subnetwork. PURPOSE must be one of:
+
+         GLOBAL_MANAGED_PROXY
+            Reserved for Global Envoy-based Load Balancing.
+         INTERNAL_HTTPS_LOAD_BALANCER
+            Reserved for Internal HTTP(S) Load Balancing.
+         PEER_MIGRATION
+            Reserved for subnet migration between peered VPCs.
+         PRIVATE
+            Regular user created or automatically created subnet.
+         PRIVATE_NAT
+            Reserved for use as source range for Private NAT.
+         PRIVATE_SERVICE_CONNECT
+            Reserved for Private Service Connect Internal Load Balancing.
+         REGIONAL_MANAGED_PROXY
+            Reserved for Regional Envoy-based Load Balancing.
+
+     --range=RANGE
+        The IP space allocated to this subnetwork in CIDR format.
+
+     --region=REGION
+        Region of the subnetwork to create. If not specified, you might be
+        prompted to select a region (interactive mode only).
+
+        To avoid prompting when this flag is omitted, you can set the
+        compute/region property:
+
+            $ gcloud config set compute/region REGION
+
+        A list of regions can be fetched by running:
+
+            $ gcloud compute regions list
+
+        To unset the property, run:
+
+            $ gcloud config unset compute/region
+
+        Alternatively, the region can be stored in the environment variable
+        CLOUDSDK_COMPUTE_REGION.
+
+     --reserved-internal-range=RESERVED_INTERNAL_RANGE
+        If set, the primary IP range of the subnetwork will be associated with
+        the given internal range resource. If --range is set, the subnetwork
+        will only use the given IP range, which must be contained by the IP
+        range defined by the internal range resource. For example,
+        --range=10.0.0.0/24 --reserved-internal-range
+        //networkconnectivity.googleapis.com/projects/PROJECT/locations/global/internalRanges/RANGE
+        If --range is not set, the subnetwork will use the entire IP range
+        defined by the internal range resource. For example,
+        --reserved-internal-range
+        //networkconnectivity.googleapis.com/projects/PROJECT/locations/global/internalRanges/RANGE
+
+     --resource-manager-tags=[KEY=VALUE,...]
+        A comma-separated list of Resource Manager tags to apply to the
+        subnetwork.
+
+     --role=ROLE
+        The role of subnetwork. This field is required when the purpose is set
+        to GLOBAL_MANAGED_PROXY, REGIONAL_MANAGED_PROXY or
+        INTERNAL_HTTPS_LOAD_BALANCER. ROLE must be one of:
+
+         ACTIVE
+            The ACTIVE subnet that is currently used.
+         BACKUP
+            The BACKUP subnet that could be promoted to ACTIVE.
+
+     --secondary-range=PROPERTY=VALUE,[...]
+        Adds a secondary IP range to the subnetwork for use in IP aliasing.
+
+        For example, --secondary-range range1=192.168.64.0/24 adds a secondary
+        range 192.168.64.0/24 with name range1.
+
+        * RANGE_NAME - Name of the secondary range.
+        * RANGE - IP range in CIDR format.
+
+     --secondary-range-with-reserved-internal-range=RANGE_NAME=INTERNAL_RANGE_URL,[...]
+        Adds secondary IP ranges that are associated with internal range
+        resources. For example, --secondary-range-with-reserved-internal-range
+        range1=//networkconnectivity.googleapis.com/projects/PROJECT/locations/global/internalRanges/RANGE
+        adds a secondary range with the reserved internal range resource.
+        * RANGE_NAME - Name of the secondary range.
+        * INTERNAL_RANGE_URL - URL of an internal range resource.
+
+     --stack-type=STACK_TYPE
+        The stack type for this subnet. Determines if IPv6 is enabled on the
+        subnet. If not specified IPV4_ONLY will be used. STACK_TYPE must be one
+        of:
+
+         IPV4_IPV6
+            New VMs in this subnet can have both IPv4 and IPv6 addresses
+         IPV4_ONLY
+            New VMs in this subnet will only be assigned IPv4 addresses
+         IPV6_ONLY
+            New VMs in this subnet will only be assigned IPv6 addresses
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

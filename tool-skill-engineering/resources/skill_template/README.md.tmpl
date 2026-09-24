@@ -1,0 +1,50 @@
+# {{TOOL_DISPLAY_NAME}} Engineering Skill: Setup and Requirements
+
+This guide specifies system prerequisites, installation procedures, and operational rules for deploying the `{{TOOL_NAME}}` skill.
+
+```
+Skill Deployment Pipeline:
+1. Tool Installation -> 2. Formatter Config -> 3. Agent Instruction Hook -> 4. Validation Suite
+```
+
+---
+
+## 1. Prerequisites and Tool Installation
+
+Engineers install command-line utilities and language runtimes to format configuration files and test definitions.
+
+### 1.1 Formatter Installation
+Install the official formatting binary for {{TOOL_DISPLAY_NAME}}:
+```bash
+# Example formatter installation command
+```
+
+### 1.2 SDK Runtimes
+Install language runtimes and test dependencies:
+```bash
+# Language dependencies installation
+```
+
+---
+
+## 2. Agent Configuration and Requirements
+
+Add this configuration block to agent rule files (`GEMINI.md` or `AGENTS.md`) to enforce standards:
+
+```markdown
+### {{TOOL_DISPLAY_NAME}} Engineering Integrity (Mandatory Skill Usage)
+Whenever authoring, revising, or reviewing {{TOOL_DISPLAY_NAME}} code:
+- You MUST activate and strictly adhere to the `{{TOOL_NAME}}` skill.
+- Zero formatting debt: Format and verify all source files using the canonical tool formatter.
+- Strict Architectural Naming: Follow structural layer suffixes and standardized class words.
+```
+
+---
+
+## 3. Verification and Testing
+
+Run test suites and validation scripts to verify that local tools function as expected:
+```bash
+# Run artifact smoke checks
+bash scripts/verify.sh
+```

@@ -1,0 +1,100 @@
+# gcloud iam roles update
+
+## NAME
+
+    gcloud iam roles update - update an IAM custom role
+
+## SYNOPSIS
+
+```bash
+    gcloud iam roles update ROLE_ID
+        (--organization=ORGANIZATION | --project=PROJECT_ID) [--file=FILE]
+        [--add-permissions=ADD_PERMISSIONS --description=DESCRIPTION
+          --permissions=PERMISSIONS
+          --remove-permissions=REMOVE_PERMISSIONS --stage=STAGE --title=TITLE]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    This command updates an IAM custom role.
+
+## EXAMPLES
+
+    To update the role ProjectUpdater from a YAML file, run:
+
+        $ gcloud iam roles update ProjectUpdater --organization=123 \
+            --file=role_file_path
+
+    To update the role ProjectUpdater with flags, run:
+
+        $ gcloud iam roles update ProjectUpdater --project=myproject \
+            --permissions=permission1,permission2
+
+## POSITIONAL ARGUMENTS
+
+     ROLE_ID
+        ID of the custom role to update. You must also specify the
+        --organization or --project flag.
+
+## REQUIRED FLAGS
+
+     Exactly one of these must be specified:
+
+       --organization=ORGANIZATION
+          Organization of the role you want to update.
+
+       --project=PROJECT_ID
+          Project of the role you want to update.
+
+          The Google Cloud project ID to use for this invocation. If omitted,
+          then the current project is assumed; the current project can be
+          listed using gcloud config list --format='text(core.project)' and can
+          be set using gcloud config set project PROJECTID.
+
+          --project and its fallback core/project property play two roles in
+          the invocation. It specifies the project of the resource to operate
+          on. It also specifies the project for API enablement check, quota,
+          and billing. To specify a different project for quota and billing,
+          use --billing-project or billing/quota_project property.
+
+## OPTIONAL FLAGS
+
+     --file=FILE
+        The YAML file you want to use to update a role. Can not be specified
+        with other flags except role-id.
+
+     The following flags determine the fields need to be updated. You can
+     update a role by specifying the following flags, or you can update a role
+     from a YAML file by specifying the file flag.
+
+       --add-permissions=ADD_PERMISSIONS
+          The permissions you want to add to the role. Use commas to separate
+          them.
+
+       --description=DESCRIPTION
+          The description of the role you want to update.
+
+       --permissions=PERMISSIONS
+          The permissions of the role you want to set. Use commas to separate
+          them.
+
+       --remove-permissions=REMOVE_PERMISSIONS
+          The permissions you want to remove from the role. Use commas to
+          separate them.
+
+       --stage=STAGE
+          The state of the role you want to update.
+
+       --title=TITLE
+          The title of the role you want to update.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

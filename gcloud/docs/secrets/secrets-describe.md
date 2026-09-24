@@ -1,0 +1,69 @@
+# gcloud secrets describe
+
+## NAME
+
+    gcloud secrets describe - describe a secret's metadata
+
+## SYNOPSIS
+
+```bash
+    gcloud secrets describe SECRET [--location=LOCATION] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Describe a secret's metadata.
+
+## EXAMPLES
+
+    Describe metadata of the secret named 'my-secret':
+
+        $ gcloud secrets describe my-secret
+
+## POSITIONAL ARGUMENTS
+
+     Secret resource - The secret to describe. This represents a Cloud
+     resource. (NOTE) Some attributes are not given arguments in this group but
+     can be set in other ways.
+
+     To set the project attribute:
+      * provide the argument SECRET on the command line with a fully
+        specified name;
+      * provide the argument --project on the command line;
+      * set the property core/project.
+
+     This must be specified.
+
+       SECRET
+          ID of the secret or fully qualified identifier for the secret.
+
+          To set the secret attribute:
+          + provide the argument SECRET on the command line.
+
+## FLAGS
+
+     Location resource - The location to describe. This represents a Cloud
+     resource. (NOTE) Some attributes are not given arguments in this group but
+     can be set in other ways.
+
+     To set the project attribute:
+      * provide the argument --location on the command line with a fully
+        specified name;
+      * provide the argument --project on the command line;
+      * set the property core/project.
+
+       --location=LOCATION
+          ID of the location or fully qualified identifier for the location.
+
+          To set the location attribute:
+          + provide the argument --location on the command line.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

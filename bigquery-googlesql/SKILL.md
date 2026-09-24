@@ -3,11 +3,15 @@ name: bigquery-googlesql
 description: >-
   Expert reference and tooling for Google Cloud BigQuery and GoogleSQL (ZetaSQL).
   Use this skill when the user asks to write, optimize, debug, or format BigQuery queries
-  (including Classic SQL and Pipe Syntax |>), compute statistical scorecard metrics (Gini,
-  AUC, KS, PSI), design partitioning and clustering strategies, triage stage execution
-  metrics (shuffle spills, slot starvation, data skew), train or run BigQuery ML models
-  (CREATE MODEL, ML.PREDICT), execute data movement (LOAD DATA, EXPORT DATA, scheduled queries),
-  estimate scan costs via dry runs, or implement Go/Python BigQuery SDK pipelines.
+  (including Classic SQL and Pipe Syntax |>), query property graphs with GQL (CREATE PROPERTY
+  GRAPH, GRAPH_TABLE), write procedural SQL scripts and orchestrate multi-statement transactions
+  (BEGIN...END, DECLARE, dynamic SQL EXECUTE IMMEDIATE, exception handling, system procedures
+  BQ.*, system variables @@*), run model-less foundation direct inference (AI.GENERATE,
+  AI.SEARCH, AI.FORECAST), compute statistical scorecard metrics (Gini, AUC, KS, PSI),
+  design partitioning and clustering strategies, triage stage execution metrics (shuffle
+  spills, slot starvation, data skew), train or run BigQuery ML models (CREATE MODEL, ML.PREDICT),
+  execute data movement (LOAD DATA, EXPORT DATA, scheduled queries), estimate scan costs via dry
+  runs, or implement Go/Python BigQuery SDK pipelines.
 ---
 
 # GoogleSQL and BigQuery Engineering Skill
@@ -47,7 +51,7 @@ Production analytical queries and schema definitions must adhere to six non-nego
 | Operational Goal / Domain | Primary Specification Link | Subsystem Scope and Core Topics |
 | :--- | :--- | :--- |
 | **Drafting or Refactoring Classic SQL** | [Language Reference](references/language_and_syntax.md) | 12 execution phases, UNNEST, PIVOT, QUALIFY, native JSON operators, MATCH_RECOGNIZE |
-| **Constructing Pipe Syntax Pipelines** | [Pipe Syntax Guide](references/pipe_syntax.md) | Linear relational dataflows (`\|>`), 26 pipe operators, subpipelines |
+| **Constructing Pipe Syntax Pipelines** | [Pipe Syntax Guide](references/pipe_syntax.md) | Linear relational dataflows (`\|>`), 21 pipe operators, subpipelines |
 | **Accelerating Slow or Expensive Queries** | [Query Optimization](references/query_design_and_optimization.md) | 7-phase optimization framework, CTE materialization, BI Engine |
 | **Triaging Slot Spills and Data Skew** | [Planning & Execution](references/query_planning_and_execution.md) | Borg slots, DAG repartitioning, shuffle spills to Colossus |
 | **Configuring Partitions and Clusters** | [Partitioning & Clustering](references/partitioning_and_clustering_guide.md) | Sizing boundaries ($\ge 10\text{ GB}$ vs $\ge 1\text{ GB}$), column order ($C_1 \to C_4$) |
@@ -63,6 +67,8 @@ Production analytical queries and schema definitions must adhere to six non-nego
 | **Standardizing Resource Identifiers** | [Naming Conventions](references/naming_conventions.md) | Three-tier hierarchy, ISO 11179 grammar, suffix catalog |
 | **Structuring Enterprise Lifecycles** | [Data Architecture](references/data_architecture_and_lifecycle.md) | Eight-tier data lifecycle (`01_landing` to `08_metrics`), table lifecycles |
 | **Applying FinOps and Security Tags** | [Resource Tagging](references/resource_tagging_and_metadata.md) | FinOps tags, SDK query labels, Dataplex policy tags |
+| **Querying Property Graphs with GQL** | [Graph & GQL Reference](references/graph_and_gql_reference.md) | `CREATE PROPERTY GRAPH`, `GRAPH_TABLE`, GPML path patterns, path quantifiers, GQL functions |
+| **Writing Procedural SQL and Scripts** | [Procedural Scripting Guide](references/procedural_sql_and_scripting.md) | Multi-statement blocks, `DECLARE`, loops, dynamic SQL, exception handling, system variables |
 | **Executing End-to-End Workflows** | [Engineering Workflows](references/engineering_workflows.md) | Query authoring, stage performance triage, schema migrations, CI gating |
 | **Formatting Code and Enforcing CI Gates**| [Style & Formatting](references/style_and_formatting.md) | `bqfmt` rules, `.bqfmt.toml`, dry-run cost verification |
 | **Automating via CLI, Go, or Python** | [Tooling, CLI & SDKs](references/tooling_cli_and_sdks.md) | `bq` CLI flags, Go client, Python client, Storage Write API |
@@ -84,8 +90,14 @@ Production analytical queries and schema definitions must adhere to six non-nego
 | **Cardinality Aggregation** | `COUNT(DISTINCT large_id)` | `APPROX_COUNT_DISTINCT(large_id)` for massive telemetry sets | [Cheat Sheet](resources/cheat_sheet.md) |
 | **High-Precision Decimals** | Defaulting to `BIGNUMERIC` everywhere | Use `INT64` (e.g. micros/cents) or standard `NUMERIC` | [Language Syntax](references/language_and_syntax.md) |
 | **Float Output Precision** | Unrounded transformed `FLOAT64` noise | Wrap output in `ROUND(expr, N)` calibrated to domain | [Style Guide](references/style_and_formatting.md) |
+| **Three-Valued Logic** | `NOT IN (subquery)` returning zero rows on NULL | Use `NOT EXISTS (SELECT 1 ...)` or anti-join | [Anti-Patterns Catalog](resources/anti_patterns_catalog.md) |
+| **Array Unnesting** | Comma `UNNEST` dropping parent rows on empty arrays | Use `LEFT JOIN UNNEST(array_col)` to preserve parent records | [Language Syntax](references/language_and_syntax.md) |
+| **Temporal Standard** | Unspecified timezones causing day-boundary drift | Standardize on UTC; document exceptions when working in local civil zones | [Language Syntax](references/language_and_syntax.md) |
 | **Schema Definitions** | Unpartitioned tables without constraints | Partitioned, clustered tables with non-enforced PKs and partition filters | [DDL Reference](references/ddl_reference.md) |
 | **Data Mutations** | High-frequency single-row DML | Batched MERGE with partition boundary pruning | [DML & Transactions](references/dml_and_transactions.md) |
+| **Graph & GQL Traversals** | Unbounded path matching (`-[e]->*`) without bounds | Bounded path quantifiers (`-[e]->{1, 4}`) with `IS_ACYCLIC(p)` | [Graph & GQL Reference](references/graph_and_gql_reference.md) |
+| **Procedural Transactions**| Unshielded `ROLLBACK` in exception blocks failing on OCC | Wrap `ROLLBACK` inside nested `BEGIN...EXCEPTION` before `RAISE` | [Procedural Scripting](references/procedural_sql_and_scripting.md) |
+| **Foundation Inference** | Unbounded `AI.GENERATE` on unpartitioned tables | Partition-bounded filtering or materialized temporary inference tables | [BigQuery ML Reference](references/bigquery_ml.md) |
 | **System Telemetry** | Blind console inspection | Query `region-*.INFORMATION_SCHEMA.JOBS_BY_PROJECT` filtered on `creation_time` | [System Views](references/information_schema_reference.md) |
 | **Code Formatting** | Inconsistent indentation and lower-case SQL | Automated formatting with `bqfmt` (2-space indent, uppercase) | [Style Guide](references/style_and_formatting.md) |
 | **CI Cost Verification** | Blind execution of test queries | Automated dry runs checking bytes processed via CLI or SDK | [Tooling & SDKs](references/tooling_cli_and_sdks.md) |
@@ -94,20 +106,21 @@ Production analytical queries and schema definitions must adhere to six non-nego
 
 ## Production Resources and Executable Tooling
 
+- **Setup and Requirements:** Consult [Setup and Installation Guide](README.md) for toolchain dependencies and agent hook configuration.
 - **Cheat Sheets:** Consult [Engineering Cheat Sheet](resources/cheat_sheet.md) for clause mapping, execution limits, and CLI commands.
 - **Anti-Patterns Catalog:** Consult [Anti-Patterns Catalog](resources/anti_patterns_catalog.md) for mechanical failures and refactoring patterns.
 - **Schema Templates:** Consult [Schema Templates](resources/schema_templates.md) for canonical `TableFieldSchema[]` definitions.
 - **Formatter Configuration:** Deploy [Production bqfmt Configuration](examples/dot_bqfmt.toml) for automated SQL style enforcement.
-- **SQL Patterns:** Inspect [Classic vs Pipe Syntax](examples/classic_vs_pipe_syntax.sql), [Scorecard & Risk Patterns](examples/scorecard_metrics.sql), [Optimized Query Patterns](examples/optimized_patterns.sql), [Incremental Merge Pattern](examples/incremental_merge_pattern.sql), [Multi-Level Aggregation](examples/multi_level_aggregation.sql), and [DDL and DML Patterns](examples/ddl_and_dml_patterns.sql).
+- **SQL Patterns:** Inspect [Classic vs Pipe Syntax](examples/classic_vs_pipe_syntax.sql), [Scorecard & Risk Patterns](examples/scorecard_metrics.sql), [Optimized Query Patterns](examples/optimized_patterns.sql), [Incremental Merge Pattern](examples/incremental_merge_pattern.sql), [Multi-Level Aggregation](examples/multi_level_aggregation.sql), [Graph and GQL Patterns](examples/graph_and_gql_patterns.sql), and [DDL and DML Patterns](examples/ddl_and_dml_patterns.sql).
 - **Client Utilities:** Review [Go Schema Client](examples/schema_extraction.go) (with [Go Tests](examples/schema_extraction_test.go)) and [Python Schema Utility](examples/schema_extraction.py) (with [Python Tests](examples/test_schema_extraction.py)).
 - **Automation Scripts:** Execute [Dry-Run Estimator](scripts/dry_run.sh), [Schema Exporter](scripts/extract_schema.sh), and [Artifact Verifier](scripts/verify.sh).
+- **Official Documentation Suite:** Browse local offline markdown references in the [Documentation Catalog](docs/README.md), covering [GoogleSQL Syntax](docs/standard-sql/query-syntax.md), [BigQuery ML](docs/bigqueryml/bigqueryml-syntax-create.md), [Graph GQL](docs/graph/graph-query-statements.md), and [System Views](docs/information-schema/information-schema-tables.md). Refresh documents using the [Documentation Fetcher](scripts/fetch_docs.sh).
 
 ---
 
 ## Scope Boundaries
 
-This skill covers analytical query engineering, columnar storage architecture, runtime performance diagnostics, schema management, and in-database machine learning in BigQuery. The following areas fall outside the operational scope of this skill:
-- Row-level access control policies (`CREATE ROW ACCESS POLICY`).
-- Column data masking and authorized view permission grants.
+This skill covers analytical query engineering, columnar storage architecture, runtime performance diagnostics, schema management, procedural scripting, graph queries (GQL), access policies, external tables, and in-database machine learning in BigQuery. The following areas fall outside the operational scope of this skill:
 - Remote external functions invoking Cloud Functions or Cloud Run microservice endpoints.
-- BigLake engines and federated external tables (`CREATE EXTERNAL TABLE`).
+- Cloud Dataprep visual pipeline orchestration.
+- Looker Studio semantic modeling and business intelligence visualization authoring.

@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+"""Unit tests for the reference {{TOOL_DISPLAY_NAME}} Python client."""
+
+import unittest
+from client import Client, ColumnMetadata, InvalidNamingError
+
+
+class TestClient(unittest.TestCase):
+    """Test suite verifying client behavior."""
+
+    def test_client_init_validation(self) -> None:
+        with self.assertRaises(ValueError):
+            Client("")
+
+        cli = Client("mock://localhost:9000")
+        self.assertEqual(cli.endpoint, "mock://localhost:9000")
+        self.assertEqual(cli.timeout_seconds, 30.0)
+
+    def test_column_naming_validation(self) -> None:
+        col = ColumnMetadata("user_id", "INT64")
+        col.validate_naming()
+
+        invalid = ColumnMetadata("user_name", "STRING")
+        with self.assertRaises(InvalidNamingError):
+            invalid.validate_naming()
+
+    def test_execute_query(self) -> None:
+        cli = Client("mock://localhost:9000")
+        res = cli.execute_query("SELECT user_id FROM events_fact")
+        self.assertEqual(res.rows_scanned, 10)
+
+
+if __name__ == "__main__":
+    unittest.main()

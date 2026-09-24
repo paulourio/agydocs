@@ -181,7 +181,7 @@ FROM `sensor.raw_metrics`
 ```
 
 #### 12. `|> UNION`, `|> INTERSECT`, `|> EXCEPT`
-Executes set operations between the pipeline stream and one or more parenthesized query blocks: `|> SET_OP { ALL | DISTINCT } [ BY NAME ] (query) [, ...]`.
+Executes set operations between the pipeline stream and one or more parenthesized query blocks. While `|> UNION` supports `{ ALL | DISTINCT } [ BY NAME ]`, both `|> INTERSECT` and `|> EXCEPT` strictly mandate `DISTINCT`:
 
 ```sql
 FROM `sales.north_america`
@@ -193,7 +193,7 @@ FROM `sales.north_america`
    (
      SELECT order_id, order_date, order_amount
        FROM `sales.asia`
-   )
+   );
 ```
 
 ---
@@ -212,7 +212,7 @@ FROM `finance.quarterly_metrics`
 |> UNPIVOT (
      revenue
      FOR quarter_name IN (q1, q2, q3, q4)
-   )
+   );
 ```
 
 #### 14. `|> TABLESAMPLE`
@@ -220,7 +220,7 @@ Selects a random sample of physical data blocks from the input relation using Bi
 
 ```sql
 FROM `telemetry.clickstream`
-|> TABLESAMPLE SYSTEM (0.1 PERCENT)
+|> TABLESAMPLE SYSTEM (0.1 PERCENT);
 ```
 
 #### 15. `|> MATCH_RECOGNIZE`
@@ -236,11 +236,11 @@ FROM `finance.stock_ticks`
      DEFINE
        up AS   price > PREV(price),
        down AS price < PREV(price)
-   )
+   );
 ```
 
 #### 16. `|> WITH`
-Declares Common Table Expressions mid-pipeline: `|> WITH [RECURSIVE] alias AS (query) [, ...]`. The pipeline input relation passes through completely unchanged to the subsequent operator.
+Declares Common Table Expressions mid-pipeline: `|> WITH alias AS (query) [, ...]`. The `|> WITH` operator does not support recursive CTEs (`RECURSIVE` is prohibited). The pipeline input relation passes through completely unchanged to the subsequent operator.
 
 ```sql
 FROM `retail.orders`
@@ -252,7 +252,7 @@ FROM `retail.orders`
 |> INNER JOIN
    TaxRates
    USING (state_code)
-|> EXTEND order_amount * rate AS tax_due
+|> EXTEND order_amount * rate AS tax_due;
 ```
 
 #### 17. `|> ORDER BY` and `|> LIMIT`
@@ -261,7 +261,7 @@ Sorts output tuples and bounds output row cardinality:
 ```sql
 FROM `retail.orders`
 |> ORDER BY order_date DESC
-|> LIMIT 100 OFFSET 20
+|> LIMIT 100 OFFSET 20;
 ```
 
 ---
@@ -284,7 +284,7 @@ AS (
        COUNT(*)          AS order_count,
        SUM(order_amount) AS total_spend
      GROUP BY customer_id, order_date
-)
+);
 ```
 
 ### 3.2 Data Insertion
@@ -297,7 +297,7 @@ FROM `finance.incoming_transfers`
 |> WHERE transfer_status = 'CLEARED'
 |> SELECT transfer_id AS payment_id,
           account_id,
-          amount AS cleared_amount
+          amount AS cleared_amount;
 ```
 
 ### 3.3 Data Export to Cloud Storage
@@ -314,7 +314,7 @@ AS (
   FROM `retail.orders`
   |> WHERE order_date = CURRENT_DATE()
   |> DROP internal_notes, billing_hash
-)
+);
 ```
 
 ---
@@ -349,7 +349,7 @@ Engineers can isolate regressions by commenting out downstream operators. Each p
 
 ```sql
 FROM `telemetry.api_logs`
-|> WHERE response_status >= 500
+|> WHERE response_status >= 500;
 -- |> AGGREGATE COUNT(*) AS error_count GROUP BY endpoint
 -- |> ORDER BY error_count DESC
 ```
@@ -363,7 +363,7 @@ FROM `sales.transactions`
             PARTITION BY region
                 ORDER BY transaction_amount DESC
           ) AS rank_in_region
-|> WHERE rank_in_region <= 5
+|> WHERE rank_in_region <= 5;
 ```
 
 ---

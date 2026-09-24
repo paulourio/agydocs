@@ -1,0 +1,35 @@
+# {{TOOL_DISPLAY_NAME}} Style and Formatting Guide
+
+This specification defines automated code formatting rules, configuration files, and CI gating standards for {{TOOL_DISPLAY_NAME}}.
+
+---
+
+## 1. Automated Formatting Over Subjective Prompting
+
+Code formatting must never rely on model discretion. All emitted code must conform to the canonical formatter configuration shipped in `examples/dot_formatter.toml`:
+- **Indentation:** Two spaces per indentation level. Tab characters are strictly prohibited.
+- **Line Length:** Hard limit of 100 characters per line. Break long expressions across clauses.
+- **Keyword Casing:** All engine keywords and clauses must appear in uppercase.
+- **Clause Alignment:** Align secondary query clauses to maintain clean vertical gutters.
+
+---
+
+## 2. ISO 11179 Architectural Naming Taxonomy
+
+Identifiers across schemas, tables, and attributes must strictly follow standard naming conventions:
+- **Layer Suffixes:** Tables must terminate in structural suffixes (`_dim`, `_fact`, `_met`, `_jnl`, `_stage`).
+- **Standard Class Words:** Attribute names must terminate in standard ISO 11179 class words:
+  - `_id`: Unique primary or foreign surrogate identifier.
+  - `_nm`: Human-readable entity or descriptive name.
+  - `_dt`: Calendar date representation.
+  - `_ts`: Timestamp with timezone representation.
+  - `_amt`: Monies, currency balances, or financial amounts.
+  - `_qty`: Physical count, volume, or integer units.
+  - `_ind`: Boolean indicator flag (0/1 or TRUE/FALSE).
+  - `_cd`: System or domain status code.
+
+---
+
+## 3. Formatting Gating in Continuous Integration
+
+The smoke verification runner (`scripts/verify.sh`) asserts zero formatting diffs across all code examples prior to deployment.

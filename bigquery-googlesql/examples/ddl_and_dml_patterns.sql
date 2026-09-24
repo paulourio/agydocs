@@ -162,7 +162,9 @@ ALTER TABLE `corp-prod.ecom_sales_04_anl.customer_order_fact`
   ADD COLUMN IF NOT EXISTS priority_cd STRING DEFAULT 'STANDARD';
 
 ALTER TABLE `corp-prod.ecom_sales_04_anl.customer_order_fact`
-  ALTER COLUMN priority_cd DROP DEFAULT,
+  ALTER COLUMN priority_cd DROP DEFAULT;
+
+ALTER TABLE `corp-prod.ecom_sales_04_anl.customer_order_fact`
   SET OPTIONS (
     description = 'Updated customer order repository with tracking metadata'
   );
@@ -216,7 +218,6 @@ USING (
 ) AS source
    ON target.order_dt = source.order_dt
   AND target.order_id = source.order_id
-  AND target.order_dt >= DATE_SUB(CURRENT_DATE(), INTERVAL 3 DAY)
 
  -- 1. Matched row flagged for deletion in CDC source
  WHEN MATCHED AND source.cdc_action_cd = 'D' THEN
@@ -255,7 +256,6 @@ BEGIN
     );
 
     IF available_balance_amt IS NULL OR available_balance_amt < transfer_amt THEN
-      ROLLBACK TRANSACTION;
       RAISE USING MESSAGE = 'Transaction aborted: Insufficient funds in sender wallet.';
     END IF;
 
@@ -278,8 +278,10 @@ BEGIN
   COMMIT TRANSACTION;
 
 EXCEPTION WHEN ERROR THEN
-  IF @@error.statement_text IS NOT NULL THEN
+  BEGIN
     ROLLBACK TRANSACTION;
-  END IF;
+  EXCEPTION WHEN ERROR THEN
+    -- Safely absorb errors if transaction was already aborted by OCC conflict or earlier rollback
+  END;
   RAISE USING MESSAGE = CONCAT('Wallet transaction failed with error: ', @@error.message);
 END;

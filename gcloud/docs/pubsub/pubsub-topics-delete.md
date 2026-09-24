@@ -1,0 +1,51 @@
+# gcloud pubsub topics delete
+
+## NAME
+
+    gcloud pubsub topics delete - deletes one or more Cloud Pub/Sub topics
+
+## SYNOPSIS
+
+```bash
+    gcloud pubsub topics delete TOPIC [TOPIC ...] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Deletes one or more Cloud Pub/Sub topics.
+
+## EXAMPLES
+
+    To delete a Cloud Pub/Sub topic, run:
+
+        $ gcloud pubsub topics delete mytopic
+
+## POSITIONAL ARGUMENTS
+
+     Topic resource - One or more topics to delete. This represents a Cloud
+     resource. (NOTE) Some attributes are not given arguments in this group but
+     can be set in other ways.
+
+     To set the project attribute:
+      * provide the argument topic on the command line with a fully specified
+        name;
+      * provide the argument --project on the command line;
+      * set the property core/project.
+
+     This must be specified.
+
+       TOPIC [TOPIC ...]
+          IDs of the topics or fully qualified identifiers for the topics.
+
+          To set the topic attribute:
+          + provide the argument topic on the command line.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

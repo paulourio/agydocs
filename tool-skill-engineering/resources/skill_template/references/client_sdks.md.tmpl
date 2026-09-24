@@ -1,0 +1,48 @@
+# {{TOOL_DISPLAY_NAME}} Client SDKs and Integration Guide
+
+This guide documents client libraries, connection management, schema inspection, and error handling for {{TOOL_DISPLAY_NAME}} programmatic automation.
+
+---
+
+## 1. Multi-Language SDK Parity
+
+Tool skills maintain parity across supported client languages (such as Go and Python). Each client driver must provide:
+- **Connection Configuration:** Configurable timeouts, retry policies, and endpoint targets.
+- **Context Deadlines:** Full context propagation and cancellation support.
+- **Structured Error Handling:** Distinction between syntax, network, timeout, and authorization failures.
+- **Naming Validation:** Client-side helpers verifying column identifier compliance.
+
+---
+
+## 2. Go Client Architecture
+
+The Go client in `examples/client.go` exposes typed execution interfaces:
+
+```go
+cli, err := examples.NewClient(examples.Config{
+    Endpoint: "engine://endpoint:port",
+    Timeout:  30 * time.Second,
+})
+if err != nil {
+    log.Fatalf("failed to initialize client: %v", err)
+}
+
+result, err := cli.ExecuteQuery(ctx, "SELECT user_id FROM users_dim")
+```
+
+All Go implementations are tested via `go -C examples test -count=1 ./...`.
+
+---
+
+## 3. Python Client Architecture
+
+The Python client in `examples/client.py` exposes typed dataclasses and execution methods:
+
+```python
+from client import Client
+
+cli = Client(endpoint="engine://endpoint:port", timeout_seconds=30.0)
+result = cli.execute_query("SELECT user_id FROM users_dim")
+```
+
+All Python implementations are tested via `python3 -m unittest discover -s examples -p "test_*.py"`.

@@ -1,0 +1,111 @@
+# gcloud run jobs execute
+
+## NAME
+
+    gcloud run jobs execute - execute a job
+
+## SYNOPSIS
+
+```bash
+    gcloud run jobs execute [JOB] [--container=CONTAINER] [--region=REGION]
+        [--task-timeout=TASK_TIMEOUT] [--tasks=TASKS]
+        [--args=[ARG,...] --update-env-vars=[KEY=VALUE,...]] [--async | --wait]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Execute a job.
+
+## EXAMPLES
+
+    To execute a job:
+
+        $ gcloud run jobs execute my-job
+
+## POSITIONAL ARGUMENTS
+
+     Job resource - Job to execute. This represents a Cloud resource. (NOTE)
+     Some attributes are not given arguments in this group but can be set in
+     other ways.
+
+     To set the project attribute:
+      * provide the argument JOB on the command line with a fully specified
+        name;
+      * specify the job name from an interactive prompt with a fully
+        specified name;
+      * provide the argument --project on the command line;
+      * set the property core/project.
+
+       [JOB]
+          ID of the Job or fully qualified identifier for the Job.
+
+          To set the jobs attribute:
+          + provide the argument JOB on the command line;
+          + specify the job name from an interactive prompt.
+
+## FLAGS
+
+     --container=CONTAINER
+        Specifies a container by name. Flags following --container will apply
+        to the specified container.
+
+        Flags that are not container-specific must be specified before
+        --container.
+
+     --region=REGION
+        Region in which the resource can be found. Alternatively, set the
+        property [run/region].
+
+     --task-timeout=TASK_TIMEOUT
+        The existing maximum time (deadline) a job task attempt can run for. If
+        provided, an execution will be created with this value. Otherwise
+        existing maximum time of the job is used. In the case of retries, this
+        deadline applies to each attempt of a task. If the task attempt does
+        not complete within this time, it will be killed. It is specified as a
+        duration; for example, "10m5s" is ten minutes, and five seconds. If you
+        don't specify a unit, seconds is assumed. For example, "10" is 10
+        seconds.
+
+     --tasks=TASKS
+        Number of tasks that must run to completion for the execution to be
+        considered done. If provided, an execution will be created with this
+        value. Otherwise the existing task count of the job is used.
+
+### Container Flags
+
+        If the --container is specified the following arguments may only be specified after a --container flag.
+
+         --args=[ARG,...]
+            Comma-separated arguments passed to the command run by the
+            container image. If provided, an execution will be created with the
+            input values. Otherwise, the existing arguments of the job are
+            used.
+
+         --update-env-vars=[KEY=VALUE,...]
+            List of key-value pairs to set as environment variables overrides
+            for an execution of a job. If provided, an execution will be
+            created with the merge result of the input values and the existing
+            environment variables. New value overrides existing value if they
+            have the same key. If not provided, existing environment variables
+            are used.
+
+     At most one of these can be specified:
+
+       --async
+          Return immediately, without waiting for the operation in progress to
+          complete.
+
+       --wait
+          Wait until the execution has completed running before exiting. If not
+          set, gcloud exits successfully when the execution has started.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

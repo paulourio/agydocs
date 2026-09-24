@@ -335,9 +335,9 @@ Taxonomy: DataSensitivity
       └── CardCVV
 ```
 
-### 6.2 Applying Policy Tags in Table DDL
+### 6.2 Applying Data Policies in Table DDL
 
-To restrict column visibility or enable dynamic SHA-256 hash masking, attach the fully qualified policy tag resource name to the column definition. The DDL below secures sensitive card and customer fields.
+To restrict column visibility or enable dynamic SHA-256 hash masking, attach the fully qualified data policy resource name to the column definition:
 
 ```sql
 CREATE OR REPLACE TABLE `mybank-analytics-prod.lend_card_02_str.card_customer_rec`
@@ -348,14 +348,14 @@ CREATE OR REPLACE TABLE `mybank-analytics-prod.lend_card_02_str.card_customer_re
   tax_bk      STRING
               NOT NULL
               OPTIONS (
-                description = 'Customer CPF natural key',
-                policy_tags = ['projects/mybank-prod/locations/us/taxonomies/1001/policyTags/2001']
+                description   = 'Customer CPF natural key',
+                data_policies = ['projects/mybank-prod/locations/us/dataPolicies/cpf-masking-policy']
               ),
   card_pan_bk STRING
               NOT NULL
               OPTIONS (
-                description = 'Primary Account Number',
-                policy_tags = ['projects/mybank-prod/locations/us/taxonomies/1001/policyTags/2002']
+                description   = 'Primary Account Number',
+                data_policies = ['projects/mybank-prod/locations/us/dataPolicies/pan-masking-policy']
               ),
   created_ts  TIMESTAMP
               NOT NULL
@@ -370,10 +370,12 @@ OPTIONS (
              ('data-classification', 'restricted_pii'),
              ('owner-team', 'credit-data-eng')
            ]
-)
+);
 ```
 
 Users lacking the Fine-Grained Reader role on the policy tag cannot inspect plaintext values. BigQuery automatically replaces sensitive strings with null values, hashed digests, or masked tokens according to configured data masking rules.
+
+> **API Representation:** BigQuery REST API and client libraries represent column policy tags in `schema.fields[].policyTags.names`. Within GoogleSQL DDL statements, attach masking rules with `data_policies` or configure policy tags through the Cloud Console, BigQuery CLI (`bq update`), or Terraform.
 
 ---
 

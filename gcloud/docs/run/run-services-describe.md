@@ -1,0 +1,77 @@
+# gcloud run services describe
+
+## NAME
+
+    gcloud run services describe - obtain details about a given service
+
+## SYNOPSIS
+
+```bash
+    gcloud run services describe (SERVICE : --namespace=NAMESPACE)
+        [--region=REGION] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Obtain details about a given service.
+
+## EXAMPLES
+
+    To obtain details about a given service:
+
+        $ gcloud run services describe <service-name>
+
+    To get those details in the YAML format:
+
+        $ gcloud run services describe <service-name> --format=yaml
+
+    To get them in YAML format suited to export (omitting metadata specific to
+    this deployment and status info):
+
+        $ gcloud run services describe <service-name> --format=export
+
+## POSITIONAL ARGUMENTS
+
+     Service resource - Service to describe. The arguments in this group can be
+     used to specify the attributes of this resource.
+
+     This must be specified.
+
+       SERVICE
+          ID of the service or fully qualified identifier for the service.
+
+          To set the service attribute:
+          + provide the argument SERVICE on the command line.
+
+          This positional argument must be specified if any of the other
+          arguments in this group are specified.
+
+       --namespace=NAMESPACE
+          Specific to Cloud Run for Anthos: Kubernetes namespace for the
+          service.
+
+          To set the namespace attribute:
+          + provide the argument SERVICE on the command line with a fully
+            specified name;
+          + provide the argument --namespace on the command line;
+          + set the property run/namespace;
+          + For Cloud Run on Kubernetes Engine, defaults to "default".
+            Otherwise, defaults to project ID.;
+          + provide the argument project on the command line;
+          + set the property core/project.
+
+## FLAGS
+
+     --region=REGION
+        Region in which the resource can be found. Alternatively, set the
+        property [run/region].
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

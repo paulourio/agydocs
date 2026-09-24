@@ -1,0 +1,71 @@
+# gcloud functions list
+
+## NAME
+
+    gcloud functions list - list Google Cloud Functions
+
+## SYNOPSIS
+
+```bash
+    gcloud functions list [--regions=REGION,[REGION,...]; default="-"] [--v2]
+        [--filter=EXPRESSION] [--limit=LIMIT] [--page-size=PAGE_SIZE]
+        [--sort-by=[FIELD,...]] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    List Google Cloud Functions.
+
+## FLAGS
+
+     --regions=REGION,[REGION,...]; default="-"
+        Regions containing functions to list. By default, functions from the
+        region configured in [functions/region] property are listed.
+
+     --v2
+        If specified, this command will use Cloud Functions v2 APIs and return
+        the result in the v2 format (See
+        https://cloud.google.com/functions/docs/reference/rest/v2/projects.locations.functions#Function).
+        If not specified, 1st gen and 2nd gen functions will use v1 and v2 APIs
+        respectively and return the result in the corresponding format (For v1
+        format, see
+        https://cloud.google.com/functions/docs/reference/rest/v1/projects.locations.functions#resource:-cloudfunction).
+        This command conflicts with --no-gen2. If specified with this
+        combination, v2 APIs will be used.
+
+## LIST COMMAND FLAGS
+
+     --filter=EXPRESSION
+        Apply a Boolean filter EXPRESSION to each resource item to be listed.
+        If the expression evaluates True, then that item is listed. For more
+        details and examples of filter expressions, run [`gcloud topic filters`](../topic/topic-filters.md).
+        This flag interacts with other flags that are applied in this order:
+        --flatten, --sort-by, --filter, --limit.
+
+     --limit=LIMIT
+        Maximum number of resources to list. The default is unlimited. This
+        flag interacts with other flags that are applied in this order:
+        --flatten, --sort-by, --filter, --limit.
+
+     --page-size=PAGE_SIZE
+        Some services group resource list output into pages. This flag
+        specifies the maximum number of resources per page. The default is
+        determined by the service if it supports paging, otherwise it is
+        unlimited (no paging). Paging may be applied before or after --filter
+        and --limit depending on the service.
+
+     --sort-by=[FIELD,...]
+        Comma-separated list of resource field key names to sort by. The
+        default order is ascending. Prefix a field with ``~'' for descending
+        order on that field. This flag interacts with other flags that are
+        applied in this order: --flatten, --sort-by, --filter, --limit.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

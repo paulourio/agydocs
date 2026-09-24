@@ -1,0 +1,63 @@
+# gcloud run jobs delete
+
+## NAME
+
+    gcloud run jobs delete - delete a job
+
+## SYNOPSIS
+
+```bash
+    gcloud run jobs delete JOB [--[no-]async] [--region=REGION]
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Delete a job.
+
+## EXAMPLES
+
+    To delete a job:
+
+        $ gcloud run jobs delete job-name
+
+## POSITIONAL ARGUMENTS
+
+     Job resource - Job to delete. This represents a Cloud resource. (NOTE)
+     Some attributes are not given arguments in this group but can be set in
+     other ways.
+
+     To set the project attribute:
+      * provide the argument JOB on the command line with a fully specified
+        name;
+      * provide the argument --project on the command line;
+      * set the property core/project.
+
+     This must be specified.
+
+       JOB
+          ID of the Job or fully qualified identifier for the Job.
+
+          To set the jobs attribute:
+          + provide the argument JOB on the command line.
+
+## FLAGS
+
+     --[no-]async
+        Return immediately, without waiting for the operation in progress to
+        complete. Defaults to --no-async. Use --async to enable and --no-async
+        to disable.
+
+     --region=REGION
+        Region in which the resource can be found. Alternatively, set the
+        property [run/region].
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

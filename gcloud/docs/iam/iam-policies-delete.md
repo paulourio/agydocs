@@ -1,0 +1,61 @@
+# gcloud iam policies delete
+
+## NAME
+
+    gcloud iam policies delete - delete a policy on the given attachment point
+        with the given name
+
+## SYNOPSIS
+
+```bash
+    gcloud iam policies delete POLICY_ID --attachment-point=ATTACHMENT_POINT
+        --kind=KIND [--etag=ETAG] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Delete a policy on the given attachment point with the given name.
+
+## EXAMPLES
+
+### The following command deletes the IAM policy defined at the resource
+
+    project 123 of kind denypolicies and id my-deny-policy, with etag abc:
+
+        $ gcloud iam policies delete my-deny-policy \
+            --attachment-point=cloudresourcemanager.googleapis.com/\
+        projects/123 --kind=denypolicies --etag=abc
+
+## POSITIONAL ARGUMENTS
+
+     POLICY_ID
+        Policy ID that is unique for the resource to which the policy is
+        attached.
+
+## REQUIRED FLAGS
+
+     --attachment-point=ATTACHMENT_POINT
+        Resource to which the policy is attached. For valid formats, see
+        https://cloud.google.com/iam/help/deny/attachment-point.
+
+     --kind=KIND
+        Policy type. Use denypolicies for deny policies.
+
+## OPTIONAL FLAGS
+
+     --etag=ETAG
+        Etag that identifies the version of the existing policy. It can be
+        obtained by running gcloud iam policies get. When deleting a policy, if
+        the etag is omitted, the policy is deleted regardless of its current
+        etag. When updating a policy, if the etag is omitted, the update uses
+        the etag provided in the policy file.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

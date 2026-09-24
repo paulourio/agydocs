@@ -1,0 +1,90 @@
+# gcloud services list
+
+## NAME
+
+    gcloud services list - list services for a project
+
+## SYNOPSIS
+
+```bash
+    gcloud services list [--available | --enabled] [--filter=EXPRESSION]
+        [--limit=LIMIT] [--page-size=PAGE_SIZE; default=200]
+        [--sort-by=[FIELD,...]] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+### This command lists the services that are enabled or available to be enabled
+
+    by a project. You can choose the mode in which the command will list
+    services by using exactly one of the --enabled or --available flags.
+    --enabled is the default.
+
+## EXAMPLES
+
+    To list the services for the current project has enabled for consumption,
+    run:
+
+        $ gcloud services list --enabled
+
+    To list the services for the current project can enable for consumption,
+    run:
+
+        $ gcloud services list --available
+
+    To list the services for project my-project has enabled for consumption,
+    run:
+
+        $ gcloud services list --enabled --project=my-project
+
+    To list the services the project my-project can enable for consumption,
+    run:
+
+        $ gcloud services list --available --project=my-project
+
+## FLAGS
+
+     At most one of these can be specified:
+
+       --available
+          Return the services available to the project to enable. This list
+          will include any services that the project has already enabled.
+
+       --enabled
+          (DEFAULT) Return the services which the project has enabled.
+
+## LIST COMMAND FLAGS
+
+     --filter=EXPRESSION
+        Apply a Boolean filter EXPRESSION to each resource item to be listed.
+        If the expression evaluates True, then that item is listed. For more
+        details and examples of filter expressions, run [`gcloud topic filters`](../topic/topic-filters.md).
+        This flag interacts with other flags that are applied in this order:
+        --flatten, --sort-by, --filter, --limit.
+
+     --limit=LIMIT
+        Maximum number of resources to list. The default is unlimited. This
+        flag interacts with other flags that are applied in this order:
+        --flatten, --sort-by, --filter, --limit.
+
+     --page-size=PAGE_SIZE; default=200
+        Some services group resource list output into pages. This flag
+        specifies the maximum number of resources per page. The default is 200.
+        Paging may be applied before or after --filter and --limit depending on
+        the service.
+
+     --sort-by=[FIELD,...]
+        Comma-separated list of resource field key names to sort by. The
+        default order is ascending. Prefix a field with ``~'' for descending
+        order on that field. This flag interacts with other flags that are
+        applied in this order: --flatten, --sort-by, --filter, --limit.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

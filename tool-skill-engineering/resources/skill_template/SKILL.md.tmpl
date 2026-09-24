@@ -1,0 +1,50 @@
+---
+name: {{TOOL_NAME}}
+description: >-
+  Expert reference and tooling for {{TOOL_DISPLAY_NAME}}.
+  Use this skill when the user asks to write, optimize, debug, or verify {{TOOL_DISPLAY_NAME}} configurations,
+  queries, scripts, schema definitions, or client SDK automation.
+---
+
+# {{TOOL_DISPLAY_NAME}} Engineering Skill
+
+{{TOOL_DISPLAY_NAME}} operates across distributed compute and storage boundaries. This skill provides reference architectures, syntax specifications, engine internal models, optimization protocols, formatting rules, and client tooling for {{TOOL_DISPLAY_NAME}} engineering.
+
+```
+-- Baseline operational pattern
+SELECT 1 AS status_ind
+```
+
+---
+
+## Core Engineering Invariants
+
+Production analytical queries and configurations must adhere to five non-negotiable engineering invariants:
+
+- **Strict Projection Discipline:** Select only required attributes and fields to minimize memory bus traffic and disk reads.
+- **Boundary Gating:** Supply explicit, sargable boundary filters in top-level execution predicates.
+- **Intermediate Materialization:** Materialize shared, expensive subqueries into temporary structures rather than re-evaluating inline views.
+- **Universal Code Style Compliance:** Format all emitted code files using the project formatter with zero permitted formatting diffs.
+- **Architectural Naming Standards:** Apply strict structural naming conventions, layer suffixes, and ISO 11179 class words.
+
+---
+
+## Unified Technical Architecture and Routing Matrix
+
+| Operational Goal / Domain | Primary Specification Link | Subsystem Scope and Core Topics |
+| :--- | :--- | :--- |
+| **Core Syntax & Operators** | [Syntax Guide](references/syntax_and_operators.md) | Statements, operators, expressions, and built-ins |
+| **Physical Engine Architecture** | [Engine Architecture](references/engine_architecture.md) | Storage layouts, execution planning, and resource limits |
+| **Optimization Framework** | [Optimization Protocols](references/optimization_guide.md) | Pruning, indexing, caching, and straggler triage |
+| **Code Style & Formatting** | [Style & Formatting](references/style_and_formatting.md) | Formatter rules, configuration, and CI gates |
+| **Client SDK Automation** | [Client SDKs](references/client_sdks.md) | Client libraries, connection pooling, and error handling |
+
+---
+
+## Production Quick Reference
+
+| Operational Domain | Anti-Pattern | Recommended Production Pattern | Reference Link |
+| :--- | :--- | :--- | :--- |
+| **Data Retrieval** | Wildcard projection across wide tables | Project explicit column lists | [Engine Architecture](references/engine_architecture.md) |
+| **Predicate Filtering** | Wrapping indexed fields in scalar functions | Sargable bounded comparisons | [Optimization Guide](references/optimization_guide.md) |
+| **Code Formatting** | Inconsistent indentation and mixed casing | Automated formatting with official formatter | [Style Guide](references/style_and_formatting.md) |

@@ -17,10 +17,10 @@ run_check() {
   printf "  %-45s" "$label"
   if "$@" >/dev/null 2>&1; then
     echo "✅ PASS"
-    ((PASS++))
+    PASS=$((PASS + 1))
   else
     echo "❌ FAIL"
-    ((FAIL++))
+    FAIL=$((FAIL + 1))
   fi
 }
 
@@ -30,9 +30,9 @@ echo ""
 # --- Go checks ---
 echo "[Go]"
 if command -v go >/dev/null 2>&1; then
-  run_check "go vet" go vet "$EXAMPLES_DIR/..."
-  run_check "go build" go build "$EXAMPLES_DIR/..."
-  run_check "go test" go test "$EXAMPLES_DIR/..." -count=1 -short
+  run_check "go vet" go -C "$EXAMPLES_DIR" vet ./...
+  run_check "go build" go -C "$EXAMPLES_DIR" build -o /dev/null ./...
+  run_check "go test" go -C "$EXAMPLES_DIR" test ./... -count=1 -short
 else
   echo "  SKIP: 'go' not found in PATH"
 fi

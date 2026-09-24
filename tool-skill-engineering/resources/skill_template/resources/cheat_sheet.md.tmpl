@@ -1,0 +1,23 @@
+# {{TOOL_DISPLAY_NAME}} Engineering Cheat Sheet
+
+This cheat sheet provides quick-reference commands, syntax patterns, flag mappings, and system limits for {{TOOL_DISPLAY_NAME}}.
+
+---
+
+## 1. Core Command Matrix
+
+| Operational Goal | Command / Pattern | Notes |
+| :--- | :--- | :--- |
+| **Validate Code** | `bash scripts/verify.sh` | Runs shell, Go, and Python test suites |
+| **Format Files** | `dot_formatter.toml` alignment | Enforces 2-space indents and uppercase keywords |
+| **Assert Invariants** | `python3 resources/eval_runner.py` | Asserts dialect purity and naming standards |
+
+---
+
+## 2. Invariant Checklist
+
+- [ ] All queries project explicit column lists (no unconstrained `*`).
+- [ ] Outer `WHERE` clauses apply sargable predicates on partitioned keys.
+- [ ] Table identifiers terminate in structural layer suffixes (`_dim`, `_fact`, `_met`).
+- [ ] Column names terminate in ISO 11179 class words (`_id`, `_nm`, `_dt`, `_ts`, `_amt`, `_qty`, `_ind`, `_cd`).
+- [ ] Code formatting has zero diffs against the canonical formatter configuration.

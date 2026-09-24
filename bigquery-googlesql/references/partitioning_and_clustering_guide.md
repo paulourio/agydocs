@@ -65,7 +65,7 @@ SELECT CAST(ROUND(AVG(daily_bytes) / (1024 * 1024 * 1024), 2) AS STRING) AS avg_
            FROM `telemetry.raw_stream`
           WHERE event_timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
           GROUP BY ingest_date
-       )
+       );
 ```
 
 ### 2.1 Granularity Selection Rules
@@ -73,7 +73,7 @@ SELECT CAST(ROUND(AVG(daily_bytes) / (1024 * 1024 * 1024), 2) AS STRING) AS avg_
 - **Daily (`DAY`):** Standard default for analytical systems. Apply when daily ingestion spans $100\text{ MB}$ to $1\text{ TB}$. Daily partitions accommodate up to 10.9 years of historical records before hitting the 4,000-partition boundary.
 - **Monthly (`MONTH`):** Apply when daily ingestion is below $100\text{ MB}$, or when total table volume spans $10\text{ GB}$ to $500\text{ GB}$ across multiple years. Monthly intervals aggregate small writes, preventing micro-partition fragmentation.
 - **Yearly (`YEAR`):** Apply for multi-decade historical archives where queries filter strictly by calendar year.
-- **Integer Range (`RANGE`):** Apply for non-temporal numeric identifiers (such as account IDs or shard keys) with static distributions.
+- **Integer Range (`RANGE_BUCKET`):** Apply for non-temporal numeric identifiers (such as account IDs or shard keys) with static distributions using `RANGE_BUCKET(shard_id, GENERATE_ARRAY(0, 1000, 10))`.
 
 ---
 
@@ -93,6 +93,21 @@ Part 2026-03-04: [ 5.0 GB ]        Part 2026-03-04: [ 0.1 GB ]
 - **Bulk Historical Migrations:** Backfilling historical years in a solitary transaction concentrates millions of rows into a single partition date. Stage historical backfills into distinct day batches to maintain uniform Capacitor block allocations.
 - **The Null Partition Trap:** Records containing `NULL` or unparseable dates land in the special `__NULL__` partition. If data validation fails upstream, this partition swells disproportionately. Always enforce `NOT NULL` constraints on partition columns during ingest.
 - **Out-of-Range Partitions:** Records with timestamps before 1960 or after 2159 land in `__UNPARTITIONED__`. Query filters on valid date ranges do not prune this partition if predicates permit null evaluations.
+
+### 3.2 Partition Purging and the Myth of DROP PARTITION
+GoogleSQL DDL contains no `ALTER TABLE DROP PARTITION` syntax. Engineers attempting to execute drop partition statements encounter compilation errors.
+
+To purge individual partitions, apply one of two supported approaches:
+- **Zero-Cost DML Deletion:** Execute a targeted `DELETE` statement:
+  ```sql
+  DELETE FROM `telemetry.raw_stream`
+   WHERE ingest_date = '2026-03-01';
+  ```
+  When the filter predicate matches an entire partition boundary, BigQuery completes a zero-byte metadata update. The engine dereferences partition pointers in Colossus storage without scanning table blocks or consuming slot compute.
+- **CLI Partition Drop:** Remove the partition decorator using the `bq` CLI utility:
+  ```bash
+  bq rm --table 'telemetry.raw_stream$20260301'
+  ```
 
 ---
 
@@ -120,7 +135,7 @@ Never declare low-cardinality attributes (such as boolean flags or binary status
 | **Customer Transaction Ledger ($\ge 500\text{ GB}$ total)** | Partition by `MONTH` + Cluster on `(account_id, txn_date)` | Monthly partitions eliminate micro-partitions; account clustering enables point lookups. |
 | **Product Dimension Catalog ($5\text{ GB}$ total)** | Cluster on `(category_id, product_id)` (No partitioning) | Table size is under $10\text{ GB}$; clustering provides zone map skipping without partition metadata. |
 | **Lookup Reference Table ($50\text{ MB}$ total)** | Flat table (No partitioning, no clustering) | Table fits into a single Capacitor storage stripe; pruning provides zero mechanical benefit. |
-| **Global Sharded Multi-Tenant ($\ge 2\text{ TB}$)** | Partition by `INTEGER_RANGE(shard_id)` + Cluster on `customer_id` | Distributes non-temporal shards evenly across slots while clustering customer histories. |
+| **Global Sharded Multi-Tenant ($\ge 2\text{ TB}$)** | Partition by `RANGE_BUCKET(shard_id, GENERATE_ARRAY(0, 1000, 10))` + Cluster on `customer_id` | Distributes non-temporal shards evenly across slots while clustering customer histories. |
 
 ---
 
@@ -137,7 +152,7 @@ SELECT table_name,
   FROM `my_project.analytics.INFORMATION_SCHEMA.PARTITIONS`
  WHERE table_name = 'user_telemetry'
    AND partition_id NOT IN ('__NULL__', '__UNPARTITIONED__')
- GROUP BY table_name
+ GROUP BY table_name;
 ```
 
 If average partition logical size falls below $100\text{ MB}$, migrate the schema from daily to monthly partitioning. If maximum partition size exceeds ten times the average, investigate upstream key skew.

@@ -1,0 +1,50 @@
+# gcloud compute instance-templates delete
+
+## NAME
+
+    gcloud compute instance-templates delete - delete Compute Engine virtual
+        machine instance templates
+
+## SYNOPSIS
+
+```bash
+    gcloud compute instance-templates delete NAME [NAME ...]
+        [--global | --region=REGION] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    gcloud compute instance-templates delete deletes one or more Compute Engine
+    virtual machine instance templates.
+
+## EXAMPLES
+
+    To delete the instance template named 'INSTANCE-TEMPLATE', run:
+
+        $ gcloud compute instance-templates delete INSTANCE-TEMPLATE
+
+## POSITIONAL ARGUMENTS
+
+     NAME [NAME ...]
+        Names of the instance templates to delete.
+
+## FLAGS
+
+     At most one of these can be specified:
+
+       --global
+          If set, the instance templates are global.
+
+       --region=REGION
+          Region of the instance templates to delete. Overrides the default
+          compute/region property value for this command invocation.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

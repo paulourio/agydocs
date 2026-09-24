@@ -1,0 +1,76 @@
+# gcloud storage objects describe
+
+## NAME
+
+    gcloud storage objects describe - describe a Cloud Storage object
+
+## SYNOPSIS
+
+```bash
+    gcloud storage objects describe URL [--additional-headers=HEADER=VALUE]
+        [--fetch-encrypted-object-hashes] [--raw] [--soft-deleted]
+        [--decryption-keys=[DECRYPTION_KEY,...]] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    Describe a Cloud Storage object.
+
+## EXAMPLES
+
+### Describe a Google Cloud Storage object with the url
+
+    "gs://bucket/my-object":
+
+        $ gcloud storage objects describe gs://bucket/my-object
+
+    Describe object with JSON formatting, only returning the "name" key:
+
+        $ gcloud storage objects describe gs://bucket/my-object \
+            --format="json(name)"
+
+## POSITIONAL ARGUMENTS
+
+     URL
+        Specifies URL of object to describe.
+
+## FLAGS
+
+     --additional-headers=HEADER=VALUE
+        Includes arbitrary headers in storage API calls. Accepts a comma
+        separated list of key=value pairs, e.g. header1=value1,header2=value2.
+        Overrides the default storage/additional_headers property value for
+        this command invocation.
+
+     --fetch-encrypted-object-hashes
+        If the initial GET request returns an object encrypted with a
+        customer-supplied encryption key, the hash fields will be null. If the
+        matching decryption key is present on the system, this flag retries the
+        GET request with the key.
+
+     --raw
+        Shows metadata in the format returned by the API instead of
+        standardizing it.
+
+     --soft-deleted
+        Displays soft-deleted resources only. For objects, it will exclude live
+        and noncurrent ones.
+
+## ENCRYPTION FLAGS
+
+     --decryption-keys=[DECRYPTION_KEY,...]
+        A comma-separated list of customer-supplied encryption keys (RFC 4648
+        section 4 base64-encoded AES256 strings) that will be used to decrypt
+        Cloud Storage objects. Data encrypted with a customer-managed
+        encryption key (CMEK) is decrypted automatically, so CMEKs do not need
+        to be listed here.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

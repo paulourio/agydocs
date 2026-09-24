@@ -1,0 +1,70 @@
+# gcloud iam roles undelete
+
+## NAME
+
+    gcloud iam roles undelete - undelete a custom role from an organization or
+        a project
+
+## SYNOPSIS
+
+```bash
+    gcloud iam roles undelete ROLE_ID
+        (--organization=ORGANIZATION | --project=PROJECT_ID)
+        [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    This command undeletes a role. Roles that have been deleted for certain
+    long time can't be undeleted.
+
+    This command can fail for the following reasons:
+      o The role specified does not exist.
+      o The active user does not have permission to access the given role.
+
+## EXAMPLES
+
+    To undelete the role ProjectUpdater of the organization 1234567, run:
+
+        $ gcloud iam roles undelete ProjectUpdater --organization=1234567
+
+    To undelete the role ProjectUpdater of the project myproject, run:
+
+        $ gcloud iam roles undelete ProjectUpdater --project=myproject
+
+## POSITIONAL ARGUMENTS
+
+     ROLE_ID
+        ID of the custom role to undelete. You must also specify the
+        --organization or --project flag.
+
+## REQUIRED FLAGS
+
+     Exactly one of these must be specified:
+
+       --organization=ORGANIZATION
+          Organization of the role you want to undelete.
+
+       --project=PROJECT_ID
+          Project of the role you want to undelete.
+
+          The Google Cloud project ID to use for this invocation. If omitted,
+          then the current project is assumed; the current project can be
+          listed using gcloud config list --format='text(core.project)' and can
+          be set using gcloud config set project PROJECTID.
+
+          --project and its fallback core/project property play two roles in
+          the invocation. It specifies the project of the resource to operate
+          on. It also specifies the project for API enablement check, quota,
+          and billing. To specify a different project for quota and billing,
+          use --billing-project or billing/quota_project property.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.

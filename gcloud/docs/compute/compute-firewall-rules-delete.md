@@ -1,0 +1,37 @@
+# gcloud compute firewall-rules delete
+
+## NAME
+
+    gcloud compute firewall-rules delete - delete Compute Engine firewall rules
+
+## SYNOPSIS
+
+```bash
+    gcloud compute firewall-rules delete NAME [NAME ...] [GCLOUD_WIDE_FLAG ...]
+
+```
+
+## DESCRIPTION
+
+    gcloud compute firewall-rules delete deletes one or more Compute Engine
+    firewall rules.
+
+## EXAMPLES
+
+    To delete a firewall rule, run:
+
+        $ gcloud compute firewall-rules delete my-firewall-rule
+
+## POSITIONAL ARGUMENTS
+
+     NAME [NAME ...]
+        Names of the firewall rules to delete.
+
+## GCLOUD WIDE FLAGS
+
+    These flags are available to all commands: --access-token-file, --account,
+    --billing-project, --configuration, --flags-file, --flatten, --format,
+    --help, --impersonate-service-account, --log-http, --project, --quiet,
+    --trace-token, --user-output-enabled, --verbosity.
+
+    Run $ gcloud help for details.
