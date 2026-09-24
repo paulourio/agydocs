@@ -1,13 +1,13 @@
 # Stylometric Metric Reference & Authoring Guide
 
-This reference details the metrics computed by `scripts/quality_gate.py` alongside qualitative heuristics used during editorial review.
+This reference details the metrics computed by the Go quality gate (`bin/quality_gate`) alongside qualitative heuristics used during editorial review.
 
 > [!NOTE]
 > Automated metrics catch syntactic uniformity, passive nominal density, and specific word patterns. They are **necessary but not sufficient** for good technical writing. Text can achieve high scores while still sounding pompous if it employs preachy strawmen, domain laundry lists, or pseudo-intellectual jargon.
 
 ---
 
-## Part 1: Automated Metrics Computed by `quality_gate.py`
+## Part 1: Automated Metrics Computed by the Quality Gate
 
 ### 1. Rhythmic Cadence & Burstiness
 

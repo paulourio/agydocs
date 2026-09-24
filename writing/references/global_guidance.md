@@ -210,7 +210,7 @@ To prevent outsourcing critical technical reasoning to an LLM without verificati
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ PHASE 4: AUTOMATED QUALITY GATE AUDIT                                       │
-│ - Run quality_gate.py to verify sentence burstiness, syntax overhead, DAI.  │
+│ - Run bin/quality_gate to verify sentence burstiness, syntax overhead, DAI. │
 │ - Apply surgical sentence-coordinate fixes.                                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```

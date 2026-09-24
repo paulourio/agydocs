@@ -18,6 +18,7 @@ Identify the target document type and consult its specialized reference:
 - **Systems RFCs, ADRs, and specs**: Consult [technical_systems.md](references/technical_systems.md).
 - **Scientific papers and preprints**: Consult [scientific_papers.md](references/scientific_papers.md).
 - **Developer guides and tutorials**: Consult [guides_tutorials.md](references/guides_tutorials.md).
+- **Technical briefings and incident postmortems**: Consult [briefing_format.md](references/briefing_format.md).
 - **Code reviews and technical pairing**: Consult [conversational_pairing.md](references/conversational_pairing.md).
 - **Core principles and stylistic invariants**: Consult [global_guidance.md](references/global_guidance.md).
 
@@ -31,11 +32,13 @@ State concrete invariants, numbers, and decisions first:
 Audit drafts against common AI anti-patterns:
 - Consult [anti_patterns_catalog.md](resources/anti_patterns_catalog.md) for banned clichés and direct human alternatives.
 - Check metric thresholds and qualitative heuristics in [metric_cheat_sheet.md](resources/metric_cheat_sheet.md).
-- Compare against the side-by-side golden benchmarks in [before_after_transformations.md](examples/before_after_transformations.md).
+- Inspect register golden benchmarks in [benchmarks/](benchmarks/) ([RFC](benchmarks/rfc_kernel_bypass.md), [Paper](benchmarks/paper_async_fixed_point.md), [Tutorial](benchmarks/tutorial_lockfree_spsc.md), [Essay](benchmarks/essay_leaky_abstractions.md), [Chat](benchmarks/chat_socket_starvation.md), and [Briefing](benchmarks/briefing_incident_summary.md)).
+- Review editorial side-by-side edits in [before_after_transformations.md](examples/before_after_transformations.md).
 
-Run the automated stylometric quality gate using either the high-performance Go binary or the Python script:
+Run the automated stylometric quality gate using the Go binary or shell wrapper:
 ```bash
-# Audit an RFC or ADR using the compiled Go binary
+# Audit an RFC or ADR using the shell wrapper or compiled Go binary
+writing/scripts/quality_gate.sh --profile rfc path/to/doc.md
 writing/bin/quality_gate --profile rfc path/to/doc.md
 
 # Audit a scientific paper or research note
@@ -49,9 +52,6 @@ writing/bin/quality_gate references/ --profile essay --workers 8
 
 # Structured JSON output for agent pipelines
 writing/bin/quality_gate --profile rfc --json path/to/doc.md
-
-# Portable Python fallback
-python3 writing/scripts/quality_gate.py --profile rfc path/to/doc.md
 ```
 
 ### 4. Apply Adversarial Critique Posture
@@ -75,7 +75,7 @@ All technical prose produced or audited under this skill must uphold five struct
 
 ## Quality Gate Thresholds
 
-The quality gate tools ([`bin/quality_gate`](bin/quality_gate) and [`scripts/quality_gate.py`](scripts/quality_gate.py)) enforce three stages of validation:
+The quality gate tools ([`bin/quality_gate`](bin/quality_gate) and [`scripts/quality_gate.sh`](scripts/quality_gate.sh)) enforce three stages of validation:
 - **Stage 1 (Hard Invariants):** Fast-fails on AI clichés, winks, sycophancy, domain laundry lists, participial tailing clauses, smothered verbs, and sentence-initial mathematical/code symbols.
 - **Stage 2 (Stylometric Bands):** Verifies burstiness ($CV$), syntactic overhead ($M_{\text{ov}}$), zombie nominalizations ($Z_{\text{nom}}$), demonstrative anchoring ($DAI$), em-dash frequency, punctuation balance ($PBR$), concrete anchor lag, and low-information contrastive reframes.
 - **Stage 3 (Composite Indices):** Reports Human Voice Index ($HVI$) and Technical Precision Index ($TPI$).

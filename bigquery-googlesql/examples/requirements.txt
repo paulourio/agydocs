@@ -1,0 +1,3 @@
+# Python dependencies for BigQuery schema extraction and dry-run utilities.
+# Install: pip install -r requirements.txt
+google-cloud-bigquery>=3.20.0

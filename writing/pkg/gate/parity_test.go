@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"fmt"
 	"math"
 	"os"
 	"path/filepath"
@@ -76,15 +77,15 @@ func TestAll9MarkdownFilesPassWithParity(t *testing.T) {
 		{
 			relPath: "SKILL.md",
 			profile: "essay",
-			words:   463,
-			sents:   28,
-			cv:      0.536,
-			ovh:     3.91,
-			zmCount: 4,
-			zmPct:   0.86,
+			words:   501,
+			sents:   30,
+			cv:      0.534,
+			ovh:     3.90,
+			zmCount: 5,
+			zmPct:   1.00,
 			em:      0,
-			pbr:     22.00,
-			lag:     intPtr(206),
+			pbr:     23.00,
+			lag:     intPtr(244),
 		},
 		{
 			relPath: "references/global_guidance.md",
@@ -115,15 +116,15 @@ func TestAll9MarkdownFilesPassWithParity(t *testing.T) {
 		{
 			relPath: "resources/metric_cheat_sheet.md",
 			profile: "rfc",
-			words:   536,
+			words:   539,
 			sents:   36,
-			cv:      0.606,
+			cv:      0.605,
 			ovh:     5.45,
 			zmCount: 5,
 			zmPct:   0.93,
 			em:      0,
 			pbr:     36.00,
-			lag:     intPtr(67),
+			lag:     intPtr(70),
 		},
 		{
 			relPath: "examples/before_after_transformations.md",
@@ -185,7 +186,11 @@ func TestAll9MarkdownFilesPassWithParity(t *testing.T) {
 			}
 			if d.lag != nil {
 				if m.ConcreteAnchorLagWords == nil || *m.ConcreteAnchorLagWords != *d.lag {
-					t.Errorf("%s: lag = %v, want %d", d.relPath, m.ConcreteAnchorLagWords, *d.lag)
+					val := "<nil>"
+					if m.ConcreteAnchorLagWords != nil {
+						val = fmt.Sprintf("%d", *m.ConcreteAnchorLagWords)
+					}
+					t.Errorf("%s: lag = %s, want %d", d.relPath, val, *d.lag)
 				}
 			} else {
 				if m.ConcreteAnchorLagWords != nil {
@@ -202,3 +207,38 @@ func TestAll9MarkdownFilesPassWithParity(t *testing.T) {
 		})
 	}
 }
+
+func TestAllBenchmarksAndNewReferencesPassQualityGate(t *testing.T) {
+	docs := []struct {
+		relPath string
+		profile string
+	}{
+		{relPath: "references/briefing_format.md", profile: "essay"},
+		{relPath: "benchmarks/rfc_kernel_bypass.md", profile: "rfc"},
+		{relPath: "benchmarks/paper_async_fixed_point.md", profile: "paper"},
+		{relPath: "benchmarks/tutorial_lockfree_spsc.md", profile: "tutorial"},
+		{relPath: "benchmarks/essay_leaky_abstractions.md", profile: "essay"},
+		{relPath: "benchmarks/chat_socket_starvation.md", profile: "chat"},
+		{relPath: "benchmarks/briefing_incident_summary.md", profile: "briefing"},
+	}
+
+	for _, d := range docs {
+		t.Run(d.relPath, func(t *testing.T) {
+			path := filepath.Join("../..", d.relPath)
+			content, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatalf("Failed to read %s: %v", path, err)
+			}
+			rep, err := AuditDocument(string(content), d.profile)
+			if err != nil {
+				t.Fatalf("AuditDocument failed for %s: %v", d.relPath, err)
+			}
+			if !rep.Passed {
+				for _, v := range rep.Violations {
+					t.Errorf("Unexpected violation in %s: %s - %s", d.relPath, v.Rule, v.Message)
+				}
+			}
+		})
+	}
+}
+

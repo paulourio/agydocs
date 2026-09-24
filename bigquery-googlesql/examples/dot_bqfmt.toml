@@ -1,0 +1,93 @@
+# Production bqfmt Configuration File (.bqfmt.toml)
+# Place this file in your project root or repository parent directory.
+# The bqfmt tool searches upward from the target file to locate this file.
+
+default_style = "default"
+
+[[styles]]
+name = "default"
+
+[styles.options]
+# Soft character boundary for wrapping lines.
+soft_max_cols = 120
+
+# Force newlines before top-level query clauses (FROM, WHERE, GROUP BY, etc.).
+newline_before_clause = true
+
+# Align logical operators (AND, OR) with the governing WHERE / ON clause margin.
+align_logical_with_clauses = true
+
+# Align trailing end-of-line comments across adjacent statements.
+align_trailing_comments = true
+
+# Policy for trailing commas in column lists: "NEVER", "ALWAYS", or "AUTO".
+column_list_trailing_comma = "AUTO"
+
+# Base indentation spaces for expressions and sub-clauses.
+indentation = 2
+
+# Indent WHEN expressions within CASE ... END blocks.
+indent_case_when = true
+
+# Indent CTE expressions under the WITH clause keyword.
+indent_with_clause = true
+
+# Indent inner query statements inside CTE parentheses.
+indent_with_entries = true
+
+# Minimum number of consecutive joins to separate with blank lines.
+min_joins_to_separate_in_blocks = 2
+
+# Maximum number of projected columns to allow on a single line.
+max_cols_for_single_line_select = 4
+
+# Maximum number of parameters to allow on a single line in function declarations.
+max_params_for_single_line_function = 1
+
+# Function catalog for resolving built-in functions: "BIGQUERY" or empty.
+function_catalog = "BIGQUERY"
+
+# Identifier casing: "AS_IS", "LOWER_CASE", or "UPPER_CASE".
+identifier_style = "LOWER_CASE"
+
+# Keyword casing for SQL statements: "AS_IS", "LOWER_CASE", or "UPPER_CASE".
+keyword_style = "UPPER_CASE"
+
+# Built-in type casing (INT64, FLOAT64, STRING, TIMESTAMP, NUMERIC): "UPPER_CASE".
+type_style = "UPPER_CASE"
+
+# Built-in function name casing (COUNT, SUM, AVG, COALESCE): "UPPER_CASE".
+builtin_function_name_style = "UPPER_CASE"
+
+# Boolean literal casing (TRUE, FALSE): "UPPER_CASE".
+bool_style = "UPPER_CASE"
+
+# NULL literal casing (NULL): "UPPER_CASE".
+null_style = "UPPER_CASE"
+
+# Pseudo-column casing (_PARTITIONDATE, _PARTITIONTIME, _TABLE_SUFFIX): "UPPER_CASE".
+pseudo_column_style = "UPPER_CASE"
+
+# Table identifier casing: "AS_IS".
+table_name_style = "AS_IS"
+
+# String literal quoting preference: "PREFER_SINGLE_QUOTE", "PREFER_DOUBLE_QUOTE", or "AS_IS".
+string_style = "PREFER_SINGLE_QUOTE"
+
+# Bytes literal quoting preference: "PREFER_SINGLE_QUOTE", "PREFER_DOUBLE_QUOTE", or "AS_IS".
+bytes_style = "PREFER_SINGLE_QUOTE"
+
+# Hexadecimal literal casing: "LOWER_CASE" (0xabc) or "UPPER_CASE" (0xABC).
+hex_style = "LOWER_CASE"
+
+# Numeric literal casing: "LOWER_CASE".
+numeric_style = "LOWER_CASE"
+
+# Query parameter casing: "AS_IS".
+query_parameter_style = "AS_IS"
+
+# System variable casing: "AS_IS".
+system_variable_style = "AS_IS"
+
+# Custom UDF function name casing: "AS_IS".
+function_name_style = "AS_IS"
