@@ -1,0 +1,108 @@
+{
+  "name": "antigravity",
+  "description": "Precision engineering runtime with surgical line-anchored editing, non-interactive execution, Gate 0 test verification, zero-debt quality gates, and anti-cheating invariants (Native No-MCP).",
+  "model": "claude-sonnet-5",
+  "tools": [
+    "read",
+    "write",
+    "shell",
+    "web",
+    "subagent",
+    "code",
+    "goal"
+  ],
+  "excludedTools": [
+    "knowledge"
+  ],
+  "allowedTools": [
+    "read",
+    "write",
+    "shell",
+    "glob",
+    "grep",
+    "web_search",
+    "web_fetch",
+    "subagent",
+    "code",
+    "goal",
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "use_subagent",
+    "@builtin"
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "shell",
+        "match": [
+          "*--no-verify*",
+          "*git commit -n",
+          "*git commit -n *",
+          "*git commit * -n",
+          "*git commit * -n *",
+          "rm -rf *",
+          "rm -rf /*",
+          "sudo *"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "shell",
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_read",
+        "effect": "allow"
+      },
+      {
+        "capability": "fs_write",
+        "match": [
+          "**/.env",
+          "**/.env.*",
+          "**/*.key",
+          "**/*.pem"
+        ],
+        "effect": "deny"
+      },
+      {
+        "capability": "fs_write",
+        "effect": "allow"
+      },
+      {
+        "capability": "web_search",
+        "effect": "allow"
+      },
+      {
+        "capability": "web_fetch",
+        "effect": "allow"
+      },
+      {
+        "capability": "subagent",
+        "effect": "allow"
+      },
+      {
+        "capability": "skill",
+        "effect": "allow"
+      }
+    ]
+  },
+  "resources": [
+    "file://~/.gemini/GEMINI.md",
+    "file://.kiro/steering/**/*.md",
+    "file://~/.kiro/steering/**/*.md",
+    "skill://.kiro/skills/**/SKILL.md",
+    "skill://~/.kiro/skills/**/SKILL.md",
+    "skill://~/.gemini/config/skills/**/SKILL.md",
+    "skill://skills/**/SKILL.md"
+  ],
+  "hooks": {
+    "agentSpawn": [
+      {
+        "command": "git status --short"
+      }
+    ]
+  },
+  "prompt": "file://./antigravity.prompt.md",
+  "welcomeMessage": "Antigravity Precision Engineering Runtime active. Gate 0 quality gates, surgical editing, and non-interactive verification enforced."
+}

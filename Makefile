@@ -1,4 +1,4 @@
-.PHONY: all clean build test test-writing test-bigquery test-tool-skill-engineering test-gcloud audit help
+.PHONY: all clean build test test-writing test-bigquery test-tool-skill-engineering test-gcloud test-agent test-kiro-agent build-agent install-kiro install-kiro-agent audit help
 
 SHELL := /bin/bash
 
@@ -12,16 +12,33 @@ clean:
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".quality_gate_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name "*.py[cod]" -delete 2>/dev/null || true
+	@rm -rf agent/bin/
 	@echo "Clean completed."
 
-## build: Compile writing quality gate binary
-build:
+## build: Compile writing quality gate binary and antigravity agent
+build: build-writing build-agent
+
+build-writing:
 	@echo "==> Compiling writing quality gate binary..."
 	@cd writing && go build -o bin/quality_gate ./cmd/quality_gate
 	@echo "Build completed: writing/bin/quality_gate"
 
+build-agent:
+	@echo "==> Compiling antigravity agent binary..."
+	@cd agent && go build -o bin/antigravity-agent ./cmd/antigravity-agent
+	@echo "Build completed: agent/bin/antigravity-agent"
+
 ## test: Execute all Go and Python test suites
-test: test-writing test-bigquery test-tool-skill-engineering test-gcloud
+test: test-writing test-bigquery test-tool-skill-engineering test-gcloud test-agent test-kiro-agent
+
+test-kiro-agent:
+	@echo "==> Running kiro-agent configuration and integrity tests..."
+	@$(MAKE) -C kiro-agent test
+
+test-agent:
+	@echo "==> Running antigravity agent Go tests..."
+	@cd agent && go test -count=1 ./...
+	@cd agent && go vet ./...
 
 test-writing:
 	@echo "==> Running writing Go tests..."
@@ -51,6 +68,18 @@ audit: build
 	@writing/bin/quality_gate tool-skill-engineering/references/ tool-skill-engineering/resources/anti_patterns_catalog.md tool-skill-engineering/SKILL.md tool-skill-engineering/README.md tool-skill-engineering/examples/README.md --profile rfc --workers 8
 	@echo "==> Auditing gcloud documentation..."
 	@writing/bin/quality_gate gcloud/references/ gcloud/resources/anti_patterns_catalog.md gcloud/resources/cheat_sheet.md gcloud/SKILL.md gcloud/README.md gcloud/examples/README.md --profile rfc --workers 8
+	@echo "==> Auditing kiro-agent documentation..."
+	@$(MAKE) -C kiro-agent audit
+
+## install-kiro: Build and install Kiro 1.x agent configuration (MCP-based daemon)
+install-kiro: build-agent
+	@echo "==> Installing Kiro 1.x Antigravity agent configuration (MCP)..."
+	@agent/bin/antigravity-agent install --workspace . --global=true
+
+## install-kiro-agent: Install native no-MCP Kiro custom agent and steering
+install-kiro-agent:
+	@echo "==> Installing native no-MCP Antigravity agent configuration..."
+	@bash kiro-agent/install.sh
 
 ## help: Display available targets
 help:

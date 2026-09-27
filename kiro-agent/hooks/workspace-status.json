@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "workspace-status",
+      "trigger": "SessionStart",
+      "action": {
+        "type": "command",
+        "command": "git status --short"
+      }
+    }
+  ]
+}
