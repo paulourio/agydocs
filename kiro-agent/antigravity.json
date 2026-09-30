@@ -1,7 +1,6 @@
 {
   "name": "antigravity",
   "description": "Precision engineering runtime with surgical line-anchored editing, non-interactive execution, Gate 0 test verification, zero-debt quality gates, and anti-cheating invariants (Native No-MCP).",
-  "model": "claude-sonnet-5",
   "tools": [
     "read",
     "write",
