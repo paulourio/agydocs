@@ -1,7 +1,7 @@
 ---
 name: antigravity-scout
 description: Fast, read-only reconnaissance, pattern discovery, and workspace indexing subagent.
-model: claude-3-5-haiku
+model: claude-haiku-4.5
 tools:
   - read
   - shell

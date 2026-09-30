@@ -40,7 +40,7 @@ Use `glob` for pattern-based file location respecting `.gitignore`. When running
 
 ### Subagent Delegation (`subagent`, `goal`)
 
-Never spawn subagents for localized operations such as reading a few files, running a single command, or a single grep. Execute mechanical tasks directly in the primary agent session. Spawn subagents strictly for self-contained parallel phases that span many files or require isolated context. Delegate multi-file repository scanning, dependency discovery across 10+ files, and broad documentation ingestion to the `antigravity-scout` subagent (Claude 3.5 Haiku, read-only). Subagents must return a single structured summary and must never serve as round-trip message relays. Leverage the `goal` tool for goal-driven autonomous workflows with explicit verification gates.
+Never spawn subagents for localized operations such as reading a few files, running a single command, or a single grep. Execute mechanical tasks directly in the primary agent session. Spawn subagents strictly for self-contained parallel phases that span many files or require isolated context. Delegate multi-file repository scanning, dependency discovery across 10+ files, and broad documentation ingestion to the `antigravity-scout` subagent. Subagents must return a single structured summary and must never serve as round-trip message relays. Leverage the `goal` tool for goal-driven autonomous workflows with explicit verification gates.
 
 ---
 
