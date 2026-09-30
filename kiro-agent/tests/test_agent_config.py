@@ -132,7 +132,11 @@ class TestAgentConfig(unittest.TestCase):
 
         # Validate resources
         resources = frontmatter.get("resources", [])
-        self.assertIn("file://~/.gemini/GEMINI.md", resources)
+        self.assertNotIn(
+            "file://~/.gemini/GEMINI.md",
+            resources,
+            "GEMINI.md must not be in resources (steering files are canonical)",
+        )
         self.assertIn("file://.kiro/steering/**/*.md", resources)
         self.assertIn("file://~/.kiro/steering/**/*.md", resources)
         self.assertTrue(
@@ -256,6 +260,41 @@ class TestAgentConfig(unittest.TestCase):
         self.assertEqual(hook.get("trigger"), "SessionStart")
         self.assertEqual(hook.get("action", {}).get("type"), "command")
         self.assertEqual(hook.get("action", {}).get("command"), "git status --short")
+
+    def test_scout_subagent_config(self):
+        scout_file = MODULE_DIR / "antigravity-scout.md"
+        self.assertTrue(scout_file.exists(), "antigravity-scout.md must exist")
+        content = scout_file.read_text(encoding="utf-8")
+        parts = content.split("---")
+        self.assertGreaterEqual(
+            len(parts), 3, "antigravity-scout.md must contain YAML frontmatter"
+        )
+
+        frontmatter = yaml.safe_load(parts[1])
+        self.assertEqual(frontmatter.get("name"), "antigravity-scout")
+        self.assertEqual(
+            frontmatter.get("model"),
+            "claude-3-5-haiku",
+            "Scout must use claude-3-5-haiku for token economy",
+        )
+
+        # Scout must be read-only: no write or goal tools
+        tools = frontmatter.get("tools", [])
+        self.assertIn("read", tools)
+        self.assertNotIn("write", tools, "Scout must not have write tools")
+        self.assertNotIn("goal", tools, "Scout must not have goal tool")
+
+        excluded = frontmatter.get("excludedTools", [])
+        self.assertIn("write", excluded, "write must be in excludedTools")
+        self.assertIn("goal", excluded, "goal must be in excludedTools")
+
+        # Scout must deny fs_write
+        rules = frontmatter.get("permissions", {}).get("rules", [])
+        fs_write_denied = any(
+            r.get("capability") == "fs_write" and r.get("effect") == "deny"
+            for r in rules
+        )
+        self.assertTrue(fs_write_denied, "Scout must deny fs_write capability")
 
     def test_git_commit_fnmatch_permission_rules(self):
         """Assert legitimate commit commands are allowed and illicit commands are denied."""

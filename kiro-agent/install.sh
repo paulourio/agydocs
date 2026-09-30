@@ -154,6 +154,9 @@ install_to() {
             echo "  [DRY-RUN] cp ${AGENT_JSON_SOURCE} ${agent_dir}/antigravity.json (pointing to ${prompts_dir}/antigravity.prompt.md)"
             echo "  [DRY-RUN] rm -f ${agent_dir}/antigravity.md ${agent_dir}/antigravity.prompt.md"
         fi
+        if [[ -f "${SCRIPT_DIR}/antigravity-scout.md" ]]; then
+            echo "  [DRY-RUN] cp ${SCRIPT_DIR}/antigravity-scout.md ${agent_dir}/antigravity-scout.md"
+        fi
         if [[ "${INSTALL_STEERING}" = true && -d "${SCRIPT_DIR}/steering" ]]; then
             echo "  [DRY-RUN] mkdir -p ${steering_dir}"
             echo "  [DRY-RUN] cp ${SCRIPT_DIR}/steering/*.md ${steering_dir}/"
@@ -201,6 +204,12 @@ install_to() {
         echo "  Installed: ${prompts_dir}/antigravity.prompt.md"
         # Remove colliding or stray agent files in agents/
         rm -f "${agent_dir}/antigravity.md" "${agent_dir}/antigravity.prompt.md"
+    fi
+
+    # Deploy specialized subagent definitions
+    if [[ -f "${SCRIPT_DIR}/antigravity-scout.md" ]]; then
+        cp "${SCRIPT_DIR}/antigravity-scout.md" "${agent_dir}/antigravity-scout.md"
+        echo "  Installed: ${agent_dir}/antigravity-scout.md"
     fi
 
     if [[ "${INSTALL_STEERING}" = true && -d "${SCRIPT_DIR}/steering" ]]; then

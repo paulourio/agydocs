@@ -37,7 +37,14 @@ class TestPromptIntegrity(unittest.TestCase):
             )
 
     def test_presence_of_antigravity_invariants(self):
-        content = self.agent_md.read_text(encoding="utf-8")
+        # Invariants are distributed across the agent prompt body and steering
+        # files. Aggregate content from both sources for the invariant check.
+        agent_content = self.agent_md.read_text(encoding="utf-8")
+        steering_content = "".join(
+            f.read_text(encoding="utf-8")
+            for f in sorted(self.steering_dir.glob("*.md"))
+        )
+        combined = (agent_content + steering_content).lower()
         required_invariants = [
             "write",
             "fs_write",
@@ -76,8 +83,9 @@ class TestPromptIntegrity(unittest.TestCase):
         for invariant in required_invariants:
             self.assertIn(
                 invariant.lower(),
-                content.lower(),
-                f"Antigravity invariant '{invariant}' must be present in antigravity.md",
+                combined,
+                f"Antigravity invariant '{invariant}' must be present in "
+                f"antigravity.md or steering files",
             )
 
     def test_nlp_quality_gate_on_agent_and_steering(self):

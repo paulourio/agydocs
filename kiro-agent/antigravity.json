@@ -88,7 +88,6 @@
     ]
   },
   "resources": [
-    "file://~/.gemini/GEMINI.md",
     "file://.kiro/steering/**/*.md",
     "file://~/.kiro/steering/**/*.md",
     "skill://.kiro/skills/**/SKILL.md",
