@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: auto
+description: Protocol for extracting, managing, and inspecting image assets, text-first metadata pairing (.meta.yaml/.meta.json), and minimal visual inspection limits.
 ---
 
 # Text-First Paradigm and Asset Handling Protocol
@@ -42,5 +43,5 @@ Every image saved or downloaded must link to a structured sidecar text file (`.m
 
 Binary image viewing must remain an exception rather than the default:
 1. **Text Triage First**: Perform all initial sorting, filtering, resolution validation, and theme filtering through text metadata files.
-2. **Minimal Sample Limit**: Restrict binary inspection calls (`view_file` on binary graphics) to 1 to 3 selected candidate assets.
+2. **Minimal Sample Limit**: Restrict binary inspection calls (`read_file` on binary graphics) to 1 to 3 selected candidate assets.
 3. **Indispensable Human Validation**: Reserve binary inspection strictly for final qualitative layout confirmation when automated text checks cannot decide aesthetic fit.

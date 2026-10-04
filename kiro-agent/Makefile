@@ -12,7 +12,7 @@ test:
 
 audit:
 	@if [ -f "$(QUALITY_GATE)" ]; then \
-		$(QUALITY_GATE) --profile rfc antigravity.md antigravity.prompt.md README.md steering/*.md; \
+		$(QUALITY_GATE) --profile rfc antigravity.md antigravity.prompt.md antigravity-scout.md README.md steering/*.md; \
 	else \
 		echo "Warning: quality_gate binary not found at $(QUALITY_GATE)"; \
 	fi

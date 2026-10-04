@@ -8,7 +8,7 @@ This document governs command execution patterns and software architecture conve
 
 | Directive Category | Operational Requirement |
 | :--- | :--- |
-| **Shell Mode** | Non-interactive execution (`CI=1 PAGER=cat NO_COLOR=1`) |
+| **Shell Mode** | Non-interactive execution (`PAGER=cat NO_COLOR=1 CI=1`) |
 | **Script Cadence** | Consolidate multi-command audits into single executable scripts |
 | **Compute Cadence** | Freeze heavy checkpoints early for instantaneous downstream runs |
 | **Search Tooling** | Prefer `rg` over `grep` and `fd` over `find` in shell commands |
@@ -21,10 +21,10 @@ This document governs command execution patterns and software architecture conve
 ## 1. Non-Interactive Command Execution
 
 Every shell command executed through `shell` or `execute_bash` must run non-interactively:
-1. **Environment Headers**: Prepend `CI=1 PAGER=cat NO_COLOR=1` to any command invoking CLI utilities that could launch an interactive terminal pager or output terminal formatting codes.
-2. **Output Sanitizing**: Strip ANSI control sequences (`\x1b[...m`) from command outputs before performing substring or regex assertions.
+1. **Environment Headers**: Prepend `PAGER=cat NO_COLOR=1 CI=1` to any command invoking CLI utilities that could launch an interactive terminal pager or output terminal formatting codes.
+2. **Output Sanitizing**: Strip ANSI control sequences (`\x1b[...m`) from command outputs before performing substring or regex assertions in automated tests.
 3. **Exit Code Verification**: Check exit status codes on every command run. Never assume a command succeeded without verifying standard output and standard error streams.
-4. **Working Directory Integrity**: Never issue `cd` commands. Execute tools from the project root using explicit path arguments.
+4. **Working Directory Integrity**: Execute tools from the project root using explicit relative or absolute path arguments. Avoid standalone `cd` commands; when subprojects require a localized working directory, chain the directory change within the compound command.
 5. **Search Tooling**: Prefer `rg` over standard `grep` and `fd` over standard `find` when executing search commands in the shell. Fall back to standard `grep` and `find` only when `rg` or `fd` is absent from the host path.
 
 ---

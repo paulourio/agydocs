@@ -6,9 +6,7 @@
     "write",
     "shell",
     "web",
-    "subagent",
-    "code",
-    "goal"
+    "subagent"
   ],
   "excludedTools": [
     "knowledge"
@@ -22,33 +20,52 @@
     "web_search",
     "web_fetch",
     "subagent",
-    "code",
-    "goal",
     "fs_read",
     "fs_write",
     "execute_bash",
-    "use_subagent",
-    "@builtin"
+    "invoke_subagent"
   ],
   "permissions": {
     "rules": [
       {
         "capability": "shell",
         "match": [
-          "*--no-verify*",
-          "*git commit -n",
-          "*git commit -n *",
-          "*git commit * -n",
-          "*git commit * -n *",
-          "rm -rf *",
-          "rm -rf /*",
-          "sudo *"
+          "*--no-ver*",
+          "*git * -n *",
+          "*git * -n",
+          "*git * -nm *",
+          "*git * -nm",
+          "*git * -anm *",
+          "*git * -anm",
+          "*git * -nam *",
+          "*git * -nam",
+          "*core.hooksPath*",
+          "*rm -rf *",
+          "*rm -rf /*",
+          "*rm -fr *",
+          "*rm -r -f *",
+          "*rm -f -r *",
+          "*rm --recursive *",
+          "sudo *",
+          "doas *"
         ],
         "effect": "deny"
       },
       {
         "capability": "shell",
         "effect": "allow"
+      },
+      {
+        "capability": "fs_read",
+        "match": [
+          "**/.env",
+          "**/.env.*",
+          "**/*.key",
+          "**/*.pem",
+          "**/id_rsa*",
+          "**/id_ed25519*"
+        ],
+        "effect": "deny"
       },
       {
         "capability": "fs_read",
@@ -60,7 +77,9 @@
           "**/.env",
           "**/.env.*",
           "**/*.key",
-          "**/*.pem"
+          "**/*.pem",
+          "**/id_rsa*",
+          "**/id_ed25519*"
         ],
         "effect": "deny"
       },
@@ -90,17 +109,8 @@
     "file://.kiro/steering/**/*.md",
     "file://~/.kiro/steering/**/*.md",
     "skill://.kiro/skills/**/SKILL.md",
-    "skill://~/.kiro/skills/**/SKILL.md",
-    "skill://~/.gemini/config/skills/**/SKILL.md",
-    "skill://skills/**/SKILL.md"
+    "skill://~/.kiro/skills/**/SKILL.md"
   ],
-  "hooks": {
-    "agentSpawn": [
-      {
-        "command": "git status --short"
-      }
-    ]
-  },
   "prompt": "file://./antigravity.prompt.md",
   "welcomeMessage": "Antigravity Precision Engineering Runtime active. Gate 0 quality gates, surgical editing, and non-interactive verification enforced."
 }

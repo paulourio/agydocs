@@ -1,5 +1,6 @@
 ---
-inclusion: always
+inclusion: auto
+description: Independent peer-review protocol across Layer 0, Layer 1, and Layer 2, adversarial algorithmic verification, benchmark profiling, and meta-audit reconciliation.
 ---
 
 # Independent Peer-Review and Meta-Audit Protocol

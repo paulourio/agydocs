@@ -6,7 +6,7 @@
       "trigger": "SessionStart",
       "action": {
         "type": "command",
-        "command": "git status --short"
+        "command": "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git status --short || true"
       }
     }
   ]

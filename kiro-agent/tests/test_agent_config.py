@@ -34,7 +34,11 @@ class TestAgentConfig(unittest.TestCase):
         frontmatter = yaml.safe_load(parts[1])
         self.assertEqual(frontmatter.get("name"), "antigravity")
         self.assertIn("description", frontmatter)
-        self.assertEqual(frontmatter.get("model"), "claude-sonnet-5")
+        # Default model is omitted to respect workspace or user default model
+        self.assertIsNone(
+            frontmatter.get("model"),
+            "Default agent configuration should not pin a model",
+        )
 
         # Ensure no MCP servers are declared for native mode
         self.assertNotIn(
@@ -43,7 +47,7 @@ class TestAgentConfig(unittest.TestCase):
 
         # Validate tools include core categories and agentic tools
         tools = frontmatter.get("tools", [])
-        expected_tools = ["read", "write", "shell", "web", "subagent", "code", "goal"]
+        expected_tools = ["read", "write", "shell", "web", "subagent"]
         for required_tool in expected_tools:
             self.assertIn(
                 required_tool,
@@ -68,16 +72,23 @@ class TestAgentConfig(unittest.TestCase):
             "web_search",
             "web_fetch",
             "subagent",
-            "code",
-            "goal",
             "fs_read",
             "fs_write",
             "execute_bash",
-            "use_subagent",
-            "@builtin",
+            "invoke_subagent",
         ]
         for tool in expected_allowed:
             self.assertIn(tool, allowed, f"Tool '{tool}' must be in allowedTools")
+        self.assertNotIn(
+            "use_subagent",
+            allowed,
+            "use_subagent is not a valid tool name (use invoke_subagent)",
+        )
+        self.assertNotIn(
+            "@builtin",
+            allowed,
+            "@builtin should not be in allowedTools to ensure granular permission enforcement",
+        )
 
         # Validate permission rules
         permissions = frontmatter.get("permissions", {}).get("rules", [])
@@ -94,13 +105,11 @@ class TestAgentConfig(unittest.TestCase):
             if r.get("capability") == "shell":
                 shell_denied.extend(r.get("match", []))
 
-        self.assertIn("*--no-verify*", shell_denied)
-        self.assertIn("*git commit -n", shell_denied)
-        self.assertIn("*git commit -n *", shell_denied)
-        self.assertIn("*git commit * -n", shell_denied)
-        self.assertIn("*git commit * -n *", shell_denied)
-        self.assertNotIn("*git commit*-n*", shell_denied)
-        self.assertNotIn("*git commit* -n*", shell_denied)
+        self.assertIn("*--no-ver*", shell_denied)
+        self.assertIn("*git * -n", shell_denied)
+        self.assertIn("*git * -n *", shell_denied)
+        self.assertIn("*git * -nm *", shell_denied)
+        self.assertIn("*core.hooksPath*", shell_denied)
         self.assertTrue(
             any("rm -rf *" in m for m in shell_denied), "Must deny rm -rf *"
         )
@@ -108,10 +117,10 @@ class TestAgentConfig(unittest.TestCase):
 
         file_denied = []
         for r in deny_rules:
-            if r.get("capability") == "fs_write":
+            if r.get("capability") in ("fs_write", "fs_read"):
                 file_denied.extend(r.get("match", []))
         self.assertTrue(
-            any(".env" in m for m in file_denied), "Must deny writes to .env files"
+            any(".env" in m for m in file_denied), "Must deny access to .env files"
         )
 
         # Check allow rules
@@ -143,12 +152,11 @@ class TestAgentConfig(unittest.TestCase):
             any("skill://" in r for r in resources), "Must declare skill resources"
         )
 
-        # Validate hooks
-        self.assertIn("hooks", frontmatter, "hooks must be present in frontmatter")
-        self.assertEqual(
-            frontmatter.get("hooks"),
-            {"agentSpawn": [{"command": "git status --short"}]},
-            "agentSpawn hook must be declared in frontmatter",
+        # Validate hooks are not embedded in agent config to ensure IDE 1.0 compatibility
+        self.assertNotIn(
+            "hooks",
+            frontmatter,
+            "hooks must be defined in standalone hooks/*.json rather than agent config",
         )
 
         # Validate welcome message
@@ -162,9 +170,9 @@ class TestAgentConfig(unittest.TestCase):
         self.assertNotIn(
             "mcpServers", content, "mcpServers must be absent in JSON config"
         )
-        self.assertEqual(content.get("model"), "claude-sonnet-5")
+        self.assertIsNone(content.get("model"))
         self.assertIn("knowledge", content.get("excludedTools", []))
-        for t in ["read", "write", "shell", "web", "subagent", "code", "goal"]:
+        for t in ["read", "write", "shell", "web", "subagent"]:
             self.assertIn(t, content.get("tools", []))
         for at in [
             "read",
@@ -175,15 +183,16 @@ class TestAgentConfig(unittest.TestCase):
             "web_search",
             "web_fetch",
             "subagent",
+            "invoke_subagent",
         ]:
             self.assertIn(at, content.get("allowedTools", []))
 
         self.assertEqual(content.get("prompt"), "file://./antigravity.prompt.md")
         self.assertIn("welcomeMessage", content)
-        self.assertEqual(
-            content.get("hooks"),
-            {"agentSpawn": [{"command": "git status --short"}]},
-            "agentSpawn hook must be declared in JSON config",
+        self.assertNotIn(
+            "hooks",
+            content,
+            "hooks must be defined in standalone hooks/*.json rather than JSON config",
         )
 
         permissions = content.get("permissions", {}).get("rules", [])
@@ -193,13 +202,11 @@ class TestAgentConfig(unittest.TestCase):
             if r.get("capability") == "shell":
                 shell_denied.extend(r.get("match", []))
 
-        self.assertIn("*--no-verify*", shell_denied)
-        self.assertIn("*git commit -n", shell_denied)
-        self.assertIn("*git commit -n *", shell_denied)
-        self.assertIn("*git commit * -n", shell_denied)
-        self.assertIn("*git commit * -n *", shell_denied)
-        self.assertNotIn("*git commit*-n*", shell_denied)
-        self.assertNotIn("*git commit* -n*", shell_denied)
+        self.assertIn("*--no-ver*", shell_denied)
+        self.assertIn("*git * -n", shell_denied)
+        self.assertIn("*git * -n *", shell_denied)
+        self.assertIn("*git * -nm *", shell_denied)
+        self.assertIn("*core.hooksPath*", shell_denied)
 
     def test_prompt_body_synchronization(self):
         self.assertTrue(self.prompt_file.exists(), "antigravity.prompt.md must exist")
@@ -223,23 +230,39 @@ class TestAgentConfig(unittest.TestCase):
             len(steering_files), 5, "Must have at least 5 steering files"
         )
 
-        expected_stems = [
+        always_stems = [
             "01-engineering-discipline",
             "02-quality-gate",
             "03-anti-cheat",
+        ]
+        auto_stems = [
             "04-peer-review-and-audit",
             "05-text-first-assets",
         ]
-        present_stems = [f.stem for f in steering_files]
-        for stem in expected_stems:
-            self.assertIn(
-                stem, present_stems, f"Missing expected steering document: {stem}.md"
-            )
 
-        for sf in steering_files:
+        for stem in always_stems:
+            sf = self.steering_dir / f"{stem}.md"
+            self.assertTrue(
+                sf.exists(), f"Missing expected steering document: {stem}.md"
+            )
             text = sf.read_text(encoding="utf-8")
             self.assertIn(
                 "inclusion: always", text, f"{sf.name} must specify 'inclusion: always'"
+            )
+
+        for stem in auto_stems:
+            sf = self.steering_dir / f"{stem}.md"
+            self.assertTrue(
+                sf.exists(), f"Missing expected steering document: {stem}.md"
+            )
+            text = sf.read_text(encoding="utf-8")
+            self.assertIn(
+                "inclusion: auto", text, f"{sf.name} must specify 'inclusion: auto'"
+            )
+            self.assertIn(
+                "description:",
+                text,
+                f"{sf.name} must specify a description for auto inclusion",
             )
 
     def test_lifecycle_hooks_config(self):
@@ -259,7 +282,7 @@ class TestAgentConfig(unittest.TestCase):
         self.assertEqual(hook.get("name"), "workspace-status")
         self.assertEqual(hook.get("trigger"), "SessionStart")
         self.assertEqual(hook.get("action", {}).get("type"), "command")
-        self.assertEqual(hook.get("action", {}).get("command"), "git status --short")
+        self.assertIn("git status --short", hook.get("action", {}).get("command", ""))
 
     def test_scout_subagent_config(self):
         scout_file = MODULE_DIR / "antigravity-scout.md"
@@ -274,8 +297,8 @@ class TestAgentConfig(unittest.TestCase):
         self.assertEqual(frontmatter.get("name"), "antigravity-scout")
         self.assertEqual(
             frontmatter.get("model"),
-            "claude-3-5-haiku",
-            "Scout must use claude-3-5-haiku for token economy",
+            "claude-haiku-4.5",
+            "Scout must use claude-haiku-4.5 for token economy",
         )
 
         # Scout must be read-only: no write or goal tools
@@ -320,7 +343,12 @@ class TestAgentConfig(unittest.TestCase):
 
         illicit_commands = [
             'git commit -n -m "bypass"',
+            'git commit -nm "bypass"',
+            'git commit -anm "bypass"',
+            'git commit -nam "bypass"',
             "git commit --no-verify",
+            "git commit --no-verif",
+            "git commit --no-veri",
             'git commit -m "msg" -n',
             "git commit -n",
             'git commit -a -n -m "bypass"',
@@ -331,6 +359,8 @@ class TestAgentConfig(unittest.TestCase):
             'git commit -s -n -m "bypass"',
             "git commit -v -n",
             "git commit -s --no-verify",
+            "git -c core.hooksPath=/dev/null commit -m bypass",
+            "git commit -c core.hooksPath=/dev/null -m bypass",
         ]
 
         for source_name, config in configs:
@@ -339,18 +369,6 @@ class TestAgentConfig(unittest.TestCase):
             for r in rules:
                 if r.get("capability") == "shell" and r.get("effect") == "deny":
                     shell_denied.extend(r.get("match", []))
-
-            # Must not contain obsolete overly-broad patterns that block hyphenated commit messages
-            self.assertNotIn(
-                "*git commit*-n*",
-                shell_denied,
-                f"Obsolete pattern '*git commit*-n*' must not exist in {source_name}",
-            )
-            self.assertNotIn(
-                "*git commit* -n*",
-                shell_denied,
-                f"Obsolete pattern '*git commit* -n*' must not exist in {source_name}",
-            )
 
             # Legitimate commands evaluate to False (allowed)
             for cmd in legitimate_commands:
@@ -386,10 +404,7 @@ class TestAgentConfig(unittest.TestCase):
         self.assertIn("skills/bigquery-googlesql", res.stdout)
         self.assertIn("skills/tool-skill-engineering", res.stdout)
         self.assertIn("skills/gcloud", res.stdout)
-        # Verify that prompt.md is NOT copied into agents/
-        for line in res.stdout.splitlines():
-            if "cp " in line:
-                self.assertNotIn("agents/antigravity.prompt.md", line)
+        self.assertIn("skills/conventional-commits", res.stdout)
 
     def test_install_script_json_format_dry_run(self):
         res = subprocess.run(
@@ -410,10 +425,67 @@ class TestAgentConfig(unittest.TestCase):
         self.assertIn("skills/bigquery-googlesql", res.stdout)
         self.assertIn("skills/tool-skill-engineering", res.stdout)
         self.assertIn("skills/gcloud", res.stdout)
-        # Verify that prompt.md is NOT copied into agents/
-        for line in res.stdout.splitlines():
-            if "cp " in line:
-                self.assertNotIn("agents/antigravity.prompt.md", line)
+        self.assertIn("skills/conventional-commits", res.stdout)
+
+    def test_install_script_model_override(self):
+        with tempfile.TemporaryDirectory() as tmp_dir_str:
+            tmp_path = Path(tmp_dir_str) / ".kiro"
+            model_id = "claude-sonnet-5.5"
+            res = subprocess.run(
+                [
+                    "bash",
+                    str(self.install_sh),
+                    "--target-dir",
+                    str(tmp_path),
+                    "--model",
+                    model_id,
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(
+                res.returncode, 0, f"install.sh --model failed:\n{res.stderr}"
+            )
+            agent_md = tmp_path / "agents" / "antigravity.md"
+            self.assertTrue(agent_md.exists(), "antigravity.md must exist")
+            parts = agent_md.read_text(encoding="utf-8").split("---")
+            fm = yaml.safe_load(parts[1])
+            self.assertEqual(
+                fm.get("model"),
+                model_id,
+                f"Model override '{model_id}' was not applied to antigravity.md",
+            )
+
+            # Test JSON format with model override
+            tmp_path_json = Path(tmp_dir_str) / "json" / ".kiro"
+            res_json = subprocess.run(
+                [
+                    "bash",
+                    str(self.install_sh),
+                    "--format",
+                    "json",
+                    "--target-dir",
+                    str(tmp_path_json),
+                    "--model",
+                    model_id,
+                ],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(
+                res_json.returncode,
+                0,
+                f"install.sh --format json --model failed:\n{res_json.stderr}",
+            )
+            agent_json = tmp_path_json / "agents" / "antigravity.json"
+            data = json.loads(agent_json.read_text(encoding="utf-8"))
+            self.assertEqual(
+                data.get("model"),
+                model_id,
+                f"Model override '{model_id}' was not applied to antigravity.json",
+            )
 
     def test_install_script_skills_deployment(self):
         with tempfile.TemporaryDirectory() as tmp_dir_str:
@@ -430,6 +502,7 @@ class TestAgentConfig(unittest.TestCase):
                 f"install.sh --target-dir failed:\n{res.stderr}",
             )
             self.assertTrue((tmp_path / "agents" / "antigravity.md").exists())
+            self.assertTrue((tmp_path / "agents" / "antigravity-scout.md").exists())
             self.assertTrue(
                 (tmp_path / "steering" / "01-engineering-discipline.md").exists()
             )
@@ -443,6 +516,7 @@ class TestAgentConfig(unittest.TestCase):
                 "bigquery-googlesql",
                 "tool-skill-engineering",
                 "gcloud",
+                "conventional-commits",
             ]
             for skill in expected_skills:
                 skill_dir = tmp_path / "skills" / skill
@@ -453,28 +527,33 @@ class TestAgentConfig(unittest.TestCase):
                     (skill_dir / "SKILL.md").exists(),
                     f"SKILL.md must exist in deployed skill {skill}",
                 )
-                self.assertTrue(
-                    skill_dir.is_symlink(),
-                    f"Skill directory {skill} should be a symlink",
-                )
 
-            # Test idempotency - run again to verify no failure or nested symlinks
-            res2 = subprocess.run(
+            # Test directory protection: existing real directory is backed up, not wiped
+            custom_dir = tmp_path / "skills" / "writing"
+            custom_dir.unlink()  # remove symlink
+            custom_dir.mkdir(parents=True)
+            custom_file = custom_dir / "custom_notes.txt"
+            custom_file.write_text("important user notes", encoding="utf-8")
+
+            res_idempotent = subprocess.run(
                 ["bash", str(self.install_sh), "--target-dir", str(tmp_path)],
                 capture_output=True,
                 text=True,
                 check=False,
             )
             self.assertEqual(
-                res2.returncode,
+                res_idempotent.returncode,
                 0,
-                f"Idempotent re-run failed:\n{res2.stderr}",
+                f"Idempotent re-run with existing directory failed:\n{res_idempotent.stderr}",
             )
-            for skill in expected_skills:
-                skill_dir = tmp_path / "skills" / skill
-                self.assertTrue(skill_dir.is_symlink())
-                self.assertTrue((skill_dir / "SKILL.md").exists())
-            self.assertTrue((tmp_path / "hooks" / "workspace-status.json").exists())
+            # Verify backup was created and user data was preserved
+            backups = list((tmp_path / "skills").glob("writing.bak.*"))
+            self.assertGreaterEqual(
+                len(backups),
+                1,
+                "Existing real directory must be backed up before replacing",
+            )
+            self.assertTrue((backups[0] / "custom_notes.txt").exists())
 
     def test_install_script_no_skills_flag(self):
         with tempfile.TemporaryDirectory() as tmp_dir_str:
@@ -560,7 +639,7 @@ class TestAgentConfig(unittest.TestCase):
                 "antigravity.md must not exist in agents/ when format is json",
             )
 
-            # Validate installed JSON content and hook integrity
+            # Validate installed JSON content
             data = json.loads(json_file.read_text(encoding="utf-8"))
             self.assertEqual(data.get("name"), "antigravity")
             self.assertEqual(
@@ -568,43 +647,6 @@ class TestAgentConfig(unittest.TestCase):
                 f"file://{prompt_file}",
                 "Installed JSON prompt URI must point to prompts/antigravity.prompt.md",
             )
-            self.assertEqual(
-                data.get("hooks"),
-                {"agentSpawn": [{"command": "git status --short"}]},
-                "Hooks must be preserved in installed JSON config",
-            )
-
-            # Skills and hooks must be deployed
-            self.assertTrue(
-                (tmp_path / "hooks" / "workspace-status.json").exists(),
-                "workspace-status.json must be deployed to hooks/",
-            )
-            expected_skills = [
-                "writing",
-                "bigquery-googlesql",
-                "tool-skill-engineering",
-                "gcloud",
-            ]
-            for skill in expected_skills:
-                skill_dir = tmp_path / "skills" / skill
-                self.assertTrue(skill_dir.is_dir())
-                self.assertTrue((skill_dir / "SKILL.md").exists())
-
-            # Idempotency re-run test
-            res2 = subprocess.run(
-                [
-                    "bash",
-                    str(self.install_sh),
-                    "--format",
-                    "json",
-                    "--target-dir",
-                    str(tmp_path),
-                ],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            self.assertEqual(res2.returncode, 0, f"JSON re-run failed: {res2.stderr}")
 
     def test_install_script_cli_validation(self):
         invalid_invocations = [

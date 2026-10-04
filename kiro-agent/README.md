@@ -1,12 +1,13 @@
 # Antigravity Custom Agent for Kiro IDE (Native No-MCP)
 
-This package provides a native custom agent for Kiro IDE that replicates Google Antigravity engineering standards and GEMINI.md behavioral invariants. The agent operates through Kiro built-in tool categories (`read`, `write`, `shell`, `web`, `subagent`, `code`, `goal`), eliminating dependencies on external Model Context Protocol (MCP) servers or background daemon processes.
+This package provides a native custom agent for Kiro IDE and CLI that replicates Google Antigravity engineering standards and GEMINI.md behavioral invariants. The agent operates through Kiro built-in tool categories (`read`, `write`, `shell`, `web`, `subagent`), eliminating dependencies on external Model Context Protocol (MCP) servers or background daemon processes.
 
 | Subsystem Component | File Path | Operational Role |
 | :--- | :--- | :--- |
 | **Agent Definition (Markdown)** | `kiro-agent/antigravity.md` | Canonical agent configuration and system prompt |
 | **Agent Definition (JSON)** | `kiro-agent/antigravity.json` | Programmatic JSON schema representation |
 | **System Prompt Body** | `kiro-agent/antigravity.prompt.md` | Pure markdown prompt body referenced by JSON config |
+| **Scout Subagent** | `kiro-agent/antigravity-scout.md` | Read-only search and repository exploration subagent |
 | **Operational Steering** | `kiro-agent/steering/` | Workspace rules for Gate 0, anti-cheat, and execution |
 | **Lifecycle Hooks** | `kiro-agent/hooks/` | Event-driven automations for session initialization |
 | **Installer Utility** | `kiro-agent/install.sh` | Deployment script for global and workspace scopes |
@@ -18,14 +19,14 @@ This package provides a native custom agent for Kiro IDE that replicates Google 
 
 The `antigravity` agent configures native Kiro tools to match Google Antigravity runtime behaviors:
 
-1. **Surgical Line-Anchored Modifications**: All file modifications execute via `write` and `fs_write`. The agent reads context lines before editing, rejecting blind whole-file overwrites.
-2. **Non-Interactive Shell Discipline**: Commands execute non-interactively with `CI=1 PAGER=cat NO_COLOR=1`. Terminal output is sanitized of ANSI escape sequences before evaluating assertions.
-3. **Working Directory Integrity**: Commands execute from the project root using explicit relative or absolute path arguments. Issuing `cd` commands is prohibited.
+1. **Surgical Line-Anchored Modifications**: All targeted file modifications execute via `str_replace`. New files or complete module rewrites execute via `fs_write` atomically.
+2. **Non-Interactive Shell Discipline**: Commands execute non-interactively with `PAGER=cat NO_COLOR=1 CI=1`. Terminal output is sanitized of ANSI escape sequences before evaluating assertions in test suites.
+3. **Working Directory Integrity**: Commands execute from the project root using explicit relative or absolute path arguments. Standalone `cd` commands are avoided in favor of compound commands.
 4. **Clickable Link Generation**: All file paths and code symbols format as clickable github-style links using the `file://` scheme.
-5. **Zero-Tolerance Anti-Cheating**: The agent never comments out, deletes, or weakens test assertions. Git commits with `--no-verify` or `-n` are blocked by permission rules.
+5. **Zero-Tolerance Anti-Cheating**: The agent never comments out, deletes, or weakens test assertions. Git commits bypassing pre-commit hooks via `--no-verify`, `-n`, or hook redirection are blocked by declarative deny rules.
 6. **Mandatory Gate 0 Quality Gate**: The agent guarantees zero formatting debt, zero linter warnings, clean static typing, and 100% passing test suites before declaring work complete.
-7. **Steering Priority Semantics**: Steering files represent RFC 2119 mandatory requirements (MUST, MUST NOT) that override general model defaults.
-8. **Subagent and Autonomous Loops**: Complex tasks delegate to parallel subagents with isolated context, leveraging the `goal` tool for iterative loops.
+7. **Steering Priority Semantics**: Steering files represent RFC 2119 mandatory requirements (MUST, MUST NOT) that override general model defaults. Context-heavy domain protocols load automatically on demand.
+8. **Subagent Delegation**: Complex tasks delegate to parallel subagents with isolated context. Multi-file scanning delegates to the read-only `antigravity-scout` subagent.
 
 ---
 

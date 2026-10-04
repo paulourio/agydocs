@@ -5,7 +5,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+if [[ "${PWD}" == "${SCRIPT_DIR}" ]]; then
+    WORKSPACE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+else
+    WORKSPACE_ROOT="${PWD}"
+fi
 
 INSTALL_GLOBAL=true
 INSTALL_WORKSPACE=true
@@ -32,7 +36,7 @@ Options:
   --no-steering     Skip installing steering documents
   --no-skills       Skip installing skills
   --no-hooks        Skip installing lifecycle hooks
-  --model <id>      Override model identifier (default: claude-sonnet-5)
+  --model <id>      Override model identifier
   --dry-run         Print planned actions without modifying filesystem
   -h, --help        Show this help message
 EOF
@@ -44,11 +48,13 @@ while [[ $# -gt 0 ]]; do
         --global-only)
             INSTALL_GLOBAL=true
             INSTALL_WORKSPACE=false
+            TARGET_DIR=""
             shift
             ;;
         --workspace-only)
             INSTALL_GLOBAL=false
             INSTALL_WORKSPACE=true
+            TARGET_DIR=""
             shift
             ;;
         --target-dir)
@@ -109,7 +115,7 @@ if [[ "${FORMAT}" != "md" && "${FORMAT}" != "json" ]]; then
 fi
 
 echo "==> Validating kiro-agent configuration files..."
-for req_file in "antigravity.md" "antigravity.json" "antigravity.prompt.md"; do
+for req_file in "antigravity.md" "antigravity.json" "antigravity.prompt.md" "antigravity-scout.md"; do
     if [[ ! -f "${SCRIPT_DIR}/${req_file}" ]]; then
         echo "Error: ${SCRIPT_DIR}/${req_file} not found!" >&2
         exit 1
@@ -126,12 +132,36 @@ if [[ -n "${MODEL_OVERRIDE}" ]]; then
     TEMP_DIR="$(mktemp -d)"
     trap 'rm -rf "${TEMP_DIR}"' EXIT
     echo "==> Applying model override: ${MODEL_OVERRIDE}"
-    sed "s/^model: .*/model: ${MODEL_OVERRIDE}/" "${SCRIPT_DIR}/antigravity.md" > "${TEMP_DIR}/antigravity.md"
-    sed "s/\"model\": \".*\"/\"model\": \"${MODEL_OVERRIDE}\"/" "${SCRIPT_DIR}/antigravity.json" > "${TEMP_DIR}/antigravity.json"
     cp "${SCRIPT_DIR}/antigravity.prompt.md" "${TEMP_DIR}/antigravity.prompt.md"
-    AGENT_MD_SOURCE="${TEMP_DIR}/antigravity.md"
-    AGENT_JSON_SOURCE="${TEMP_DIR}/antigravity.json"
     AGENT_PROMPT_SOURCE="${TEMP_DIR}/antigravity.prompt.md"
+
+    python3 -c "
+import yaml, sys
+path_src = sys.argv[1]
+path_dst = sys.argv[2]
+model = sys.argv[3]
+content = open(path_src, 'r', encoding='utf-8').read()
+parts = content.split('---', 2)
+if len(parts) >= 3:
+    fm = yaml.safe_load(parts[1]) or {}
+    fm['model'] = model
+    new_fm = yaml.dump(fm, sort_keys=False).strip()
+    new_content = f'---\n{new_fm}\n---' + parts[2]
+    open(path_dst, 'w', encoding='utf-8').write(new_content)
+" "${SCRIPT_DIR}/antigravity.md" "${TEMP_DIR}/antigravity.md" "${MODEL_OVERRIDE}"
+    AGENT_MD_SOURCE="${TEMP_DIR}/antigravity.md"
+
+    python3 -c "
+import json, sys
+path_src = sys.argv[1]
+path_dst = sys.argv[2]
+model = sys.argv[3]
+data = json.load(open(path_src, 'r', encoding='utf-8'))
+data['model'] = model
+json.dump(data, open(path_dst, 'w', encoding='utf-8'), indent=2)
+open(path_dst, 'a', encoding='utf-8').write('\n')
+" "${SCRIPT_DIR}/antigravity.json" "${TEMP_DIR}/antigravity.json" "${MODEL_OVERRIDE}"
+    AGENT_JSON_SOURCE="${TEMP_DIR}/antigravity.json"
 fi
 
 install_to() {
@@ -166,7 +196,7 @@ install_to() {
             echo "  [DRY-RUN] cp ${SCRIPT_DIR}/hooks/*.json ${hooks_dir}/"
         fi
         if [[ "${INSTALL_SKILLS}" = true ]]; then
-            local skill_names=("writing" "bigquery-googlesql" "tool-skill-engineering" "gcloud")
+            local skill_names=("writing" "bigquery-googlesql" "tool-skill-engineering" "gcloud" "conventional-commits")
             local found_skills=()
             for s in "${skill_names[@]}"; do
                 if [[ -f "${WORKSPACE_ROOT}/${s}/SKILL.md" ]]; then
@@ -199,7 +229,16 @@ install_to() {
     else
         mkdir -p "${prompts_dir}"
         cp "${AGENT_PROMPT_SOURCE}" "${prompts_dir}/antigravity.prompt.md"
-        sed "s|\"prompt\": \".*\"|\"prompt\": \"file://${prompts_dir}/antigravity.prompt.md\"|" "${AGENT_JSON_SOURCE}" > "${agent_dir}/antigravity.json"
+        python3 -c "
+import json, sys
+src_json = sys.argv[1]
+dst_json = sys.argv[2]
+prompt_uri = sys.argv[3]
+data = json.load(open(src_json, 'r', encoding='utf-8'))
+data['prompt'] = prompt_uri
+json.dump(data, open(dst_json, 'w', encoding='utf-8'), indent=2)
+open(dst_json, 'a', encoding='utf-8').write('\n')
+" "${AGENT_JSON_SOURCE}" "${agent_dir}/antigravity.json" "file://${prompts_dir}/antigravity.prompt.md"
         echo "  Installed: ${agent_dir}/antigravity.json"
         echo "  Installed: ${prompts_dir}/antigravity.prompt.md"
         # Remove colliding or stray agent files in agents/
@@ -225,7 +264,7 @@ install_to() {
     fi
 
     if [[ "${INSTALL_SKILLS}" = true ]]; then
-        local skill_names=("writing" "bigquery-googlesql" "tool-skill-engineering" "gcloud")
+        local skill_names=("writing" "bigquery-googlesql" "tool-skill-engineering" "gcloud" "conventional-commits")
         local found_skills=()
         for s in "${skill_names[@]}"; do
             if [[ -f "${WORKSPACE_ROOT}/${s}/SKILL.md" ]]; then
@@ -242,8 +281,14 @@ install_to() {
                     skill_src="${HOME}/.gemini/config/skills/${s}"
                 fi
                 local skill_dst="${skills_dir}/${s}"
-                if [[ -L "${skill_dst}" || -e "${skill_dst}" ]]; then
-                    rm -rf "${skill_dst}"
+                if [[ -L "${skill_dst}" ]]; then
+                    rm -f "${skill_dst}"
+                elif [[ -d "${skill_dst}" ]]; then
+                    local backup="${skill_dst}.bak.$(date +%s)"
+                    echo "  Warning: Backing up existing directory ${skill_dst} to ${backup}"
+                    mv "${skill_dst}" "${backup}"
+                elif [[ -e "${skill_dst}" ]]; then
+                    rm -f "${skill_dst}"
                 fi
                 if ln -s "${skill_src}" "${skill_dst}" 2>/dev/null; then
                     echo "  Linked skill: ${skill_dst} -> ${skill_src}"

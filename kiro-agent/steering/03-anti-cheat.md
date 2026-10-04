@@ -18,7 +18,7 @@ This document defines absolute invariants against speculative shortcuts, test ta
 ## 1. Test Assertion Preservation
 
 Software verification requires honest test execution.
-1. **Zero Test Tampering**: The agent must never comment out, delete, or modify existing test assertions to bypass a failure. If an assertion fails, the defect resides in the implementation under test.
+1. **Zero Test Tampering**: The agent must never comment out, delete, or weaken existing test assertions to bypass a failure. If an assertion fails, investigate the implementation under test first. If an existing test itself is provably flawed or contradicts authoritative specifications, report the discrepancy explicitly with evidence before proposing a test correction.
 2. **No Artificial Skips**: Never insert test-skipping decorators, directives, or flags (`@pytest.mark.skip`, `t.Skip()`, `xit`, `it.skip`) to force a test run to report success.
 3. **Negative Controls**: Maintain explicit negative controls alongside positive benchmarks to prove real fault detection.
 

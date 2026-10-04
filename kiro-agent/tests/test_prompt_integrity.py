@@ -15,6 +15,7 @@ class TestPromptIntegrity(unittest.TestCase):
         self.agent_md = MODULE_DIR / "antigravity.md"
         self.prompt_md = MODULE_DIR / "antigravity.prompt.md"
         self.readme_md = MODULE_DIR / "README.md"
+        self.scout_md = MODULE_DIR / "antigravity-scout.md"
         self.steering_dir = MODULE_DIR / "steering"
         self.quality_gate_bin = WORKSPACE_ROOT / "writing" / "bin" / "quality_gate"
 
@@ -48,10 +49,11 @@ class TestPromptIntegrity(unittest.TestCase):
         required_invariants = [
             "write",
             "fs_write",
+            "str_replace",
             "shell",
             "read",
             "Gate 0",
-            "CI=1 PAGER=cat NO_COLOR=1",
+            "PAGER=cat NO_COLOR=1 CI=1",
             "--no-verify",
             "Ousterhout",
             "Deep Modules",
@@ -92,9 +94,12 @@ class TestPromptIntegrity(unittest.TestCase):
         if not self.quality_gate_bin.exists():
             self.skipTest(f"Quality gate binary not found at {self.quality_gate_bin}")
 
-        docs_to_check = [self.agent_md, self.prompt_md, self.readme_md] + sorted(
-            self.steering_dir.glob("*.md")
-        )
+        docs_to_check = [
+            self.agent_md,
+            self.prompt_md,
+            self.readme_md,
+            self.scout_md,
+        ] + sorted(self.steering_dir.glob("*.md"))
         for doc in docs_to_check:
             result = subprocess.run(
                 [str(self.quality_gate_bin), "--profile", "rfc", str(doc)],
