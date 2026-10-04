@@ -29,6 +29,17 @@ func GetRuleSeverity(rule string, stage int, level Level) Severity {
 		level = LevelStandard
 	}
 
+	// Content scope and non-prose advisory rules (always advisory warnings, never blocking errors)
+	switch rule {
+	case "Zero Prose Content":
+		if level == LevelDraft {
+			return SeverityInfo
+		}
+		return SeverityWarn
+	case "Raw Non-Prose Content", "Non-Markdown File Extension":
+		return SeverityWarn
+	}
+
 	if level == LevelStrict {
 		return SeverityError
 	}
@@ -162,13 +173,13 @@ var Profiles = map[string]ProfileConfig{
 		Name:                      "paper",
 		Description:               "Scientific Papers, Algorithmic Analysis, Formal Research",
 		TargetBurstinessMin:       0.40,
-		TargetBurstinessMax:       0.70,
+		TargetBurstinessMax:       1.15,
 		MaxSyntacticOverhead:      6.5,
 		MaxZombieNominalsPct:      2.0,
-		MaxEmDashesPer100w:        0.15,
+		MaxEmDashesPer100w:        0.20,
 		MinPunctuationBalance:     2.0,
-		MinDemonstrativeAnchoring: 0.85,
-		MaxConcreteAnchorLagWords: intPtr(300),
+		MinDemonstrativeAnchoring: 0.40,
+		MaxConcreteAnchorLagWords: nil,
 		MinHVI:                    85.0,
 		MinTPI:                    85.0,
 	},

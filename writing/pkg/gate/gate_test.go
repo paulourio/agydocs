@@ -294,7 +294,11 @@ func TestBurstinessEvaluation(t *testing.T) {
 	uniformProse := "The primary server receives every single incoming request from clients. " +
 		"The secondary server replicates every single state change across network. " +
 		"The tertiary server monitors every single heartbeat signal for failures. " +
-		"The quaternary server records every single telemetry metric to disk."
+		"The quaternary server records every single telemetry metric to disk. " +
+		"The quinary server verifies every single cryptographic signature across nodes. " +
+		"The senary server distributes every single configuration parameter across hosts. " +
+		"The septenary server coordinates every single transaction boundary across shards. " +
+		"The octonary server aggregates every single performance counter into memory."
 	repUniform, err := AuditDocument(uniformProse, "essay")
 	if err != nil {
 		t.Fatalf("AuditDocument err: %v", err)
@@ -1128,3 +1132,144 @@ func TestStrictnessLevelsTiering(t *testing.T) {
 	}
 }
 
+func TestDetectsZeroProseContent(t *testing.T) {
+	doc := "```python\nx = 1\ny = 2\n```\n\n$$\na^2 + b^2 = c^2\n$$"
+
+	repStd, err := AuditDocumentWithLevel(doc, "paper", LevelStandard)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel err: %v", err)
+	}
+	found := false
+	for _, v := range repStd.Violations {
+		if v.Rule == "Zero Prose Content" {
+			found = true
+			if v.Severity != SeverityWarn {
+				t.Errorf("Expected SeverityWarn in standard level, got %v", v.Severity)
+			}
+		}
+	}
+	if !found {
+		t.Errorf("Expected Zero Prose Content violation, got %v", repStd.Violations)
+	}
+	if !repStd.Passed {
+		t.Errorf("Standard mode should still pass with warning on zero prose, got errors: %d", repStd.ErrorCount)
+	}
+
+	repStrict, err := AuditDocumentWithLevel(doc, "paper", LevelStrict)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel err: %v", err)
+	}
+	foundStrict := false
+	for _, v := range repStrict.Violations {
+		if v.Rule == "Zero Prose Content" && v.Severity == SeverityWarn {
+			foundStrict = true
+		}
+	}
+	if !foundStrict {
+		t.Errorf("Expected Zero Prose Content with SeverityWarn in strict mode, got: %v", repStrict.Violations)
+	}
+}
+
+func TestDetectsRawJSONStructuredData(t *testing.T) {
+	doc := `{"service": "raft", "replicas": 3, "heartbeat_ms": 150}`
+
+	repStd, err := AuditDocumentWithLevel(doc, "rfc", LevelStandard)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel err: %v", err)
+	}
+	found := false
+	for _, v := range repStd.Violations {
+		if v.Rule == "Raw Non-Prose Content" {
+			found = true
+			if !strings.Contains(v.Message, "JSON") {
+				t.Errorf("Expected JSON in message, got %q", v.Message)
+			}
+			if v.Severity != SeverityWarn {
+				t.Errorf("Expected SeverityWarn in standard mode, got %v", v.Severity)
+			}
+		}
+	}
+	if !found {
+		t.Errorf("Expected Raw Non-Prose Content for JSON, got: %v", repStd.Violations)
+	}
+
+	repStrict, err := AuditDocumentWithLevel(doc, "rfc", LevelStrict)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel strict err: %v", err)
+	}
+	foundStrict := false
+	for _, v := range repStrict.Violations {
+		if v.Rule == "Raw Non-Prose Content" && v.Severity == SeverityWarn {
+			foundStrict = true
+		}
+	}
+	if !foundStrict {
+		t.Errorf("Expected Raw Non-Prose Content with SeverityWarn in strict mode, got: %v", repStrict.Violations)
+	}
+}
+
+func TestDetectsRawXMLStructuredData(t *testing.T) {
+	doc := `<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property>
+        <name>consensus.timeout</name>
+        <value>500ms</value>
+    </property>
+</configuration>`
+
+	rep, err := AuditDocumentWithLevel(doc, "rfc", LevelStandard)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel err: %v", err)
+	}
+	found := false
+	for _, v := range rep.Violations {
+		if v.Rule == "Raw Non-Prose Content" {
+			found = true
+			if !strings.Contains(v.Message, "XML") {
+				t.Errorf("Expected XML in message, got %q", v.Message)
+			}
+		}
+	}
+	if !found {
+		t.Errorf("Expected Raw Non-Prose Content for XML, got: %v", rep.Violations)
+	}
+}
+
+func TestDetectsNonMarkdownFileExtension(t *testing.T) {
+	tmpDir := t.TempDir()
+	jsonFile := filepath.Join(tmpDir, "config.json")
+	if err := os.WriteFile(jsonFile, []byte(`{"enabled": true}`), 0644); err != nil {
+		t.Fatalf("Failed to write temp json file: %v", err)
+	}
+
+	repStd, err := AuditFileWithLevel(jsonFile, "rfc", LevelStandard, nil)
+	if err != nil {
+		t.Fatalf("AuditFileWithLevel err: %v", err)
+	}
+	foundExt := false
+	for _, v := range repStd.Violations {
+		if v.Rule == "Non-Markdown File Extension" {
+			foundExt = true
+			if v.Severity != SeverityWarn {
+				t.Errorf("Expected SeverityWarn, got %v", v.Severity)
+			}
+		}
+	}
+	if !foundExt {
+		t.Errorf("Expected Non-Markdown File Extension violation, got: %v", repStd.Violations)
+	}
+
+	repStrict, err := AuditFileWithLevel(jsonFile, "rfc", LevelStrict, nil)
+	if err != nil {
+		t.Fatalf("AuditFileWithLevel strict err: %v", err)
+	}
+	foundStrict := false
+	for _, v := range repStrict.Violations {
+		if v.Rule == "Non-Markdown File Extension" && v.Severity == SeverityWarn {
+			foundStrict = true
+		}
+	}
+	if !foundStrict {
+		t.Errorf("Expected Non-Markdown File Extension with SeverityWarn in strict mode, got: %v", repStrict.Violations)
+	}
+}

@@ -16,13 +16,13 @@ var (
 
 	reThisInitial = regexp.MustCompile(`^\s*([Tt]his|[Tt]hese)\b(?:\s+([a-zA-Z0-9_-]+)|([,\.;:—–-]))?`)
 
-	reContrastiveReframe = regexp.MustCompile(`(?i)\b(?:it(?:'s|\s+is)?\s+not\s+(?:just|merely|simply|only|about)?|are\s+not\s+(?:just|merely|simply|only|about)?|is\s+not\s+(?:just|merely|simply|only|about)?|not\s+(?:just|merely|simply|only|about)|does\s+not\s+guarantee|doesn't\s+guarantee)\b(.*?)\b(?:but\s+(?:also|rather|instead)?|rather|instead|it(?:'s|\s+is)\s+about|it\s+guarantees|;\s*(?:they\s+are|it\s+is|rather|instead))\b(.*?)(?:[.;\n]|$)`)
+	reContrastiveReframe = regexp.MustCompile(`(?i)\b(?:it(?:'s|\s+is)?\s+not(?:\s+(?:just|merely|simply|only|about))?|are\s+not(?:\s+(?:just|merely|simply|only|about))?|is\s+not(?:\s+(?:just|merely|simply|only|about))?|not\s+(?:just|merely|simply|only|about)|does\s+not\s+guarantee|doesn't\s+guarantee)\s+([^.?!;\n]{1,80}?)\s*(?:\b(?:but\s+(?:also|rather|instead)?|rather|instead|it(?:'s|\s+is)\s+about|it\s+guarantees)\b|;\s*(?:they\s+are|it(?:'s|\s+is)\s+about|it\s+is|rather|instead))\s+([^.?!;\n]{1,80}?)(?:[.;\n]|$)`)
 
 	trivialPatterns = []*regexp.Regexp{
 		regexp.MustCompile(`(?i)\btyping\b`),
 		regexp.MustCompile(`(?i)\bstaring\b`),
-		regexp.MustCompile(`(?i)\bsimple\b`),
-		regexp.MustCompile(`(?i)\bjust\b`),
+		regexp.MustCompile(`(?i)\bsimple\s+(?:matter|task|detail|trick|magic)\b`),
+		regexp.MustCompile(`(?i)\bjust\s+(?:about|a\s+matter|an?\s+exercise|a\s+tool)\b`),
 		regexp.MustCompile(`(?i)\braw speed\b`),
 		regexp.MustCompile(`(?i)\bluck\b`),
 		regexp.MustCompile(`(?i)\bmagic\b`),
@@ -91,8 +91,11 @@ func countColons(cleanedProse string) int {
 	return count
 }
 
+var reMathDash = regexp.MustCompile(`(?mi)(?:(?:^|\s+)—\s*[A-Za-z]|\b(?:Chapter|Appendix|Section|Part)\s+[A-Za-z0-9.]+\s*—|—\s*(?:\d+[a-z]*\s+ed\.|dc\d+|programming)|4\s*—|—\s*>|[|«]\s*—|—\s*[|»]|—\s*—|\b\d+\s*—\s*\d+\b|\b\d+\s*—|(?:^|[\s=<>(+\-*/\[\]])—\s*(?:\d+|\\[a-zA-Z]+)|[=+\-*/<>≤≥≠]\s*—|—\s*[=+\-*/<>≤≥≠]|[\[\(]\s*—|—\s*[\]\)]|\)\s*—|—\s*[\(\[]|\b[a-zA-Z0-9\x27_]{1,3}\b\s*—\s*\b[a-zA-Z0-9\x27_]{1,3}\b)`)
+
 func countEmDashes(prose string) (int, int) {
-	unicodeEm := strings.Count(prose, "—")
+	cleanForEm := reMathDash.ReplaceAllString(prose, " - ")
+	unicodeEm := strings.Count(cleanForEm, "—")
 	asciiEm := 0
 	n := len(prose)
 	i := 0
@@ -196,7 +199,7 @@ func AuditStage2ToleranceBands(
 		}
 	}
 
-	if len(sentences) >= 4 {
+	if len(sentences) >= 8 {
 		if metrics.BurstinessCV < profile.TargetBurstinessMin {
 			addViolation(
 				"Low Burstiness (Metronomic Uniformity)",
@@ -219,8 +222,10 @@ func AuditStage2ToleranceBands(
 	// 2. Syntactic Overhead (Subject-Verb Distance & Prepositional Depth)
 	svdEstimates := make([]float64, 0, len(sentences))
 	ppdMax := 0
+	ppdSum := 0
 	for _, s := range sentences {
 		prepMatches := rePrep.FindAllString(s, -1)
+		ppdSum += len(prepMatches)
 		if len(prepMatches) > ppdMax {
 			ppdMax = len(prepMatches)
 		}
@@ -240,18 +245,18 @@ func AuditStage2ToleranceBands(
 		}
 		meanSVD = sum / float64(len(svdEstimates))
 	}
-	cappedPPD := float64(ppdMax)
-	if cappedPPD > 6.0 {
-		cappedPPD = 6.0
+	meanPPD := 0.0
+	if len(sentences) > 0 {
+		meanPPD = float64(ppdSum) / float64(len(sentences))
 	}
-	metrics.SyntacticOverhead = round2(0.6*meanSVD + 0.8*cappedPPD + 1.0)
+	metrics.SyntacticOverhead = round2(0.6*meanSVD + 0.8*meanPPD + 1.0)
 
 	if len(sentences) >= 3 && metrics.SyntacticOverhead > profile.MaxSyntacticOverhead {
 		addViolation(
 			"Syntactic Memory Overhead (DLT Violation)",
 			fmt.Sprintf("Syntactic overhead (%.2f) exceeds profile limit (%.1f).", metrics.SyntacticOverhead, profile.MaxSyntacticOverhead),
 			nil,
-			fmt.Sprintf("Mean SVD: %.1f, Max PPD: %d", meanSVD, ppdMax),
+			fmt.Sprintf("Mean SVD: %.1f, Mean PPD: %.1f (Max PPD: %d)", meanSVD, meanPPD, ppdMax),
 			"Shorten distance between grammatical subject and finite verb. Eliminate prepositional chains.",
 		)
 	}
@@ -359,31 +364,40 @@ func AuditStage2ToleranceBands(
 	}
 
 	// 6. Contrastive Reframes Analysis (Information Gain)
-	proseClean := reInlineCode.ReplaceAllString(prose, " ")
-	reframeMatches := reContrastiveReframe.FindAllStringSubmatch(proseClean, -1)
-	metrics.ContrastiveReframesCount = len(reframeMatches)
-	for _, m := range reframeMatches {
-		if len(m) > 2 {
-			xClause := m[1]
-			yClause := m[2]
-			isTrivial := false
-			for _, pat := range trivialPatterns {
-				if pat.MatchString(xClause) {
-					isTrivial = true
-					break
+	totalReframes := 0
+	for _, s := range sentences {
+		sClean := reInlineCode.ReplaceAllString(s, " ")
+		reframeMatches := reContrastiveReframe.FindAllStringSubmatch(sClean, -1)
+		totalReframes += len(reframeMatches)
+		for _, m := range reframeMatches {
+			if len(m) > 2 {
+				// Correlative conjunction check: "not only ... but also ..." is additive, not a contrastive strawman
+				lowerM := strings.ToLower(m[0])
+				if strings.Contains(lowerM, "not only") && strings.Contains(lowerM, "but also") {
+					continue
 				}
-			}
-			if isTrivial {
-				addViolation(
-					"Low-Information Contrastive Strawman",
-					"Detected trivial contrastive reframe ('Not X, but Y') with zero information gain.",
-					nil,
-					fmt.Sprintf("Clause X: '%s' -> Clause Y: '%s'", strings.TrimSpace(xClause), strings.TrimSpace(yClause)),
-					"Cut the 'Not X' strawman and state assertion Y directly.",
-				)
+				xClause := m[1]
+				yClause := m[2]
+				isTrivial := false
+				for _, pat := range trivialPatterns {
+					if pat.MatchString(xClause) {
+						isTrivial = true
+						break
+					}
+				}
+				if isTrivial {
+					addViolation(
+						"Low-Information Contrastive Strawman",
+						"Detected trivial contrastive reframe ('Not X, but Y') with zero information gain.",
+						nil,
+						fmt.Sprintf("Clause X: '%s' -> Clause Y: '%s'", strings.TrimSpace(xClause), strings.TrimSpace(yClause)),
+						"Cut the 'Not X' strawman and state assertion Y directly.",
+					)
+				}
 			}
 		}
 	}
+	metrics.ContrastiveReframesCount = totalReframes
 
 	// 7. Concrete Anchor Lag
 	if profile.MaxConcreteAnchorLagWords != nil {

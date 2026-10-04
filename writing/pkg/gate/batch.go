@@ -57,6 +57,31 @@ func CollectFiles(inputs []string) ([]string, error) {
 	return files, nil
 }
 
+// NonProseExtensions maps file extensions of code, data, and markup files to their human-readable format names.
+var NonProseExtensions = map[string]string{
+	".json":  "JSON",
+	".yaml":  "YAML",
+	".yml":   "YAML",
+	".xml":   "XML",
+	".html":  "HTML",
+	".htm":   "HTML",
+	".toml":  "TOML",
+	".sql":   "SQL",
+	".go":    "Go",
+	".py":    "Python",
+	".js":    "JavaScript",
+	".ts":    "TypeScript",
+	".rs":    "Rust",
+	".c":     "C",
+	".cpp":   "C++",
+	".h":     "C/C++ Header",
+	".java":  "Java",
+	".sh":    "Shell",
+	".css":   "CSS",
+	".scss":  "SCSS",
+	".proto": "Protobuf",
+}
+
 // AuditFile audits a single file using LevelStandard, checking and updating the cache if available.
 func AuditFile(path string, profile string, cache *Cache) (*AuditReport, error) {
 	return AuditFileWithLevel(path, profile, LevelStandard, cache)
@@ -83,6 +108,37 @@ func AuditFileWithLevel(path string, profile string, level Level, cache *Cache) 
 	rep, err := AuditDocumentWithLevel(string(content), profile, level)
 	if err != nil {
 		return nil, err
+	}
+
+	// Check for non-markdown file extension
+	ext := strings.ToLower(filepath.Ext(path))
+	if formatName, ok := NonProseExtensions[ext]; ok {
+		sev := GetRuleSeverity("Non-Markdown File Extension", 0, level)
+		hasExtViolation := false
+		for _, v := range rep.Violations {
+			if v.Rule == "Non-Markdown File Extension" {
+				hasExtViolation = true
+				break
+			}
+		}
+		if !hasExtViolation {
+			v := Violation{
+				Rule:           "Non-Markdown File Extension",
+				Severity:       sev,
+				Message:        fmt.Sprintf("File '%s' has non-Markdown extension '%s' (%s). Quality gate evaluates natural language prose in Markdown documents.", filepath.Base(path), ext, formatName),
+				Recommendation: "Convert to Markdown (.md) or wrap code/data inside Markdown code fences (```).",
+			}
+			rep.Violations = append([]Violation{v}, rep.Violations...)
+			switch sev {
+			case SeverityError:
+				rep.ErrorCount++
+				rep.Passed = false
+			case SeverityWarn:
+				rep.WarningCount++
+			case SeverityInfo:
+				rep.InfoCount++
+			}
+		}
 	}
 
 	if cache != nil {

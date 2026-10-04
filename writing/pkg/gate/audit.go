@@ -3,6 +3,7 @@ package gate
 import (
 	"fmt"
 	"sort"
+	"strings"
 )
 
 // AuditDocument executes the complete 3-stage audit on the target text using LevelStandard.
@@ -34,6 +35,25 @@ func AuditDocumentWithLevel(text string, profileName string, level Level) (*Audi
 		HumanVoiceIndex:             100.0,
 		TechnicalPrecisionIndex:     100.0,
 		DemonstrativeAnchoringIndex: 1.0,
+	}
+
+	// Check for zero narrative prose content or raw structured data
+	if len(words) == 0 {
+		sev := GetRuleSeverity("Zero Prose Content", 0, level)
+		violations = append(violations, Violation{
+			Rule:           "Zero Prose Content",
+			Severity:       sev,
+			Message:        "Document contains 0 narrative prose words. The quality gate validates natural language prose in technical Markdown documents; code fences, tables, and equations are excluded.",
+			Recommendation: "Ensure narrative prose is present outside code fences (```) and math blocks.",
+		})
+	} else if isRaw, formatName := DetectRawStructuredData(text); isRaw {
+		sev := GetRuleSeverity("Raw Non-Prose Content", 0, level)
+		violations = append(violations, Violation{
+			Rule:           "Raw Non-Prose Content",
+			Severity:       sev,
+			Message:        fmt.Sprintf("Input appears to be raw %s rather than Markdown prose.", formatName),
+			Recommendation: fmt.Sprintf("Quality gate expects natural language prose in Markdown format. Wrap raw %s in code fences (```%s) or use <!-- gate:off --> escapes.", formatName, strings.ToLower(strings.Split(formatName, "/")[0])),
+		})
 	}
 
 	AuditStage1HardInvariants(text, lines, proseLines, level, &violations)

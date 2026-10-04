@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"encoding/json"
 	"regexp"
 	"strings"
 	"unicode"
@@ -18,7 +19,7 @@ var (
 	reNegBlockquote    = regexp.MustCompile("(?i)^\\s*(?:>\\s*)+(?:[\\*\\\"`])*(?:Bad|Defect|Negative(?:\\s+Example)?|Anti-Pattern|Banned|Strawman|Infantilized|Before|REJECTED)\\b")
 	reNegBullet        = regexp.MustCompile(`(?i)^\s*[-*+]?\s*\**\s*(?:Bad|Defect|Negative(?:\s+Example)?|Anti-Pattern|Banned|Strawman[^*:]*|Infantilized|Avoid|Trivial\s+Reframe|Claudisms?\s+Detected|Violations?|Fatal\s+Defect|AI\s+Tells|Tailing\s+Clauses|Quality\s+Gate|Shannon\s+Information\s+Loss|Zombie\s+Nominals?|Human\s+Voice\s+Index|Technical\s+Precision\s+Index|Linguistic\s+Virtues|Dependency\s+Locality|Burstiness|Demonstrative\s+Anchoring)\s*[:*]+\s*`)
 	reBannedListItem   = regexp.MustCompile(`^\s*[-*+]?\s*(?:\*["']|["'])`)
-	reParenNeg         = regexp.MustCompile(`\(\*.*?\*\)`)
+	reParenNeg         = regexp.MustCompile(`\(\*(?:\s*(?:e\.g\.\s*)?["'“\x60].*?["'”\x60]\s*|(?:\s*[-a-zA-Z]{3,}(?:\s+[-a-zA-Z]{3,})*\s*,\s*)+(?:and\s+|or\s+)?[-a-zA-Z]{3,}(?:\s+[-a-zA-Z]{3,})*\s*|\s*[-a-zA-Z]{4,}\s*|\s*(?:-[a-z]+,\s*)+-[a-z]+\s*)\*\)`)
 	reBlockquotePrefix = regexp.MustCompile(`^(?:\s*>\s*)+`)
 	reBulletPrefix     = regexp.MustCompile(`^\s*[-*+]\s+`)
 	reNumberPrefix     = regexp.MustCompile(`^\s*\d+\.\s+`)
@@ -31,7 +32,58 @@ var (
 	reCurlySingle      = regexp.MustCompile(`‘[^’\n]+’`)
 	reGateOff          = regexp.MustCompile(`(?i)<!--\s*gate:off\s*-->`)
 	reGateOn           = regexp.MustCompile(`(?i)<!--\s*gate:on\s*-->`)
+
+	rePandocSplitComma       = regexp.MustCompile("([`\\d\\)]|\\b[a-zA-Z0-9_-]+\\b)\\s*\\$,\\$\\s*([`\\d\\(]|\\b[a-zA-Z0-9_-]+\\b)")
+	reCodeSpan               = regexp.MustCompile("`[^`]+`")
+	reMathSpan               = regexp.MustCompile(`\$[^\$]+\$`)
+	reHTMLTag                = regexp.MustCompile(`<!--.*?-->|<[^>]+>`)
+	reProseWords             = regexp.MustCompile(`\b[a-zA-Z]{2,}\b`)
+	reCatalogLine            = regexp.MustCompile(`(?i)\b(?:Library of Congress|Cataloging-in-Publication|ISBN\s+[\d\-X]+|All rights reserved|Printed in\s+the|First printing|Text printed on|acid-free paper|Copyright\s+©)\b`)
+	rePublisherCity          = regexp.MustCompile(`(?i)\b(?:Addison[–\-]Wesley|Longman|Pearson|trademark\s+of|About This eBook|THIRD EDITION|Second Edition|Reading,\s+Massachusetts|Menlo Park|Wokingham|Amsterdam|Sydney|Tokyo|Singapore|Madrid|Paris|San Juan|Milan|Bonn|Capetown|Upper Saddle River|informit\.com|corpsales@|pearsoned|camera-ready|retrieval system|photocopying|recording|QA\d+|dc\d+|CIP\b|Includes\s+bibliographical|Includes\s+index|Bibliography:|Computer\s+science--Mathematics|Mathematics\.)\b`)
+	reCatalogCard            = regexp.MustCompile(`(?i)^\s*(?:[A-Z][a-z]+,\s+[A-Z][a-z]+|--\s*\d+[a-z]*\s+ed\.|[0-9IVXLCDM]+\.\s+[A-Za-z]|[IVXLCDM]+\.|\d+\s+p\.|\d+\s+cm\.|Title\.|[\d\s{MABCDEFGH\-}]+$)`)
+	reIndexLine              = regexp.MustCompile(`(?i)(?:[,;\s]\s*(?:[ivxlcdm]+|\d+)(?:[–—\-{]\d+)?(?:\s*[.,•*]+)*\s*$|(?:\b|[\$\*])see(?:\s+also)?\b|,\s*$|[^\n:]+:\s*[^\n,]+,\s*\d+|(?:\bTable\s+\d+|\b[A-Za-z0-9_\/\\^°—\s\(\)]+=\s*[\d.]+[+\-]?)|^\s*[√=<γΓδ∆ϵλµπσϕ∑∏\$\x60\\_\-+~#&@\/\d]|\b\d+\.\d+(?:\.\d+)?\.?\s*$)`)
+	reAllUpperHeader         = regexp.MustCompile(`^[A-Z0-9\s\(\)\-–—,.:]{4,}$`)
+	reTrailingConnect        = regexp.MustCompile(`(?i)(?:\b(?:and|or|to|for|in|of|on|by|at|as|with|between|analogous\s+to|due)\b|[(\[{])\s*$`)
+	reIndexAuthor            = regexp.MustCompile(`(?i)^\s*[A-Z][a-z]+(?:,\s+[A-Z][a-z]+|\s+\(=|\s+son\s+of|\s+\([^)]+\))`)
+	reNotationRow            = regexp.MustCompile(`(?i)\b(?:arithmetic expression|pointer- valued|set or multiset|string of symbols|value of expression|nth element of|element in row|group of variables|address is P|whose field name is|contents of computer word|address of variable|value of pointer variable|to free storage|node at the top of|preorder predecessor|postorder predecessor|local symbol in MIXAL|Formal symbolism|cot\b|sin\b|cos\b)\b`)
+	reTOCLine                = regexp.MustCompile(`^(?:(?:\d+(?:\.\d+)*\s+[^0-9\n]+|\bExercises\b)\s*\d*|\.{3,}\s*\d+|\d+)$`)
+	reIndexHeading           = regexp.MustCompile(`(?i)^(?:(?:(?:Appendix\s+[A-Z0-9]+|\d+)\s*[:.]?\s*)?(?:Index|General Index|Symbol Index|Subject Index|Author Index|Index to Notations|Index and Glossary|Appendices\s*(?:&|and)\s*Index|Index to Algorithms and Theorems|Appendices and Index|Glossary|Tables?\s+of\s+Numerical\s+Quantities)|Index)$`)
+	reTOCHeading             = regexp.MustCompile(`(?i)^(?:Table\s+of\s+Contents|Brief\s+Contents|Contents)$`)
+	reFrontmatterHeading     = regexp.MustCompile(`(?i)^(?:Cover\s*(&|and)?\s*Front\s*Matter|Front\s*Matter|About\s+This\s+eBook)$`)
+	reCreditHeading          = regexp.MustCompile(`(?i)^(?:(?:(?:Appendix\s+[A-Z0-9]+|\d+)\s*[:.]?\s*)?(?:Credits?(?:\s+for\s+Exercises)?|Acknowledgments?|Acknowledgements?))$`)
+	reEBookHeading           = regexp.MustCompile(`(?i)^About\s+This\s+(?:eBook|Edition|EPUB)$`)
+	reSubstantiveHeading     = regexp.MustCompile(`(?i)\b(?:Preface|Foreword|Introduction|Prologue|Contents|Chapter|Section|Appendix|Index)\b`)
+	reCIPLine                = regexp.MustCompile(`(?i)(?:^\s*(?:Library of Congress|Cataloging-in-Publication|\d+\s+cm\.|ISBN\b|p\.\s+\d+|Includes\s+index|Bibliography:|CIP\b|QA\d+|\d+--dc\d+|\d+-\d+|[IVXLCDM]+\.|\d+\.\s+[A-Za-z]|Dedicated to\b|[A-Z][a-z]+,\s+[A-Z]|\b(?:Second|Third|First|Fourth)\s+Edition\b|\bFoundation for Computer Science\b|Concrete mathematics|The art of computer programming|--\s*\d+[a-z]*\s+ed\.|Contents:\s*v\.)|--\s*v\.\s*\d|\b[ivx]+,\s*\d+\s*p\b|I\.\s+Title|\bcm\b|\.html\b|Mathematical Sciences Publishers|Internet page\b.*contains|Electronic version by|For sales\b)`)
+	rePublisherDisclaimer    = regexp.MustCompile(`(?i)\b(?:expressed or implied warranty|errors or omissions|consequential damages|special sales|bulk purposes|camera-ready|retrieval system|photocopying|recording|prior (?:written )?permission|United States of America|All rights reserved|Printed in\s+the|reproduced|warranty of any kind|marketing focus|corporate and government sales|dedicated to the Type 650|in remembrance of many pleasant evenings|DONALD E\.\s+KNUTH|Stanford University)\b`)
+	reSpacedLetters          = regexp.MustCompile(`^(?:[A-Za-z]\s+){3,}[A-Za-z]$`)
+	reCreditLine             = regexp.MustCompile(`(?i)(?:^\s*\d+\.\d+|^\s*#?\s*\d{4}|^\s*\[|\[\d|\][.,]?$|\b(?:midterm|final|exam|homework|class\s+notes|guest\s+lecture|personal\s+communication|edition|chapter|section|problem|part|solution|vol\.)\b|\.\*\s*$)`)
+	reRosterLine             = regexp.MustCompile(`^\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+(?:,\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)*\s*$`)
+	reShortFragment          = regexp.MustCompile(`^\s*(?:Year|Instructor|Teaching Assistant\(s\)|Credits for Exercises|[A-Z])\s*$`)
+	rePageNumberHeading      = regexp.MustCompile(`^\d+$`)
+	reSmallConnectors        = regexp.MustCompile(`(?i)\b(?:and|or|where|with|for|to|if)\b`)
+	reAssignArrow            = regexp.MustCompile(`[←:=≡]`)
+	reSpacedEllipsis         = regexp.MustCompile(`(?:\.\s+){2,}\.`)
+	rePandocSplitDollarComma = regexp.MustCompile(`\$\s*\$,\s*`)
+	reImageRef               = regexp.MustCompile(`\[Eq/Symbol:\s*[^\]]+\]|!\[.*?\]\(.*?\)`)
+	reGlossaryDef            = regexp.MustCompile(`(?i)^\*?[A-Za-z0-9\s` + "`" + `\-/_$,.]+\*?:\s+["“'A-Za-z$]`)
+	reIndexCont              = regexp.MustCompile(`(?i)\(continued\)`)
+	reExerciseCitationStart  = regexp.MustCompile(`^\s*\d+\.\d+\s*$`)
+	reEpigraphAttribution    = regexp.MustCompile(`(?i)^\s*(?:—\s*[A-Z]|[A-Z\s]{4,},\s+[A-Za-z\s]+\(\d{4}\))`)
+	reEpigraphVerse          = regexp.MustCompile(`(?i)^\s*(?:Some Men pretend|by scouting thro|as if a Traveller|when he had seen|that is ratiocination|Numerical experimentations|to fully understand|We must not|has place only in numbers)`)
+	reTerminalPunct          = regexp.MustCompile(`[.!?]["”'’]?$`)
+	reCaptionLine            = regexp.MustCompile(`(?i)^\*?The names at the left\b`)
 )
+
+func isPureDisplayOrEquation(s string) bool {
+	sClean := reCodeSpan.ReplaceAllString(s, "")
+	sClean = reMathSpan.ReplaceAllString(sClean, "")
+	sClean = reHTMLTag.ReplaceAllString(sClean, "")
+	sClean = reImageRef.ReplaceAllString(sClean, "")
+	if reAssignArrow.MatchString(s) {
+		sClean = reSmallConnectors.ReplaceAllString(sClean, "")
+	}
+	return !reProseWords.MatchString(sClean)
+}
 
 // MaskInlineCode replaces inline code spans with equivalent spaces to preserve offsets.
 func MaskInlineCode(s string) string {
@@ -97,6 +149,13 @@ func SplitIntoLinesAndProse(text string) ([]string, string, []LineInfo) {
 	inBannedList := false
 	prevLineEmpty := true
 	inIndentedCode := false
+	inIndex := false
+	inTOC := false
+	inFrontmatterSection := false
+	inCreditSection := false
+	inEBookSection := false
+	inCitationList := false
+	inGlossaryDef := false
 
 	for idx1, line := range lines {
 		idx := idx1 + 1
@@ -208,6 +267,108 @@ func SplitIntoLinesAndProse(text string) ([]string, string, []LineInfo) {
 				inNegativeContext = false
 			}
 			inBannedList = false
+			cleanHead := strings.TrimSpace(reNumberPrefix.ReplaceAllString(headText, ""))
+			if rePageNumberHeading.MatchString(cleanHead) {
+				continue
+			}
+			if reEBookHeading.MatchString(cleanHead) {
+				inEBookSection = true
+				inFrontmatterSection = true
+				inIndex = false
+				inTOC = false
+				inCreditSection = false
+				continue
+			} else {
+				inEBookSection = false
+			}
+			if reIndexHeading.MatchString(cleanHead) {
+				inIndex = true
+				inFrontmatterSection = false
+				inTOC = false
+				inCreditSection = false
+			} else if reTOCHeading.MatchString(cleanHead) {
+				inTOC = true
+				inIndex = false
+				inFrontmatterSection = false
+				inCreditSection = false
+			} else if reFrontmatterHeading.MatchString(cleanHead) {
+				inFrontmatterSection = true
+				inIndex = false
+				inTOC = false
+				inCreditSection = false
+			} else if reCreditHeading.MatchString(cleanHead) {
+				inCreditSection = true
+				inCitationList = false
+				inIndex = false
+				inTOC = false
+				inFrontmatterSection = false
+			} else if inFrontmatterSection && !reSubstantiveHeading.MatchString(cleanHead) && !reNumberPrefix.MatchString(headText) {
+				// Keep inFrontmatterSection if inside book front matter (e.g. title page heading)
+			} else {
+				inIndex = false
+				inTOC = false
+				inFrontmatterSection = false
+				inCreditSection = false
+				inCitationList = false
+				inGlossaryDef = false
+			}
+			continue
+		}
+
+		if inEBookSection {
+			continue
+		}
+
+		// Skip structural cataloging, index, credit, and table-of-contents lines
+		if inIndex {
+			if reGlossaryDef.MatchString(stripped) {
+				inGlossaryDef = true
+			}
+			if inGlossaryDef {
+				if strings.HasSuffix(stripped, ".") || strings.HasSuffix(stripped, ";") {
+					inGlossaryDef = false
+				}
+				continue
+			}
+			if len(strings.Fields(stripped)) <= 4 ||
+				reIndexLine.MatchString(stripped) ||
+				reIndexCont.MatchString(stripped) ||
+				reEpigraphAttribution.MatchString(stripped) ||
+				reEpigraphVerse.MatchString(stripped) ||
+				reCaptionLine.MatchString(stripped) ||
+				reTOCLine.MatchString(stripped) ||
+				reCatalogLine.MatchString(stripped) ||
+				reAllUpperHeader.MatchString(stripped) ||
+				reTrailingConnect.MatchString(stripped) ||
+				reIndexAuthor.MatchString(stripped) ||
+				reNotationRow.MatchString(stripped) ||
+				strings.HasSuffix(stripped, ":") ||
+				(!reTerminalPunct.MatchString(stripped) && len(strings.Fields(stripped)) <= 8) {
+				continue
+			}
+		}
+		if inCreditSection {
+			if reExerciseCitationStart.MatchString(stripped) {
+				inCitationList = true
+			}
+			if inCitationList {
+				continue
+			}
+			if reCreditLine.MatchString(stripped) || reRosterLine.MatchString(stripped) || reShortFragment.MatchString(stripped) || reIndexLine.MatchString(stripped) || reCatalogLine.MatchString(stripped) || (len(strings.Fields(stripped)) <= 4 && !strings.ContainsAny(stripped, ".!?")) {
+				continue
+			}
+		}
+		if inFrontmatterSection {
+			if reCatalogLine.MatchString(stripped) || reCatalogCard.MatchString(stripped) || rePublisherCity.MatchString(stripped) || reCIPLine.MatchString(stripped) || rePublisherDisclaimer.MatchString(stripped) || reSpacedLetters.MatchString(stripped) || (len(strings.Fields(stripped)) <= 5 && !strings.ContainsAny(stripped, ".!?")) {
+				continue
+			}
+		}
+		if inTOC {
+			if reTOCLine.MatchString(stripped) || reIndexLine.MatchString(stripped) || reCatalogLine.MatchString(stripped) {
+				continue
+			}
+		}
+		if reCatalogLine.MatchString(stripped) {
 			continue
 		}
 
@@ -251,6 +412,18 @@ func SplitIntoLinesAndProse(text string) ([]string, string, []LineInfo) {
 		// Remove list markers
 		cleaned = reBulletPrefix.ReplaceAllString(cleaned, "")
 		cleaned = reNumberPrefix.ReplaceAllString(cleaned, "")
+
+		cleaned = reSpacedEllipsis.ReplaceAllString(cleaned, "...")
+		cleaned = strings.ReplaceAll(cleaned, "$$,", ",")
+		cleaned = strings.ReplaceAll(cleaned, "$$ ,", ",")
+		cleaned = strings.ReplaceAll(cleaned, "$,$", ",")
+		cleaned = rePandocSplitComma.ReplaceAllString(cleaned, "$1, $2")
+		cleaned = rePandocSplitDollarComma.ReplaceAllString(cleaned, ", $")
+		cleaned = reImageRef.ReplaceAllString(cleaned, "")
+		if isPureDisplayOrEquation(cleaned) || !reProseWords.MatchString(cleaned) {
+			continue
+		}
+
 		if strings.TrimSpace(cleaned) != "" {
 			proseLines = append(proseLines, LineInfo{Line: idx, Content: cleaned})
 			bodyLines = append(bodyLines, cleaned)
@@ -288,8 +461,9 @@ func ExtractSentences(prose string) []string {
 			end := i
 
 			leftOk := false
+			var r1 rune
 			if start > 0 {
-				r1, _ := utf8.DecodeLastRuneInString(prose[:start])
+				r1, _ = utf8.DecodeLastRuneInString(prose[:start])
 				if strings.ContainsRune(termChars, r1) {
 					leftOk = true
 				} else if strings.ContainsRune(punctChars, r1) {
@@ -308,6 +482,16 @@ func ExtractSentences(prose string) []string {
 							}
 						}
 					}
+				}
+			}
+
+			if leftOk {
+				trimmedBefore := strings.TrimRight(prose[:start], " \"'”’)]}")
+				if strings.HasSuffix(trimmedBefore, "..") || strings.HasSuffix(trimmedBefore, "…") {
+					leftOk = false
+				}
+				if r1 == '!' && len(prose[:start]) > 1 && strings.HasSuffix(strings.TrimSpace(prose[:start-1]), "$") {
+					leftOk = false
 				}
 			}
 
@@ -377,8 +561,10 @@ func TokenizeWords(text string) []string {
 	return words
 }
 
+var reAlgoAnchor = regexp.MustCompile(`(?i)(?:^|\s)(?:\*\*)?(?:Algorithm\s+[A-Z0-9]+|[A-Z][0-9]+\.\s*\[)`)
+
 // ComputeAnchorLag computes words from start of document or first header until first code block,
-// table, or display equation.
+// table, display equation, or formal algorithm environment. Returns nil if no anchor is found.
 func ComputeAnchorLag(lines []string) *int {
 	wordCount := 0
 	inFrontmatter := false
@@ -405,7 +591,7 @@ func ComputeAnchorLag(lines []string) *int {
 		if strings.HasPrefix(stripped, "|") && strings.HasSuffix(stripped, "|") && strings.Contains(stripped, "-") {
 			return &wordCount
 		}
-		if strings.HasPrefix(stripped, "$$") || reMathBegin.MatchString(stripped) {
+		if strings.HasPrefix(stripped, "$$") || reMathBegin.MatchString(stripped) || reAlgoAnchor.MatchString(stripped) {
 			return &wordCount
 		}
 
@@ -413,8 +599,44 @@ func ComputeAnchorLag(lines []string) *int {
 		wordCount += len(words)
 	}
 
-	if wordCount > 0 {
-		return &wordCount
-	}
 	return nil
+}
+
+var reMarkdownHeading = regexp.MustCompile(`(?m)^#{1,6}\s+`)
+
+// DetectRawStructuredData checks whether the input text appears to be raw JSON, XML, or HTML
+// rather than a Markdown document.
+func DetectRawStructuredData(text string) (bool, string) {
+	trimmed := strings.TrimSpace(text)
+	if trimmed == "" {
+		return false, ""
+	}
+	// Markdown headings explicitly signal markdown documentation
+	if reMarkdownHeading.MatchString(trimmed) {
+		return false, ""
+	}
+
+	// Raw JSON object or array
+	if (strings.HasPrefix(trimmed, "{") && strings.HasSuffix(trimmed, "}")) ||
+		(strings.HasPrefix(trimmed, "[") && strings.HasSuffix(trimmed, "]")) {
+		var js json.RawMessage
+		if json.Unmarshal([]byte(trimmed), &js) == nil {
+			return true, "JSON"
+		}
+	}
+
+	// Raw XML or HTML document (excluding markdown HTML comments like <!-- gate:off -->)
+	if strings.HasPrefix(trimmed, "<") && !strings.HasPrefix(trimmed, "<!--") {
+		if strings.HasPrefix(trimmed, "<?xml") ||
+			strings.HasPrefix(trimmed, "<!DOCTYPE") ||
+			strings.HasPrefix(trimmed, "<!doctype") ||
+			strings.HasPrefix(trimmed, "<html") {
+			return true, "XML/HTML"
+		}
+		if strings.HasSuffix(trimmed, ">") && strings.Contains(trimmed, "</") {
+			return true, "XML/HTML"
+		}
+	}
+
+	return false, ""
 }

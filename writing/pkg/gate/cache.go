@@ -29,7 +29,7 @@ func NewCache(dir string, enabled bool) *Cache {
 
 // RulesVersion must be bumped whenever lexicon, regexes, thresholds, or
 // severity mapping change, so persisted cache entries are invalidated.
-const RulesVersion = "2026-10-04.1"
+const RulesVersion = "2026-10-04.5"
 
 func (c *Cache) key(content []byte, profile string, level Level) string {
 	if level == "" {
