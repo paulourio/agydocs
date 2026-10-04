@@ -6,24 +6,12 @@
     "write",
     "shell",
     "web",
-    "subagent"
-  ],
-  "excludedTools": [
-    "knowledge"
-  ],
-  "allowedTools": [
-    "read",
-    "write",
-    "shell",
-    "glob",
-    "grep",
-    "web_search",
-    "web_fetch",
     "subagent",
-    "fs_read",
-    "fs_write",
-    "execute_bash",
-    "invoke_subagent"
+    "run_workflow",
+    "inspect_workflow",
+    "update_workflow",
+    "validate_workflow",
+    "send_message"
   ],
   "permissions": {
     "rules": [
@@ -31,21 +19,27 @@
         "capability": "shell",
         "match": [
           "*--no-ver*",
-          "*git * -n *",
-          "*git * -n",
-          "*git * -nm *",
-          "*git * -nm",
-          "*git * -anm *",
-          "*git * -anm",
-          "*git * -nam *",
-          "*git * -nam",
+          "*git*commit* -n *",
+          "*git*commit* -n",
+          "*git*commit* -nm *",
+          "*git*commit* -nm",
+          "*git*commit* -mn *",
+          "*git*commit* -mn",
+          "*git*commit* -anm *",
+          "*git*commit* -anm",
+          "*git*commit* -nam *",
+          "*git*commit* -nam",
+          "*git*commit* -qn *",
+          "*git*commit* -qn",
+          "*git*commit* -nqm *",
+          "*git*commit* -nqm",
           "*core.hooksPath*",
-          "*rm -rf *",
+          "*HUSKY=0*",
+          "*LEFTHOOK=0*",
           "*rm -rf /*",
-          "*rm -fr *",
-          "*rm -r -f *",
-          "*rm -f -r *",
-          "*rm --recursive *",
+          "*rm -rf /",
+          "*rm -fr /*",
+          "*rm -fr /",
           "sudo *",
           "doas *"
         ],
@@ -105,12 +99,6 @@
       }
     ]
   },
-  "resources": [
-    "file://.kiro/steering/**/*.md",
-    "file://~/.kiro/steering/**/*.md",
-    "skill://.kiro/skills/**/SKILL.md",
-    "skill://~/.kiro/skills/**/SKILL.md"
-  ],
   "prompt": "file://./antigravity.prompt.md",
   "welcomeMessage": "Antigravity Precision Engineering Runtime active. Gate 0 quality gates, surgical editing, and non-interactive verification enforced."
 }

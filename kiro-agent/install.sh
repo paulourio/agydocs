@@ -16,6 +16,7 @@ INSTALL_WORKSPACE=true
 INSTALL_STEERING=true
 INSTALL_SKILLS=true
 INSTALL_HOOKS=true
+INSTALL_WORKFLOWS=true
 TARGET_DIR=""
 MODEL_OVERRIDE=""
 FORMAT="md"
@@ -26,7 +27,7 @@ usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Installs the Antigravity custom agent and steering rules into Kiro IDE directories.
+Installs the Antigravity custom agent, steering rules, and workflow recipes into Kiro IDE directories.
 
 Options:
   --global-only     Install only to user global scope (~/.kiro/)
@@ -36,6 +37,7 @@ Options:
   --no-steering     Skip installing steering documents
   --no-skills       Skip installing skills
   --no-hooks        Skip installing lifecycle hooks
+  --no-workflows    Skip installing workflow recipes
   --model <id>      Override model identifier
   --dry-run         Print planned actions without modifying filesystem
   -h, --help        Show this help message
@@ -85,6 +87,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-hooks)
             INSTALL_HOOKS=false
+            shift
+            ;;
+        --no-workflows)
+            INSTALL_WORKFLOWS=false
             shift
             ;;
         --model)
@@ -171,6 +177,7 @@ install_to() {
     local prompts_dir="${target_base}/prompts"
     local skills_dir="${target_base}/skills"
     local hooks_dir="${target_base}/hooks"
+    local workflows_dir="${target_base}/workflows"
 
     echo "==> Installing to: ${target_base} (format: ${FORMAT})"
     if [[ "${DRY_RUN}" = true ]]; then
@@ -194,6 +201,10 @@ install_to() {
         if [[ "${INSTALL_HOOKS}" = true && -d "${SCRIPT_DIR}/hooks" ]]; then
             echo "  [DRY-RUN] mkdir -p ${hooks_dir}"
             echo "  [DRY-RUN] cp ${SCRIPT_DIR}/hooks/*.json ${hooks_dir}/"
+        fi
+        if [[ "${INSTALL_WORKFLOWS}" = true && -d "${SCRIPT_DIR}/workflows" ]]; then
+            echo "  [DRY-RUN] mkdir -p ${workflows_dir}"
+            echo "  [DRY-RUN] cp ${SCRIPT_DIR}/workflows/*.workflow.json ${workflows_dir}/"
         fi
         if [[ "${INSTALL_SKILLS}" = true ]]; then
             local skill_names=("writing" "bigquery-googlesql" "tool-skill-engineering" "gcloud" "conventional-commits")
@@ -263,6 +274,12 @@ open(dst_json, 'a', encoding='utf-8').write('\n')
         echo "  Installed hooks to: ${hooks_dir}/"
     fi
 
+    if [[ "${INSTALL_WORKFLOWS}" = true && -d "${SCRIPT_DIR}/workflows" ]]; then
+        mkdir -p "${workflows_dir}"
+        cp "${SCRIPT_DIR}/workflows/"*.workflow.json "${workflows_dir}/"
+        echo "  Installed workflow recipes to: ${workflows_dir}/"
+    fi
+
     if [[ "${INSTALL_SKILLS}" = true ]]; then
         local skill_names=("writing" "bigquery-googlesql" "tool-skill-engineering" "gcloud" "conventional-commits")
         local found_skills=()
@@ -315,3 +332,5 @@ fi
 
 echo "==> kiro-agent installation complete!"
 echo "    In Kiro IDE AI Chat header, click the agent selector dropdown and choose 'antigravity'."
+echo "    To enable Kiro 1.2 Workflows in the IDE, open Workspace Configuration > Workflows and enable Workflows"
+echo "    (setting: kiroAgent.workflows.enabled). In Kiro CLI, use /settings > Features > Workflows."

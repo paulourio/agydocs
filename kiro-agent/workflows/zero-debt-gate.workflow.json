@@ -1,0 +1,42 @@
+{
+  "name": "zero-debt-gate",
+  "description": "Automated quality gate verification and remediation loop enforcing zero debt across formatters, linters, static type checkers, and test suites.",
+  "inputs": {
+    "run_dir": "string",
+    "target_dir": "string"
+  },
+  "steps": [
+    {
+      "type": "step",
+      "id": "setup",
+      "agent": "wf-coder",
+      "effortLevel": "low",
+      "captureOutput": true,
+      "prompt": "Create the directory {{run_dir}} if it does not exist using mkdir -p. Emit the absolute directory path as your final output."
+    },
+    {
+      "type": "repeat",
+      "id": "remediation-loop",
+      "maxIterations": 5,
+      "onMaxIterations": "pause",
+      "stopCondition": {
+        "fileCheck": {
+          "path": "{{run_dir}}/gate.json",
+          "jsonPath": "passed",
+          "value": true
+        }
+      },
+      "steps": [
+        {
+          "type": "step",
+          "id": "verify-and-fix",
+          "agent": "wf-coder",
+          "prompt": "Run formatting checks, linters, static type checks, and test suites covering {{target_dir}}. If all checks pass cleanly with zero warnings and zero errors, write {\"passed\": true} to {{run_dir}}/gate.json and call send_message with severity 'success' summarizing clean verification. If any check fails, fix the root causes without disabling linter rules or skipping tests, record failures in {{run_dir}}/gate.json as {\"passed\": false}, and complete this iteration so the stop condition can evaluate gate.json.",
+          "artifacts": {
+            "gate_report": "{{run_dir}}/gate.json"
+          }
+        }
+      ]
+    }
+  ]
+}

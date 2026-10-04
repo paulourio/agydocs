@@ -1,0 +1,50 @@
+{
+  "name": "peer-review",
+  "description": "Three-layer independent peer review protocol: Layer 0 verifiable execution trace, Layer 1 adversarial verification, and Layer 2 reconciliation with severity triage.",
+  "inputs": {
+    "run_dir": "string",
+    "target": "string"
+  },
+  "steps": [
+    {
+      "type": "step",
+      "id": "setup",
+      "agent": "wf-coder",
+      "effortLevel": "low",
+      "captureOutput": true,
+      "prompt": "Create the review directory {{run_dir}} if it does not exist using mkdir -p. Emit the absolute directory path as your final output."
+    },
+    {
+      "type": "parallel",
+      "id": "independent-reviews",
+      "joinPolicy": "all",
+      "branches": [
+        {
+          "type": "step",
+          "id": "layer0-audit",
+          "agent": "antigravity-scout",
+          "captureOutput": true,
+          "prompt": "Layer 0 Code-Level Audit of {{target}}. Read target files and existing tests without modifying them. Trace execution paths, check implementation correctness, identify edge-case bugs and data leakage. Return full structured findings directly as your output report. Conclude by calling send_message with severity 'success' and a summary."
+        },
+        {
+          "type": "step",
+          "id": "layer1-adversarial",
+          "agent": "wf-coder",
+          "prompt": "Layer 1 Adversarial Verification of {{target}}. Run test suites and benchmark reproduction scripts in terminal. Confirm that cited numbers match raw standard output. Check metric sanity, crossover points, and scale-dependent generalization. Write findings to {{run_dir}}/l1-verify.md. Conclude by calling send_message with severity 'success' and a summary.",
+          "artifacts": {
+            "l1_verify": "{{run_dir}}/l1-verify.md"
+          }
+        }
+      ]
+    },
+    {
+      "type": "step",
+      "id": "layer2-reconcile",
+      "agent": "wf-coder",
+      "prompt": "Layer 2 Reconciliation and Severity Triage. Read the Layer 0 findings from {{layer0-audit.output}} and read {{run_dir}}/l1-verify.md. Defend Deep Modules and Ousterhout's principle against false-positive refactoring proposals. Consolidate confirmed findings into {{run_dir}}/final-review.md sorted by severity: Critical, Major, Minor, Suggestion/Rejected. Conclude by calling send_message with severity 'success' reporting the final path.",
+      "artifacts": {
+        "final_review": "{{run_dir}}/final-review.md"
+      }
+    }
+  ]
+}

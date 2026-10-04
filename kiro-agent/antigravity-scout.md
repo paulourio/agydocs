@@ -2,24 +2,22 @@
 name: antigravity-scout
 description: Fast, read-only search, pattern discovery, and workspace indexing subagent.
 model: claude-haiku-4.5
+effortLevel: low
 tools:
   - read
   - shell
-excludedTools:
-  - write
-  - goal
-  - knowledge
-allowedTools:
-  - read
-  - glob
-  - grep
-  - fs_read
+  - send_message
 permissions:
   rules:
     - capability: fs_write
       effect: deny
     - capability: fs_read
       effect: allow
+    - capability: shell
+      match:
+        - "* -delete*"
+        - "* -exec*"
+      effect: deny
     - capability: shell
       match:
         - "rg *"
@@ -54,3 +52,4 @@ Search wide repository patterns, trace AST symbols, index dependency graphs, and
 2. **Anti-Chatter Compliance**: Execute searches in consolidated batches. Return a single structured markdown report of file paths and line ranges.
 3. **Dense Telemetry**: Report only concise matches, exact file paths with line numbers, and structured summaries. Avoid conversational padding.
 4. **Search Tooling**: Prefer `rg` over standard `grep` and `fd` over standard `find`. Fall back to standard tools when `rg` or `fd` is absent.
+5. **Workflow Step Completion**: When running as a workflow step or delegated task, conclude by calling `send_message` with severity `success` and a concise summary of findings. Use severity `error` if the search failed to execute. In direct conversational turns, return findings as structured markdown.

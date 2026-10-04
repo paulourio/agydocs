@@ -81,6 +81,10 @@ class TestPromptIntegrity(unittest.TestCase):
             "Conversational Pairing Register",
             "references/conversational_pairing.md",
             "Zero Sycophancy",
+            "run_workflow",
+            "orchestrate_subagent",
+            "workflowPrompt",
+            "send_message",
         ]
         for invariant in required_invariants:
             self.assertIn(
@@ -88,6 +92,24 @@ class TestPromptIntegrity(unittest.TestCase):
                 combined,
                 f"Antigravity invariant '{invariant}' must be present in "
                 f"antigravity.md or steering files",
+            )
+
+    def test_prompt_no_cli_only_tools(self):
+        prompt_content = self.prompt_md.read_text(encoding="utf-8")
+        agent_content = self.agent_md.read_text(encoding="utf-8")
+        for content, name in [
+            (prompt_content, "antigravity.prompt.md"),
+            (agent_content, "antigravity.md"),
+        ]:
+            self.assertNotIn(
+                "`goal`",
+                content,
+                f"CLI-only tool `goal` must not be referenced in {name}",
+            )
+            self.assertNotIn(
+                "`code`",
+                content,
+                f"CLI-only tool `code` must not be referenced in {name}",
             )
 
     def test_nlp_quality_gate_on_agent_and_steering(self):
