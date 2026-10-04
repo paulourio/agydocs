@@ -27,20 +27,36 @@ func NewCache(dir string, enabled bool) *Cache {
 	}
 }
 
-func (c *Cache) key(content []byte, profile string) string {
+// RulesVersion must be bumped whenever lexicon, regexes, thresholds, or
+// severity mapping change, so persisted cache entries are invalidated.
+const RulesVersion = "2026-10-04.1"
+
+func (c *Cache) key(content []byte, profile string, level Level) string {
+	if level == "" {
+		level = LevelStandard
+	}
 	h := sha256.New()
+	h.Write([]byte(RulesVersion))
+	h.Write([]byte{0})
 	h.Write(content)
 	h.Write([]byte{0})
 	h.Write([]byte(profile))
+	h.Write([]byte{0})
+	h.Write([]byte(level))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-// Get retrieves a cached audit report if present.
+// Get retrieves a cached audit report using LevelStandard.
 func (c *Cache) Get(content []byte, profile string) (*AuditReport, bool) {
+	return c.GetWithLevel(content, profile, LevelStandard)
+}
+
+// GetWithLevel retrieves a cached audit report for a given level.
+func (c *Cache) GetWithLevel(content []byte, profile string, level Level) (*AuditReport, bool) {
 	if !c.enabled {
 		return nil, false
 	}
-	k := c.key(content, profile)
+	k := c.key(content, profile, level)
 
 	c.mu.RLock()
 	rep, ok := c.memCache[k]
@@ -71,12 +87,20 @@ func (c *Cache) Get(content []byte, profile string) (*AuditReport, bool) {
 	return &report, true
 }
 
-// Put stores an audit report in the cache.
+// Put stores an audit report in the cache using report's level.
 func (c *Cache) Put(content []byte, profile string, report *AuditReport) {
-	if !c.enabled {
+	if report == nil {
 		return
 	}
-	k := c.key(content, profile)
+	c.PutWithLevel(content, profile, report.Level, report)
+}
+
+// PutWithLevel stores an audit report in the cache for a specific level.
+func (c *Cache) PutWithLevel(content []byte, profile string, level Level, report *AuditReport) {
+	if !c.enabled || report == nil {
+		return
+	}
+	k := c.key(content, profile, level)
 
 	c.mu.Lock()
 	c.memCache[k] = report

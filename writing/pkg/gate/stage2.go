@@ -63,12 +63,11 @@ func IsValidDomainNoun(word string) bool {
 // IsZombieNominal detects bureaucratic action-obscuring nominalizations in singular and plural forms.
 func IsZombieNominal(word string) bool {
 	wLower := strings.ToLower(word)
+	if strings.Contains(wLower, "_") {
+		return false
+	}
 	if strings.Contains(wLower, "-") {
 		parts := strings.Split(wLower, "-")
-		return IsZombieNominal(parts[len(parts)-1])
-	}
-	if strings.Contains(wLower, "_") {
-		parts := strings.Split(wLower, "_")
 		return IsZombieNominal(parts[len(parts)-1])
 	}
 	if len(wLower) < 6 || IsValidDomainNoun(wLower) {
@@ -118,7 +117,7 @@ func countEmDashes(prose string) (int, int) {
 
 		if hasLeftSpace && hasRightSpace {
 			asciiEm++
-		} else if lp >= 0 && rp < n {
+		} else if !hasLeftSpace && !hasRightSpace && lp == actualPos-1 && rp == actualPos+2 {
 			lc := rune(prose[lp])
 			rc := rune(prose[rp])
 			leftOk := unicode.IsLetter(lc) || unicode.IsDigit(lc) || strings.ContainsRune(",;\"'", lc)
@@ -139,9 +138,25 @@ func AuditStage2ToleranceBands(
 	sentences []string,
 	words []string,
 	profile ProfileConfig,
+	level Level,
 	metrics *QualityMetrics,
 	violations *[]Violation,
 ) {
+	addViolation := func(rule string, message string, line *int, snippet string, rec string) {
+		sev := GetRuleSeverity(rule, 2, level)
+		if sev == SeverityOff {
+			return
+		}
+		*violations = append(*violations, Violation{
+			Stage:          2,
+			Severity:       sev,
+			Rule:           rule,
+			Message:        message,
+			Line:           line,
+			Snippet:        snippet,
+			Recommendation: rec,
+		})
+	}
 	metrics.TotalWords = len(words)
 	metrics.TotalSentences = len(sentences)
 
@@ -183,23 +198,21 @@ func AuditStage2ToleranceBands(
 
 	if len(sentences) >= 4 {
 		if metrics.BurstinessCV < profile.TargetBurstinessMin {
-			*violations = append(*violations, Violation{
-				Stage:          2,
-				Rule:           "Low Burstiness (Metronomic Uniformity)",
-				Message:        fmt.Sprintf("Sentence length CV (%.3f) is below minimum %.2f.", metrics.BurstinessCV, profile.TargetBurstinessMin),
-				Line:           nil,
-				Snippet:        fmt.Sprintf("Mean sentence length: %.1f words (std: %.1f)", metrics.MeanSentenceLength, metrics.SentenceLengthStd),
-				Recommendation: "Vary sentence length aggressively. Mix short punchy statements (3-6 words) with compound sentences.",
-			})
+			addViolation(
+				"Low Burstiness (Metronomic Uniformity)",
+				fmt.Sprintf("Sentence length CV (%.3f) is below minimum %.2f.", metrics.BurstinessCV, profile.TargetBurstinessMin),
+				nil,
+				fmt.Sprintf("Mean sentence length: %.1f words (std: %.1f)", metrics.MeanSentenceLength, metrics.SentenceLengthStd),
+				"Vary sentence length aggressively. Mix short punchy statements (3-6 words) with compound sentences.",
+			)
 		} else if metrics.BurstinessCV > profile.TargetBurstinessMax {
-			*violations = append(*violations, Violation{
-				Stage:          2,
-				Rule:           "Excessive Burstiness (Fragmented / Run-On)",
-				Message:        fmt.Sprintf("Sentence length CV (%.3f) exceeds maximum %.2f.", metrics.BurstinessCV, profile.TargetBurstinessMax),
-				Line:           nil,
-				Snippet:        fmt.Sprintf("Mean sentence length: %.1f words (std: %.1f)", metrics.MeanSentenceLength, metrics.SentenceLengthStd),
-				Recommendation: "Rebalance sentences; break run-on sentences and unify fragmented dependent clauses.",
-			})
+			addViolation(
+				"Excessive Burstiness (Fragmented / Run-On)",
+				fmt.Sprintf("Sentence length CV (%.3f) exceeds maximum %.2f.", metrics.BurstinessCV, profile.TargetBurstinessMax),
+				nil,
+				fmt.Sprintf("Mean sentence length: %.1f words (std: %.1f)", metrics.MeanSentenceLength, metrics.SentenceLengthStd),
+				"Rebalance sentences; break run-on sentences and unify fragmented dependent clauses.",
+			)
 		}
 	}
 
@@ -233,15 +246,14 @@ func AuditStage2ToleranceBands(
 	}
 	metrics.SyntacticOverhead = round2(0.6*meanSVD + 0.8*cappedPPD + 1.0)
 
-	if metrics.SyntacticOverhead > profile.MaxSyntacticOverhead && len(sentences) >= 3 {
-		*violations = append(*violations, Violation{
-			Stage:          2,
-			Rule:           "Syntactic Memory Overhead (DLT Violation)",
-			Message:        fmt.Sprintf("Syntactic overhead (%.2f) exceeds profile limit (%.1f).", metrics.SyntacticOverhead, profile.MaxSyntacticOverhead),
-			Line:           nil,
-			Snippet:        fmt.Sprintf("Mean SVD: %.1f, Max PPD: %d", meanSVD, ppdMax),
-			Recommendation: "Shorten distance between grammatical subject and finite verb. Eliminate prepositional chains.",
-		})
+	if len(sentences) >= 3 && metrics.SyntacticOverhead > profile.MaxSyntacticOverhead {
+		addViolation(
+			"Syntactic Memory Overhead (DLT Violation)",
+			fmt.Sprintf("Syntactic overhead (%.2f) exceeds profile limit (%.1f).", metrics.SyntacticOverhead, profile.MaxSyntacticOverhead),
+			nil,
+			fmt.Sprintf("Mean SVD: %.1f, Max PPD: %d", meanSVD, ppdMax),
+			"Shorten distance between grammatical subject and finite verb. Eliminate prepositional chains.",
+		)
 	}
 
 	// 3. Zombie Nominalizations (excluding valid domain nouns)
@@ -255,7 +267,7 @@ func AuditStage2ToleranceBands(
 	metrics.ZombieNominalsCount = len(nominals)
 	metrics.ZombieNominalsPct = round2((float64(len(nominals)) / float64(metrics.TotalWords)) * 100.0)
 
-	if metrics.ZombieNominalsPct > profile.MaxZombieNominalsPct {
+	if metrics.ZombieNominalsCount >= 2 && metrics.ZombieNominalsPct > profile.MaxZombieNominalsPct {
 		seen := make(map[string]bool)
 		sampleNoms := make([]string, 0, 5)
 		for _, w := range nominals {
@@ -267,20 +279,20 @@ func AuditStage2ToleranceBands(
 				}
 			}
 		}
-		*violations = append(*violations, Violation{
-			Stage:          2,
-			Rule:           "Excessive Zombie Nominals",
-			Message:        fmt.Sprintf("Zombie nominal density (%.2f%%) exceeds profile limit (%.1f%%). Found: %v", metrics.ZombieNominalsPct, profile.MaxZombieNominalsPct, sampleNoms),
-			Line:           nil,
-			Snippet:        fmt.Sprintf("%d nominals across %d words", len(nominals), metrics.TotalWords),
-			Recommendation: "Convert bureaucratic nouns into active verbs and concrete actors.",
-		})
+		addViolation(
+			"Excessive Zombie Nominals",
+			fmt.Sprintf("Zombie nominal density (%.2f%%) exceeds profile limit (%.1f%%). Found: %v", metrics.ZombieNominalsPct, profile.MaxZombieNominalsPct, sampleNoms),
+			nil,
+			fmt.Sprintf("%d nominals across %d words", len(nominals), metrics.TotalWords),
+			"Convert bureaucratic nouns into active verbs and concrete actors.",
+		)
 	}
 
 	// 4. Em-Dash Overuse & Punctuation Balance
 	cleanedProse := reURL.ReplaceAllString(prose, " ")
-	cleanedProse = reInlineCode.ReplaceAllString(cleanedProse, " ")
-	unicodeEm, asciiEm := countEmDashes(prose)
+	cleanedProse = MaskInlineCode(cleanedProse)
+	cleanedProse = MaskInlineMath(cleanedProse)
+	unicodeEm, asciiEm := countEmDashes(cleanedProse)
 	emDashes := unicodeEm + asciiEm
 	colons := countColons(cleanedProse)
 	semicolons := strings.Count(cleanedProse, ";")
@@ -291,26 +303,24 @@ func AuditStage2ToleranceBands(
 	metrics.EmDashesPer100w = round2((float64(emDashes) / float64(metrics.TotalWords)) * 100.0)
 	metrics.PunctuationBalanceRatio = round2(float64(colons+semicolons) / float64(emDashes+1))
 
-	if metrics.EmDashesPer100w > profile.MaxEmDashesPer100w && (metrics.TotalWords >= 50 || emDashes >= 2) {
-		*violations = append(*violations, Violation{
-			Stage:          2,
-			Rule:           "Em-Dash Saturation",
-			Message:        fmt.Sprintf("Em-dash rate (%.2f/100w) exceeds limit (%.2f/100w).", metrics.EmDashesPer100w, profile.MaxEmDashesPer100w),
-			Line:           nil,
-			Snippet:        fmt.Sprintf("%d em-dashes found", emDashes),
-			Recommendation: "Replace em-dashes with semicolons, parentheses, or periods.",
-		})
+	if emDashes >= 2 && metrics.EmDashesPer100w > profile.MaxEmDashesPer100w {
+		addViolation(
+			"Em-Dash Saturation",
+			fmt.Sprintf("Em-dash rate (%.2f/100w) exceeds limit (%.2f/100w).", metrics.EmDashesPer100w, profile.MaxEmDashesPer100w),
+			nil,
+			fmt.Sprintf("%d em-dashes found", emDashes),
+			"Replace em-dashes with semicolons, parentheses, or periods.",
+		)
 	}
 
-	if metrics.PunctuationBalanceRatio < profile.MinPunctuationBalance && emDashes >= 3 {
-		*violations = append(*violations, Violation{
-			Stage:          2,
-			Rule:           "Punctuation Imbalance",
-			Message:        fmt.Sprintf("Punctuation balance ratio (%.2f) is below minimum (%.1f).", metrics.PunctuationBalanceRatio, profile.MinPunctuationBalance),
-			Line:           nil,
-			Snippet:        fmt.Sprintf("%d colons, %d semicolons vs %d em-dashes", colons, semicolons, emDashes),
-			Recommendation: "Meter complex clauses with colons and semicolons rather than breathy em-dashes.",
-		})
+	if emDashes >= 3 && metrics.PunctuationBalanceRatio < profile.MinPunctuationBalance {
+		addViolation(
+			"Punctuation Imbalance",
+			fmt.Sprintf("Punctuation balance ratio (%.2f) is below minimum (%.1f).", metrics.PunctuationBalanceRatio, profile.MinPunctuationBalance),
+			nil,
+			fmt.Sprintf("%d colons, %d semicolons vs %d em-dashes", colons, semicolons, emDashes),
+			"Meter complex clauses with colons and semicolons rather than breathy em-dashes.",
+		)
 	}
 
 	// 5. Demonstrative Anchoring Index (DAI)
@@ -339,14 +349,13 @@ func AuditStage2ToleranceBands(
 	}
 
 	if thisTotal >= 2 && metrics.DemonstrativeAnchoringIndex < profile.MinDemonstrativeAnchoring {
-		*violations = append(*violations, Violation{
-			Stage:          2,
-			Rule:           "Unanchored Demonstrative Pronouns",
-			Message:        fmt.Sprintf("Demonstrative Anchoring Index (%.2f) is below target (%.2f).", metrics.DemonstrativeAnchoringIndex, profile.MinDemonstrativeAnchoring),
-			Line:           nil,
-			Snippet:        fmt.Sprintf("%d/%d sentence-initial 'This/These' are anchored to explicit nouns.", thisAnchored, thisTotal),
-			Recommendation: "Always attach a concrete governing noun: 'This invariant...', 'This latency...', 'This result...'",
-		})
+		addViolation(
+			"Unanchored Demonstrative Pronouns",
+			fmt.Sprintf("Demonstrative Anchoring Index (%.2f) is below target (%.2f).", metrics.DemonstrativeAnchoringIndex, profile.MinDemonstrativeAnchoring),
+			nil,
+			fmt.Sprintf("%d/%d sentence-initial 'This/These' are anchored to explicit nouns.", thisAnchored, thisTotal),
+			"Always attach a concrete governing noun: 'This invariant...', 'This latency...', 'This result...'",
+		)
 	}
 
 	// 6. Contrastive Reframes Analysis (Information Gain)
@@ -365,14 +374,13 @@ func AuditStage2ToleranceBands(
 				}
 			}
 			if isTrivial {
-				*violations = append(*violations, Violation{
-					Stage:          2,
-					Rule:           "Low-Information Contrastive Strawman",
-					Message:        "Detected trivial contrastive reframe ('Not X, but Y') with zero information gain.",
-					Line:           nil,
-					Snippet:        fmt.Sprintf("Clause X: '%s' -> Clause Y: '%s'", strings.TrimSpace(xClause), strings.TrimSpace(yClause)),
-					Recommendation: "Cut the 'Not X' strawman and state assertion Y directly.",
-				})
+				addViolation(
+					"Low-Information Contrastive Strawman",
+					"Detected trivial contrastive reframe ('Not X, but Y') with zero information gain.",
+					nil,
+					fmt.Sprintf("Clause X: '%s' -> Clause Y: '%s'", strings.TrimSpace(xClause), strings.TrimSpace(yClause)),
+					"Cut the 'Not X' strawman and state assertion Y directly.",
+				)
 			}
 		}
 	}
@@ -380,15 +388,14 @@ func AuditStage2ToleranceBands(
 	// 7. Concrete Anchor Lag
 	if profile.MaxConcreteAnchorLagWords != nil {
 		metrics.ConcreteAnchorLagWords = ComputeAnchorLag(SplitLines(text))
-		if metrics.ConcreteAnchorLagWords != nil && *metrics.ConcreteAnchorLagWords > *profile.MaxConcreteAnchorLagWords {
-			*violations = append(*violations, Violation{
-				Stage:          2,
-				Rule:           "Delayed Concrete Anchor",
-				Message:        fmt.Sprintf("Concrete anchor lag (%d words) exceeds profile limit (%d words).", *metrics.ConcreteAnchorLagWords, *profile.MaxConcreteAnchorLagWords),
-				Line:           nil,
-				Snippet:        "Preamble length before first code fence or table",
-				Recommendation: fmt.Sprintf("Introduce a concrete code example or data schema within the first %d words.", *profile.MaxConcreteAnchorLagWords),
-			})
+		if metrics.TotalWords >= 150 && metrics.ConcreteAnchorLagWords != nil && *metrics.ConcreteAnchorLagWords > *profile.MaxConcreteAnchorLagWords {
+			addViolation(
+				"Delayed Concrete Anchor",
+				fmt.Sprintf("Concrete anchor lag (%d words) exceeds profile limit (%d words).", *metrics.ConcreteAnchorLagWords, *profile.MaxConcreteAnchorLagWords),
+				nil,
+				"Preamble length before first code fence or table",
+				fmt.Sprintf("Introduce a concrete code example or data schema within the first %d words.", *profile.MaxConcreteAnchorLagWords),
+			)
 		}
 	}
 }

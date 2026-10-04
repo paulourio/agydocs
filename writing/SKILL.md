@@ -11,52 +11,74 @@ description: >-
 
 This skill provides an operational workflow, stylometric quality gate, and modular reference library for authoring and auditing technical prose. It enforces sentence variation, concrete technical anchoring, and concise reasoning across engineering documents.
 
+## Scope and Activation Boundaries
+
+Apply this skill and its quality gate to persisted technical prose:
+- Systems RFCs, Architecture Decision Records (ADRs), and product specifications.
+- Scientific preprints, research papers, and technical evaluation reports.
+- Developer guides, operational manuals, and project README files.
+- Incident postmortems and executive briefings.
+
+Do NOT run the quality gate or enforce formal prose thresholds on:
+- Conversational assistant turns and scratch notes.
+- Git commit messages (governed separately by `conventional-commits`).
+- Inline code comments, unit tests, or raw CLI command outputs.
+
 ## Workflow
 
-### 1. Select the Register
-Identify the target document type and consult its specialized reference:
-- **Systems RFCs, ADRs, and specs**: Consult [technical_systems.md](references/technical_systems.md).
-- **Scientific papers and preprints**: Consult [scientific_papers.md](references/scientific_papers.md).
-- **Developer guides and tutorials**: Consult [guides_tutorials.md](references/guides_tutorials.md).
-- **Technical briefings and incident postmortems**: Consult [briefing_format.md](references/briefing_format.md).
-- **Code reviews and technical pairing**: Consult [conversational_pairing.md](references/conversational_pairing.md).
-- **Core principles and stylistic invariants**: Consult [global_guidance.md](references/global_guidance.md).
+### Quick Invocation
+Execute the Go binary with compact formatting for automated agent loops:
+```bash
+writing/bin/quality_gate --profile rfc --level standard --format compact path/to/doc.md
+```
+
+### 1. Lazy Reference Loading
+To minimize context token consumption, load only the single reference matching your document type:
+- **Systems RFCs, ADRs, and specs**: Read [technical_systems.md](references/technical_systems.md).
+- **Scientific papers and preprints**: Read [scientific_papers.md](references/scientific_papers.md).
+- **Developer guides and tutorials**: Read [guides_tutorials.md](references/guides_tutorials.md).
+- **Technical briefings and incident postmortems**: Read [briefing_format.md](references/briefing_format.md).
+- **Code reviews and technical pairing**: Read [conversational_pairing.md](references/conversational_pairing.md).
+- **Core principles and stylistic invariants**: Read [global_guidance.md](references/global_guidance.md).
+
+Do not load [anti_patterns_catalog.md](resources/anti_patterns_catalog.md) or [metric_cheat_sheet.md](resources/metric_cheat_sheet.md) during initial drafting. Open them only if the quality gate flags a specific Stage 1 lexical violation or unexplained metric failure.
 
 ### 2. Draft the Technical Core
 State concrete invariants, numbers, and decisions first:
 - Ground abstract statements in physical referents (such as file paths, system calls, or benchmark metrics) within two sentences.
 - Anchor demonstrative pronouns to explicit nouns (*"this trade-off"*, not *"this is"*).
 - Syntactically integrate inline code and formulas so sentences remain grammatical if symbols are replaced with standard nouns.
+- Wrap third-party quotes or non-standard legacy excerpts in `<!-- gate:off -->` and `<!-- gate:on -->` comments to skip validation.
 
-### 3. Review and Self-Audit
-Audit drafts against common AI anti-patterns:
-- Consult [anti_patterns_catalog.md](resources/anti_patterns_catalog.md) for banned clichés and direct human alternatives.
-- Check metric thresholds and qualitative heuristics in [metric_cheat_sheet.md](resources/metric_cheat_sheet.md).
-- Inspect register golden benchmarks in [benchmarks/](benchmarks/) ([RFC](benchmarks/rfc_kernel_bypass.md), [Paper](benchmarks/paper_async_fixed_point.md), [Tutorial](benchmarks/tutorial_lockfree_spsc.md), [Essay](benchmarks/essay_leaky_abstractions.md), [Chat](benchmarks/chat_socket_starvation.md), and [Briefing](benchmarks/briefing_incident_summary.md)).
-- Review editorial side-by-side edits in [before_after_transformations.md](examples/before_after_transformations.md).
-
-Run the automated stylometric quality gate using the Go binary or shell wrapper:
+### 3. Review with Bounded Remediation
+Execute the automated quality gate using the Go binary:
 ```bash
-# Audit an RFC or ADR using the shell wrapper or compiled Go binary
-writing/scripts/quality_gate.sh --profile rfc path/to/doc.md
-writing/bin/quality_gate --profile rfc path/to/doc.md
+# Recommended agent loop invocation (compact output, standard tier)
+writing/bin/quality_gate --profile rfc --level standard --format compact path/to/doc.md
 
-# Audit a scientific paper or research note
-writing/bin/quality_gate --profile paper path/to/paper.md
+# Explanatory full report with remediation hints
+writing/bin/quality_gate --profile paper --level standard path/to/paper.md
 
-# Audit a developer guide or tutorial
-writing/bin/quality_gate --profile tutorial path/to/guide.md
+# Rapid advisory check during early drafting
+writing/bin/quality_gate --profile tutorial --level draft --format compact path/to/guide.md
+
+# Strict verification for publication preprints and external releases
+writing/bin/quality_gate --profile essay --level strict path/to/doc.md
 
 # Concurrent batch audit across a directory
 writing/bin/quality_gate references/ --profile essay --workers 8
 
-# Structured JSON output for agent pipelines
+# Structured JSON output for automated CI pipelines
 writing/bin/quality_gate --profile rfc --json path/to/doc.md
 ```
 
+#### Remediation Protocol
+1. **Target errors only**: Remediate fatal `[ERROR]` findings (Stage 1 findings, or any finding under --level strict). Do not alter working technical sentences solely to optimize advisory `[WARN]` or `[INFO]` scores.
+2. **Cap iteration loops**: Enforce a strict bound of **at most two remediation passes**. If errors persist after two targeted edits, inspect the specific lines manually. Never enter recursive rewrite loops.
+
 ### 4. Apply Adversarial Critique Posture
-When reviewing or auditing existing prose:
-- **Audit adversarially**: Actively search for domain laundry lists, unearned contrastive strawmen, and pseudo-intellectual buzzwords. Do not defend text simply because it exists in the repository.
+When reviewing existing prose:
+- **Audit adversarially**: Search for domain laundry lists, unearned contrastive strawmen, and pseudo-intellectual buzzwords. Do not defend text simply because it exists in the repository.
 - **Look beyond automated scores**: Automated scripts verify syntactic baselines. They cannot judge technical clarity, epistemic honesty, or conversational tone. Evaluate whether the text explains ideas clearly or merely uses jargon to simulate depth.
 
 ---
@@ -73,12 +95,17 @@ All technical prose produced or audited under this skill must uphold five struct
 
 ---
 
-## Quality Gate Thresholds
+## Quality Gate Thresholds and Enforcement Tiers
 
-The quality gate tools ([`bin/quality_gate`](bin/quality_gate) and [`scripts/quality_gate.sh`](scripts/quality_gate.sh)) enforce three stages of validation:
+The quality gate binary ([`bin/quality_gate`](bin/quality_gate)) enforces three validation stages:
 - **Stage 1 (Hard Invariants):** Fast-fails on AI clichés, winks, sycophancy, domain laundry lists, participial tailing clauses, smothered verbs, and sentence-initial mathematical/code symbols.
 - **Stage 2 (Stylometric Bands):** Verifies burstiness ($CV$), syntactic overhead ($M_{\text{ov}}$), zombie nominalizations ($Z_{\text{nom}}$), demonstrative anchoring ($DAI$), em-dash frequency, punctuation balance ($PBR$), concrete anchor lag, and low-information contrastive reframes.
 - **Stage 3 (Composite Indices):** Reports Human Voice Index ($HVI$) and Technical Precision Index ($TPI$).
+
+### Strictness Tiers (`--level`)
+- **`draft`**: Stage 1 lexical hits (clichés, winks, sycophancy) remain errors. Other Stage 1 rules drop to warnings, and Stage 2 stylometric bands and Knuth micro-syntax checks are switched off.
+- **`standard` (default)**: Stage 1 hard invariants are errors. Stage 2 band deviations are warnings and Stage 3 composite scores are informational, so only Stage 1 findings fail the gate.
+- **`strict`**: Every finding, including Stage 2 deviations and the composite voice score, is an error. Use it for preprints and published specifications.
 
 | Metric | `rfc` (Specs / ADRs) | `paper` (Research) | `essay` (Architecture) | `tutorial` (Guides) | `chat` (Pairing) | `briefing` (Summaries) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |

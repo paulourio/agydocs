@@ -16,23 +16,33 @@ import (
 
 func main() {
 	var profileName string
+	var levelName string
+	var format string
 	var jsonOutput bool
 	var verbose bool
 	var useCache bool
+	var cacheDir string
 	var fixHints bool
 	var workers int
+	var maxViolations int
 
 	flag.StringVar(&profileName, "profile", "essay", "Target writing profile band (rfc, paper, essay, tutorial, chat, briefing)")
 	flag.StringVar(&profileName, "p", "essay", "Target writing profile band (shorthand)")
+	flag.StringVar(&levelName, "level", "standard", "Strictness enforcement tier (draft, standard, strict)")
+	flag.StringVar(&levelName, "l", "standard", "Strictness enforcement tier (shorthand)")
+	flag.StringVar(&format, "format", "full", "Terminal output format (full, compact)")
+	flag.StringVar(&format, "f", "full", "Terminal output format (shorthand)")
 	flag.BoolVar(&jsonOutput, "json", false, "Emit structured JSON for automated agent loops and CI pipelines")
 	flag.BoolVar(&verbose, "verbose", false, "Display extended diagnostic details")
 	flag.BoolVar(&verbose, "v", false, "Display extended diagnostic details (shorthand)")
-	flag.BoolVar(&useCache, "cache", true, "Enable SHA-256 result caching in .quality_gate_cache/")
+	flag.BoolVar(&useCache, "cache", true, "Enable SHA-256 result caching")
+	flag.StringVar(&cacheDir, "cache-dir", "", "Custom cache directory (defaults to $XDG_CACHE_HOME/quality_gate)")
 	flag.BoolVar(&fixHints, "fix-hints", true, "Show actionable fix recommendations for each violation")
 	flag.IntVar(&workers, "workers", runtime.NumCPU(), "Number of parallel workers for multi-file processing")
+	flag.IntVar(&maxViolations, "max-violations", 20, "Maximum number of violations to display (0 for unlimited)")
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [--profile {rfc,paper,essay,tutorial,chat,briefing}] [--json] [--cache] [--workers N] [FILE/DIR...]\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s [--profile {rfc,paper,essay,tutorial,chat,briefing}] [--level {draft,standard,strict}] [--format {full,compact}] [--json] [--cache] [--workers N] [FILE/DIR...]\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 
@@ -40,7 +50,13 @@ func main() {
 	valFlags := map[string]bool{
 		"-profile": true, "--profile": true,
 		"-p": true, "--p": true,
+		"-level": true, "--level": true,
+		"-l": true, "--l": true,
+		"-format": true, "--format": true,
+		"-f": true, "--f": true,
+		"-cache-dir": true, "--cache-dir": true,
 		"-workers": true, "--workers": true,
+		"-max-violations": true, "--max-violations": true,
 	}
 	var flagArgs, posArgs []string
 	rawArgs := os.Args[1:]
@@ -69,10 +85,24 @@ func main() {
 		os.Exit(2)
 	}
 
+	level := gate.Level(strings.ToLower(levelName))
+	if level != gate.LevelDraft && level != gate.LevelStandard && level != gate.LevelStrict {
+		fmt.Fprintf(os.Stderr, "Error: Unknown level '%s'. Available: draft, standard, strict\n", levelName)
+		os.Exit(2)
+	}
+
 	var cache *gate.Cache
 	if useCache {
-		cacheDir := filepath.Join(".", ".quality_gate_cache")
-		cache = gate.NewCache(cacheDir, true)
+		resolvedCacheDir := cacheDir
+		if resolvedCacheDir == "" {
+			uCache, err := os.UserCacheDir()
+			if err != nil || uCache == "" {
+				resolvedCacheDir = filepath.Join(os.TempDir(), "quality_gate_cache")
+			} else {
+				resolvedCacheDir = filepath.Join(uCache, "quality_gate")
+			}
+		}
+		cache = gate.NewCache(resolvedCacheDir, true)
 	}
 
 	args := flag.Args()
@@ -87,20 +117,20 @@ func main() {
 
 		var report *gate.AuditReport
 		if cache != nil {
-			if cached, ok := cache.Get(content, profileName); ok {
+			if cached, ok := cache.GetWithLevel(content, profileName, level); ok {
 				report = cached
 			}
 		}
 
 		if report == nil {
-			rep, err := gate.AuditDocument(string(content), profileName)
+			rep, err := gate.AuditDocumentWithLevel(string(content), profileName, level)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(2)
 			}
 			report = rep
 			if cache != nil {
-				cache.Put(content, profileName, report)
+				cache.PutWithLevel(content, profileName, level, report)
 			}
 		}
 
@@ -108,7 +138,7 @@ func main() {
 			data, _ := json.MarshalIndent(report, "", "  ")
 			fmt.Println(string(data))
 		} else {
-			fmt.Println(gate.FormatTerminalReport(report, fixHints, verbose))
+			fmt.Println(gate.FormatReport(report, format, fixHints, verbose, maxViolations))
 		}
 
 		if report.Passed {
@@ -131,7 +161,7 @@ func main() {
 
 	// Single file execution
 	if len(files) == 1 {
-		report, err := gate.AuditFile(files[0], profileName, cache)
+		report, err := gate.AuditFileWithLevel(files[0], profileName, level, cache)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(2)
@@ -141,7 +171,7 @@ func main() {
 			data, _ := json.MarshalIndent(report, "", "  ")
 			fmt.Println(string(data))
 		} else {
-			fmt.Println(gate.FormatTerminalReport(report, fixHints, verbose))
+			fmt.Println(gate.FormatReport(report, format, fixHints, verbose, maxViolations))
 		}
 
 		if report.Passed {
@@ -151,7 +181,7 @@ func main() {
 	}
 
 	// Batch multi-file execution
-	results := gate.ProcessFiles(files, profileName, workers, cache)
+	results := gate.ProcessFilesWithLevel(files, profileName, level, workers, cache)
 	allPassed := true
 
 	if jsonOutput {
@@ -165,14 +195,19 @@ func main() {
 	} else {
 		passedCount := 0
 		for _, r := range results {
-			fmt.Println("=" + strings.Repeat("-", 74) + "=")
-			fmt.Printf("File: %s\n", r.Path)
+			if format != "compact" {
+				fmt.Println("=" + strings.Repeat("-", 74) + "=")
+				fmt.Printf("File: %s\n", r.Path)
+			}
 			if r.Error != "" {
-				fmt.Printf("Error: %s\n", r.Error)
+				fmt.Printf("Error: %s (%s)\n", r.Error, r.Path)
 				allPassed = false
 				continue
 			}
-			fmt.Println(gate.FormatTerminalReport(r.Report, fixHints, verbose))
+			if format == "compact" {
+				fmt.Printf("[%s] ", r.Path)
+			}
+			fmt.Println(gate.FormatReport(r.Report, format, fixHints, verbose, maxViolations))
 			if r.Report.Passed {
 				passedCount++
 			} else {

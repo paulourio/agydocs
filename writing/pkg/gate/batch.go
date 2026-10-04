@@ -57,8 +57,13 @@ func CollectFiles(inputs []string) ([]string, error) {
 	return files, nil
 }
 
-// AuditFile audits a single file, checking and updating the cache if available.
+// AuditFile audits a single file using LevelStandard, checking and updating the cache if available.
 func AuditFile(path string, profile string, cache *Cache) (*AuditReport, error) {
+	return AuditFileWithLevel(path, profile, LevelStandard, cache)
+}
+
+// AuditFileWithLevel audits a single file with a specified strictness level.
+func AuditFileWithLevel(path string, profile string, level Level, cache *Cache) (*AuditReport, error) {
 	var content []byte
 	var err error
 	if path == "-" {
@@ -70,26 +75,30 @@ func AuditFile(path string, profile string, cache *Cache) (*AuditReport, error) 
 	}
 
 	if cache != nil {
-		if rep, ok := cache.Get(content, profile); ok {
+		if rep, ok := cache.GetWithLevel(content, profile, level); ok {
 			return rep, nil
 		}
 	}
 
-	rep, err := AuditDocument(string(content), profile)
+	rep, err := AuditDocumentWithLevel(string(content), profile, level)
 	if err != nil {
 		return nil, err
 	}
 
 	if cache != nil {
-		cache.Put(content, profile, rep)
+		cache.PutWithLevel(content, profile, level, rep)
 	}
 
 	return rep, nil
 }
 
-// ProcessFiles processes multiple files concurrently using a worker pool.
-// When len(paths) == 1, execution is completely synchronous with zero goroutine overhead.
+// ProcessFiles processes multiple files concurrently using a worker pool with LevelStandard.
 func ProcessFiles(paths []string, profile string, workers int, cache *Cache) []FileResult {
+	return ProcessFilesWithLevel(paths, profile, LevelStandard, workers, cache)
+}
+
+// ProcessFilesWithLevel processes multiple files concurrently with a specified strictness level.
+func ProcessFilesWithLevel(paths []string, profile string, level Level, workers int, cache *Cache) []FileResult {
 	if len(paths) == 0 {
 		return nil
 	}
@@ -98,7 +107,7 @@ func ProcessFiles(paths []string, profile string, workers int, cache *Cache) []F
 
 	// Fast path: single file, zero concurrency overhead
 	if len(paths) == 1 {
-		rep, err := AuditFile(paths[0], profile, cache)
+		rep, err := AuditFileWithLevel(paths[0], profile, level, cache)
 		results[0] = FileResult{Path: paths[0], Report: rep}
 		if err != nil {
 			results[0].Error = err.Error()
@@ -126,7 +135,7 @@ func ProcessFiles(paths []string, profile string, workers int, cache *Cache) []F
 		go func() {
 			defer wg.Done()
 			for j := range jobs {
-				rep, err := AuditFile(j.path, profile, cache)
+				rep, err := AuditFileWithLevel(j.path, profile, level, cache)
 				res := FileResult{Path: j.path, Report: rep}
 				if err != nil {
 					res.Error = err.Error()

@@ -1,5 +1,80 @@
 package gate
 
+import (
+	"strings"
+)
+
+// Severity defines the enforcement weight of a detected violation.
+type Severity string
+
+const (
+	SeverityError Severity = "error"
+	SeverityWarn  Severity = "warn"
+	SeverityInfo  Severity = "info"
+	SeverityOff   Severity = "off"
+)
+
+// Level defines the gate strictness tier.
+type Level string
+
+const (
+	LevelDraft    Level = "draft"
+	LevelStandard Level = "standard"
+	LevelStrict   Level = "strict"
+)
+
+// GetRuleSeverity returns the appropriate severity for a given rule and stage under the target level.
+func GetRuleSeverity(rule string, stage int, level Level) Severity {
+	if level == "" {
+		level = LevelStandard
+	}
+
+	if level == LevelStrict {
+		return SeverityError
+	}
+
+	// Knuth micro-syntax (typesetting and formula integration rules)
+	if strings.HasPrefix(rule, "Knuth Micro-Syntax") {
+		if level == LevelDraft {
+			return SeverityOff
+		}
+		return SeverityWarn
+	}
+
+	// Stage 1 Hard Invariants
+	if stage == 1 {
+		switch rule {
+		case "Claudism", "Claudism (Contextual)", "Performative Wink", "Sycophancy", "AI Tell":
+			return SeverityError
+		case "Tailing Participial Clause", "Light Verb Nominal", "Domain Laundry List (Throat-Clearing)":
+			if level == LevelDraft {
+				return SeverityWarn
+			}
+			return SeverityError
+		default:
+			if level == LevelDraft {
+				return SeverityWarn
+			}
+			return SeverityError
+		}
+	}
+
+	// Stage 2 Tolerance Bands
+	if stage == 2 {
+		if level == LevelDraft {
+			return SeverityOff
+		}
+		return SeverityWarn
+	}
+
+	// Stage 3 Composite Scores
+	if stage == 3 {
+		return SeverityInfo
+	}
+
+	return SeverityWarn
+}
+
 // ProfileConfig defines the tolerance bands and scoring thresholds for a specific prose style.
 type ProfileConfig struct {
 	Name                      string  `json:"name"`
@@ -18,12 +93,13 @@ type ProfileConfig struct {
 
 // Violation represents an individual gate violation detected in prose.
 type Violation struct {
-	Stage          int    `json:"stage"`
-	Rule           string `json:"rule"`
-	Message        string `json:"message"`
-	Line           *int   `json:"line"`
-	Snippet        string `json:"snippet"`
-	Recommendation string `json:"recommendation"`
+	Stage          int      `json:"stage"`
+	Severity       Severity `json:"severity"`
+	Rule           string   `json:"rule"`
+	Message        string   `json:"message"`
+	Line           *int     `json:"line"`
+	Snippet        string   `json:"snippet"`
+	Recommendation string   `json:"recommendation"`
 }
 
 // QualityMetrics contains all quantitative measurements computed during audit.
@@ -52,10 +128,14 @@ type QualityMetrics struct {
 
 // AuditReport aggregates profile configuration, pass/fail status, metrics, and violations.
 type AuditReport struct {
-	Profile    string         `json:"profile"`
-	Passed     bool           `json:"passed"`
-	Metrics    QualityMetrics `json:"metrics"`
-	Violations []Violation    `json:"violations"`
+	Profile      string         `json:"profile"`
+	Level        Level          `json:"level"`
+	Passed       bool           `json:"passed"`
+	ErrorCount   int            `json:"error_count"`
+	WarningCount int            `json:"warning_count"`
+	InfoCount    int            `json:"info_count"`
+	Metrics      QualityMetrics `json:"metrics"`
+	Violations   []Violation    `json:"violations"`
 }
 
 func intPtr(i int) *int {

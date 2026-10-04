@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	reFence            = regexp.MustCompile("^(`{3,})")
+	reFence            = regexp.MustCompile("^(`{3,}|~{3,})")
 	reMathBegin        = regexp.MustCompile(`^\\begin\{(?:equation|align|gather|multline|displaymath)\*?\}`)
 	reMathEnd          = regexp.MustCompile(`^\\end\{(?:equation|align|gather|multline|displaymath)\*?\}`)
 	reHead             = regexp.MustCompile(`^(#{1,6})\s+(.*)`)
@@ -16,7 +16,7 @@ var (
 	reHeadNeg          = regexp.MustCompile(`(?i)\b(?:Before|Negative|Banned|REJECTED|Slop|Anti-Pattern|Bad|Defect|Strawman|Infantilized|Prohibited|Bourbaki|Fluff)\b`)
 	reBannedList       = regexp.MustCompile(`(?i)^[-*+]?\s*\*\*(?:Prohibited|Banned|Anti-Patterns?|Violation(?:\s+Example)?)[^*:]*[:*]+`)
 	reNegBlockquote    = regexp.MustCompile("(?i)^\\s*(?:>\\s*)+(?:[\\*\\\"`])*(?:Bad|Defect|Negative(?:\\s+Example)?|Anti-Pattern|Banned|Strawman|Infantilized|Before|REJECTED)\\b")
-	reNegBullet        = regexp.MustCompile(`(?i)^\s*[-*+]?\s*\**\s*(?:Bad|Defect|Negative(?:\s+Example)?|Anti-Pattern|Banned|Strawman[^*:]*|Infantilized|Avoid|Trivial\s+Reframe|Claudisms?\s+Detected|Violations?|Fatal\s+Defect|AI\s+Tells|Tailing\s+Clauses|Quality\s+Gate|Shannon\s+Information\s+Loss|Zombie\s+Nominals?|Human\s+Voice\s+Index|Technical\s+Precision\s+Index|Linguistic\s+Virtues|Dependency\s+Locality|Burstiness|Demonstrative\s+Anchoring|Status|Root\s+Cause|Action|Result)\s*[:*]+\s*`)
+	reNegBullet        = regexp.MustCompile(`(?i)^\s*[-*+]?\s*\**\s*(?:Bad|Defect|Negative(?:\s+Example)?|Anti-Pattern|Banned|Strawman[^*:]*|Infantilized|Avoid|Trivial\s+Reframe|Claudisms?\s+Detected|Violations?|Fatal\s+Defect|AI\s+Tells|Tailing\s+Clauses|Quality\s+Gate|Shannon\s+Information\s+Loss|Zombie\s+Nominals?|Human\s+Voice\s+Index|Technical\s+Precision\s+Index|Linguistic\s+Virtues|Dependency\s+Locality|Burstiness|Demonstrative\s+Anchoring)\s*[:*]+\s*`)
 	reBannedListItem   = regexp.MustCompile(`^\s*[-*+]?\s*(?:\*["']|["'])`)
 	reParenNeg         = regexp.MustCompile(`\(\*.*?\*\)`)
 	reBlockquotePrefix = regexp.MustCompile(`^(?:\s*>\s*)+`)
@@ -25,7 +25,41 @@ var (
 	reWord             = regexp.MustCompile(`\b[A-Za-z0-9_-]+\b`)
 	reURL              = regexp.MustCompile(`https?://\S+`)
 	reInlineCode       = regexp.MustCompile("`[^`]+`")
+	reInlineMath       = regexp.MustCompile(`\$[^\$\n]+\$|\\\([^\)\n]+\\\)`)
+	reDoubleQuotes     = regexp.MustCompile(`"[^"\n]+"|“[^”\n]+”`)
+	reSingleQuotes     = regexp.MustCompile(`(^|[^\p{L}\p{N}])'([^'\n]+)'([^\p{L}\p{N}]|$)`)
+	reCurlySingle      = regexp.MustCompile(`‘[^’\n]+’`)
+	reGateOff          = regexp.MustCompile(`(?i)<!--\s*gate:off\s*-->`)
+	reGateOn           = regexp.MustCompile(`(?i)<!--\s*gate:on\s*-->`)
 )
+
+// MaskInlineCode replaces inline code spans with equivalent spaces to preserve offsets.
+func MaskInlineCode(s string) string {
+	return reInlineCode.ReplaceAllStringFunc(s, func(m string) string {
+		return strings.Repeat(" ", len(m))
+	})
+}
+
+// MaskInlineMath replaces inline math formulas ($...$ and \(...\)) with equivalent spaces.
+func MaskInlineMath(s string) string {
+	return reInlineMath.ReplaceAllStringFunc(s, func(m string) string {
+		return strings.Repeat(" ", len(m))
+	})
+}
+
+// MaskQuotedMentions replaces double and single quoted spans with spaces to avoid false-positive rule triggers.
+func MaskQuotedMentions(s string) string {
+	s = reDoubleQuotes.ReplaceAllStringFunc(s, func(m string) string {
+		return strings.Repeat(" ", len(m))
+	})
+	s = reCurlySingle.ReplaceAllStringFunc(s, func(m string) string {
+		return strings.Repeat(" ", len(m))
+	})
+	s = reSingleQuotes.ReplaceAllStringFunc(s, func(m string) string {
+		return strings.Repeat(" ", len(m))
+	})
+	return s
+}
 
 // LineInfo pairs a 1-based source line index with its cleaned narrative prose text.
 type LineInfo struct {
@@ -56,13 +90,30 @@ func SplitIntoLinesAndProse(text string) ([]string, string, []LineInfo) {
 
 	inMathBlock := false
 	inFrontmatter := false
+	inGateOff := false
 	codeFenceLen := 0
+	var fenceChar byte
 	inNegativeContext := false
 	inBannedList := false
+	prevLineEmpty := true
+	inIndentedCode := false
 
 	for idx1, line := range lines {
 		idx := idx1 + 1
 		stripped := strings.TrimSpace(line)
+
+		// Handle gate:off and gate:on comments
+		if reGateOff.MatchString(stripped) {
+			inGateOff = true
+			continue
+		}
+		if reGateOn.MatchString(stripped) {
+			inGateOff = false
+			continue
+		}
+		if inGateOff {
+			continue
+		}
 
 		// Handle YAML frontmatter at start of file
 		if idx == 1 && stripped == "---" {
@@ -76,22 +127,41 @@ func SplitIntoLinesAndProse(text string) ([]string, string, []LineInfo) {
 			continue
 		}
 
-		// CommonMark code fences with backtick counts (including nested inside blockquotes)
+		// CommonMark code fences with backtick or tilde counts (including nested inside blockquotes)
 		strippedWithoutQuotes := strings.TrimLeft(stripped, "> ")
 		mFence := reFence.FindStringSubmatch(strippedWithoutQuotes)
 		if len(mFence) > 1 {
-			fl := len(mFence[1])
+			fStr := mFence[1]
+			fl := len(fStr)
+			fChar := fStr[0]
 			if codeFenceLen == 0 {
 				codeFenceLen = fl
+				fenceChar = fChar
 				continue
-			} else if fl >= codeFenceLen {
+			} else if fChar == fenceChar && fl >= codeFenceLen {
 				codeFenceLen = 0
+				fenceChar = 0
 				continue
 			}
 		}
 		if codeFenceLen > 0 {
 			continue
 		}
+
+		// Handle indented code blocks (4 spaces or 1 tab)
+		if stripped == "" {
+			prevLineEmpty = true
+			inIndentedCode = false
+			continue
+		}
+		if (strings.HasPrefix(line, "    ") || strings.HasPrefix(line, "\t")) && (prevLineEmpty || inIndentedCode) {
+			if !strings.HasPrefix(stripped, "- ") && !strings.HasPrefix(stripped, "* ") && !strings.HasPrefix(stripped, "+ ") && !strings.HasPrefix(stripped, ">") && !reNumberPrefix.MatchString(stripped) {
+				inIndentedCode = true
+				continue
+			}
+		}
+		prevLineEmpty = false
+		inIndentedCode = false
 
 		// Handle LaTeX display math blocks ($$ ... $$ and \begin{equation} ... \end{equation})
 		if strings.HasPrefix(stripped, "$$") {

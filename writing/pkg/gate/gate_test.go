@@ -1036,3 +1036,95 @@ func TestBriefingProfileValidation(t *testing.T) {
 		t.Errorf("Briefing failed with violations: %v", rep.Violations)
 	}
 }
+
+func TestShortDocPassesWithoutFalsePositives(t *testing.T) {
+	sample := "The cache is warm."
+	rep, err := AuditDocumentWithLevel(sample, "chat", LevelStandard)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel err: %v", err)
+	}
+	if !rep.Passed {
+		t.Errorf("Short document failed quality gate: %v", rep.Violations)
+	}
+	if rep.ErrorCount != 0 {
+		t.Errorf("Expected 0 errors, got %d", rep.ErrorCount)
+	}
+}
+
+func TestGateOffOnCommentBlocksSkipped(t *testing.T) {
+	doc := "The leader writes to disk.\n\n" +
+		"<!-- gate:off -->\n" +
+		"We must delve into this rich tapestry and utilize holistic paradigms.\n" +
+		"<!-- gate:on -->\n\n" +
+		"This write guarantees persistence."
+
+	rep, err := AuditDocumentWithLevel(doc, "rfc", LevelStandard)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel err: %v", err)
+	}
+	if !rep.Passed {
+		t.Errorf("Document with gate:off failed: %v", rep.Violations)
+	}
+	for _, v := range rep.Violations {
+		if strings.Contains(v.Message, "delve") || strings.Contains(v.Message, "tapestry") {
+			t.Errorf("Violation detected inside gate:off block: %v", v)
+		}
+	}
+}
+
+func TestIndentedCodeBlocksSkipped(t *testing.T) {
+	doc := "The leader writes to disk.\n\n" +
+		"    // delve into this tapestry\n" +
+		"    func handleRequest() {}\n\n" +
+		"This write guarantees persistence."
+
+	rep, err := AuditDocumentWithLevel(doc, "rfc", LevelStandard)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel err: %v", err)
+	}
+	if !rep.Passed {
+		t.Errorf("Document with indented code failed: %v", rep.Violations)
+	}
+}
+
+func TestQuotedMentionsAndInlineCodeIgnoredInStage1(t *testing.T) {
+	doc := "Do not use the word \"delve\" or `tapestry` when describing system architecture. " +
+		"This rule prevents stylistic drift across engineering documentation. " +
+		"The compiler flags unanchored terms immediately. " +
+		"Engineers must adhere to these lexical standards."
+
+	rep, err := AuditDocumentWithLevel(doc, "rfc", LevelStandard)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel err: %v", err)
+	}
+	for _, v := range rep.Violations {
+		if v.Severity == SeverityError && (strings.Contains(v.Message, "delve") || strings.Contains(v.Message, "tapestry")) {
+			t.Errorf("Quoted mention or inline code flagged as error: %v", v)
+		}
+	}
+}
+
+func TestStrictnessLevelsTiering(t *testing.T) {
+	// A document with borderline CV or demonstrative that would be a warning in standard but error in strict
+	doc := "The leader writes to disk. " +
+		"This write ensures persistence across node failures. " +
+		"Network packets route through secondary proxies. " +
+		"Disk writes sync synchronously before returning acknowledgement."
+
+	repStd, err := AuditDocumentWithLevel(doc, "rfc", LevelStandard)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel standard err: %v", err)
+	}
+	if !repStd.Passed {
+		t.Errorf("Standard level should pass clean text: %v", repStd.Violations)
+	}
+
+	repDraft, err := AuditDocumentWithLevel(doc, "rfc", LevelDraft)
+	if err != nil {
+		t.Fatalf("AuditDocumentWithLevel draft err: %v", err)
+	}
+	if !repDraft.Passed {
+		t.Errorf("Draft level should pass clean text: %v", repDraft.Violations)
+	}
+}
+
