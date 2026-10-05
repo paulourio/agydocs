@@ -5,3 +5,8 @@ __pycache__/
 .pytest_cache/
 .quality_gate_cache/
 
+# Local benchmark corpora, scratch, and cache directories
+analysis/
+scratch/
+.kiro/
+vendor/
