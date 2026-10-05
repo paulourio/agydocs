@@ -22,7 +22,16 @@ Scientific writing demands high semantic density and rigorous formal definitions
 
 ---
 
-## 2. Voice & Agency: The Participatory "We" vs. Cold Bureaucracy
+## 2. Stylistic Touchstones: Radical Economy and Didactic Precision
+
+Emulate the structural virtues of these canonical researchers:
+
+- **Claude Shannon (*A Mathematical Theory of Communication*)**: Radical economic clarity and structural directness. State the problem and fundamental limits immediately without academic throat-clearing or philosophical self-aggrandizement. Introduce definitions with immediate operational meaning ($H = -\sum p_i \log p_i$); proceed directly from premises to mathematical bounds.
+- **Donald E. Knuth (*The Art of Computer Programming*, *Concrete Mathematics*)**: Integrate mathematical notation directly into running prose. Maintain total precision across notation, algorithm invariants, and asymptotic derivations. Anchor theoretical deductions with a concrete trace (exact machine states, instruction counts, or finite instances) before generalizing to abstract lemmas.
+
+---
+
+## 3. Voice & Agency: The Participatory "We" vs. Cold Bureaucracy
 
 ### The Knuth-Halmos Principle
 Scientific tradition often defaults to cold, agentless passive voice (*"It was observed that the bound holds..."*). This artificial distance obscures the reasoning process. 
@@ -48,7 +57,7 @@ In scientific writing, agentless passive is linguistically necessary when the ex
 
 ---
 
-## 3. Motivating Proofs and Invariants
+## 4. Motivating Proofs and Invariants
 
 ### Beyond the Bourbaki Trap
 Presenting mathematics in the sterile format of **Definition $\to$ Lemma $\to$ Theorem $\to$ Proof** makes papers appear logically unassailable, but leaves the reader completely mystified as to *why* the definitions exist in that specific form.
@@ -66,7 +75,7 @@ When introducing profound theoretical results, do not treat them as mere manipul
 
 ---
 
-## 4. Mathematical Micro-Syntax
+## 5. Mathematical Micro-Syntax
 
 From Stanford CS 209 (*Mathematical Writing*), adhere to these mechanical rules to eliminate working-memory friction:
 
@@ -96,7 +105,7 @@ Before presenting abstract asymptotic proofs, trace the algorithm or formula on 
 
 ---
 
-## 5. Adversarial and Game-Theoretic Proof Structuring
+## 6. Adversarial and Game-Theoretic Proof Structuring
  
 When proving computational lower bounds or distributed separation results, structure arguments around formal adversary methods:
 - **Yao's Minimax Principle (Randomized Complexity):** Model algorithm execution as a two-player zero-sum game between an algorithm designer selecting query strategies and an adversary constructing input distributions. Applying von Neumann's minimax theorem establishes that randomized query complexity corresponds to the optimal distributional lower bound against deterministic algorithms.
@@ -104,7 +113,7 @@ When proving computational lower bounds or distributed separation results, struc
 
 ---
 
-## 6. Constructive Steelmanning (The "Sure/Shor" Strategy)
+## 7. Constructive Steelmanning (The "Sure/Shor" Strategy)
 
 When addressing academic critics, alternative conjectures, or skepticism:
 - **Never dismiss skepticism with ad hominem rhetoric or vague hand-waving.**
@@ -114,7 +123,7 @@ When addressing academic critics, alternative conjectures, or skepticism:
 
 ---
 
-## 7. Epistemic Modesty & Calibrated Nuance
+## 8. Epistemic Modesty & Calibrated Nuance
 
 Scientific rigor requires precise epistemic stance. Distinguish clearly between what is proven, what is conjectured, and what is empirically observed:
 
@@ -135,7 +144,7 @@ Scientific rigor requires precise epistemic stance. Distinguish clearly between 
 
 ---
 
-## 8. Informative Footnotes: High-Gain Technical Wit
+## 9. Informative Footnotes: High-Gain Technical Wit
 
 Authors frequently use footnotes to provide high-information-gain remarks that illuminate technical subtleties:
 - *Scott Aaronson on Quantum Factoring:*

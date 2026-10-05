@@ -22,7 +22,16 @@ Systems documentation communicates high-stakes operational constraints where amb
 
 ---
 
-## 2. Invariant-First Architecture (The Inverted Pyramid)
+## 2. Stylistic Touchstones: Invariant Rigor and Protocol Determinism
+
+Emulate the structural virtues of these canonical systems architects:
+
+- **Leslie Lamport (*Time, Clocks, and the Ordering of Events*, Paxos Made Simple)**: State safety and liveness invariants as formal state-machine conditions and bounding inequalities. Specify monotonic clock intervals, quorum boundaries, and state transitions with mathematical precision. Never describe what components "hope" to achieve; declare what must physically hold true across all execution histories.
+- **Diego Ongaro (*Raft: In Search of an Understandable Consensus Algorithm*)**: Structure distributed protocols into explicit, partitioned role rules (Follower, Candidate, Leader) and universal state transitions. Provide concrete, unambiguous RPC schemas, explicit timeout mechanics, and exhaustive failure-mode recoveries. Eliminate hand-waving in favor of deterministic protocol steps.
+
+---
+
+## 3. Invariant-First Architecture (The Inverted Pyramid)
 
 ### The First-Line Rule
 In architecture documents, RFCs, and incident reports, **never begin with background fluff or corporate throat-clearing** (e.g. avoid vague platitudes about modern cloud environments).
@@ -33,7 +42,7 @@ In architecture documents, RFCs, and incident reports, **never begin with backgr
 
 ---
 
-## 3. The Core Specification vs. Verification Appendix Model
+## 4. The Core Specification vs. Verification Appendix Model
 
 To eliminate corporate fluff and solve the enterprise compliance dilemma (CYA vs. engineering readability), partition every major systems document into two explicit sections:
 
@@ -59,7 +68,7 @@ To eliminate corporate fluff and solve the enterprise compliance dilemma (CYA vs
 
 ---
 
-## 4. Concrete Hardware Metrics and Negative Controls
+## 5. Concrete Hardware Metrics and Negative Controls
 
 AI-generated systems documentation often presents an idealized scenario where components scale without friction and failure modes are ignored. Authentic systems engineering documents operational reality:
 
@@ -75,7 +84,7 @@ Authentic engineering documentation records what was tried and rejected:
 
 ---
 
-## 5. Ousterhout’s Principle: Deep Modules over Shallow Interfaces
+## 6. Ousterhout’s Principle: Deep Modules over Shallow Interfaces
 
 When specifying system components and API contracts, follow John Ousterhout’s *Philosophy of Software Design*:
 - **Deep Modules:** An interface must be simple relative to the complexity it conceals. A deep module provides powerful functionality through a tiny API surface.
@@ -87,7 +96,7 @@ When specifying system components and API contracts, follow John Ousterhout’s 
 
 ---
 
-## 6. Authoritative Technical Stance in Decision Records
+## 7. Authoritative Technical Stance in Decision Records
 
 Architecture Decision Records (ADRs) must take an explicit, authoritative technical stance:
 - An ADR that provides an equidistant, non-committal summary of three options without choosing an option and defending that choice forces downstream engineers to guess architectural intent.
@@ -95,7 +104,7 @@ Architecture Decision Records (ADRs) must take an explicit, authoritative techni
 
 ---
 
-## 7. Operational Runbooks & Step-by-Step Procedures
+## 8. Operational Runbooks & Step-by-Step Procedures
 
 Operational runbooks and troubleshooting guides must be executable under emergency outage pressure:
 1. **Imperative Mood Only:** Begin every operational step with an active verb (*"Verify"*, *"Execute"*, *"Check"*, *"Restart"*).

@@ -59,7 +59,16 @@ asyncio.run(main())
 
 ---
 
-## 3. The 4-Stage Progressive Disclosure Flow
+## 3. Stylistic Touchstones: Pedagogical Intuition and Mechanical Clarity
+
+Emulate the structural virtues of these canonical technical educators:
+
+- **Richard Feynman (*The Feynman Lectures on Physics*)**: Ground complex mechanisms in physical intuition, mechanical reality, and concrete causality. Eliminate academic throat-clearing; explain what physical electrons, transistors, or memory buses are actually doing. Trace cause-and-effect step-by-step. Never use jargon as a substitute for comprehension.
+- **Rob Pike (*Effective Go*, Plan 9 specifications)**: Emphasize idiomatic economy, mechanical sympathy, and crisp operational clarity. Let clean, copy-pasteable code demonstrate structure; explain mechanics through active verbs and concise exposition without ceremonial boilerplate.
+
+---
+
+## 4. The 4-Stage Progressive Disclosure Flow
 
 Organize tutorial sections according to the **Progressive Disclosure Flow**:
 
@@ -86,7 +95,7 @@ Organize tutorial sections according to the **Progressive Disclosure Flow**:
 
 ---
 
-## 4. Explain Failure Mechanics, Not Just Happy Paths
+## 5. Explain Failure Mechanics, Not Just Happy Paths
 
 Developer tutorials fail when they show only happy paths and omit configuration rationale:
 - If a setting specifies `max_retries=3`, state why 3 was chosen and document the exception raised when retries are exhausted.
@@ -94,7 +103,7 @@ Developer tutorials fail when they show only happy paths and omit configuration 
 
 ---
 
-## 5. Cognitive Ergonomics: Active Scaffolding
+## 6. Cognitive Ergonomics: Active Scaffolding
 
 Developers troubleshooting code or onboarding onto a platform have limited working memory. Effective guides reduce cognitive overhead:
 - **Second-Person Direct Address ("You"):** Address the developer directly as an active operator (*"Inspect the generated query by setting `DEBUG=1`"*).
@@ -120,7 +129,7 @@ ch <- 42 // Completes immediately
 
 ---
 
-## 6. Mandatory Structured Markdown Tables ($N \ge 3$)
+## 7. Mandatory Structured Markdown Tables ($N \ge 3$)
 
 Whenever comparing three or more configuration parameters, environment variables, algorithmic choices, or API methods, **never write a wall of prose paragraphs**. 
 

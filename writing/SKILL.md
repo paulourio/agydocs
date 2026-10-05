@@ -34,11 +34,11 @@ writing/bin/quality_gate --profile rfc --level standard --format compact path/to
 
 ### 1. Lazy Reference Loading
 To minimize context token consumption, load only the single reference matching your document type:
-- **Systems RFCs, ADRs, and specs**: Read [technical_systems.md](references/technical_systems.md).
-- **Scientific papers and preprints**: Read [scientific_papers.md](references/scientific_papers.md).
-- **Developer guides and tutorials**: Read [guides_tutorials.md](references/guides_tutorials.md).
+- **Systems RFCs, ADRs, and specs**: Read [technical_systems.md](references/technical_systems.md) (touchstones: Lamport, Ongaro).
+- **Scientific papers and preprints**: Read [scientific_papers.md](references/scientific_papers.md) (touchstones: Shannon, Knuth).
+- **Developer guides and tutorials**: Read [guides_tutorials.md](references/guides_tutorials.md) (touchstones: Feynman, Pike).
 - **Technical briefings and incident postmortems**: Read [briefing_format.md](references/briefing_format.md).
-- **Code reviews and technical pairing**: Read [conversational_pairing.md](references/conversational_pairing.md).
+- **Code reviews and technical pairing**: Read [conversational_pairing.md](references/conversational_pairing.md) (touchstone: Torvalds).
 - **Core principles and stylistic invariants**: Read [global_guidance.md](references/global_guidance.md).
 
 Do not load [anti_patterns_catalog.md](resources/anti_patterns_catalog.md) or [metric_cheat_sheet.md](resources/metric_cheat_sheet.md) during initial drafting. Open them only if the quality gate flags a specific Stage 1 lexical violation or unexplained metric failure.
