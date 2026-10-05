@@ -126,6 +126,7 @@ func AuditStage1HardInvariants(
 	lines []string,
 	proseLines []LineInfo,
 	level Level,
+	profileName string,
 	violations *[]Violation,
 ) {
 	addViolation := func(rule string, message string, line *int, snippet string, rec string) {
@@ -291,7 +292,7 @@ func AuditStage1HardInvariants(
 
 		// 7. Knuth Micro-Syntax: Sentence-initial math/variable/code symbols
 		trimmedContent := strings.TrimSpace(lineInfo.Content)
-		if !reExerciseOrStep.MatchString(trimmedContent) && !reIndexDef.MatchString(trimmedContent) {
+		if (profileName == "" || profileName == "paper" || profileName == "rfc" || profileName == "essay") && !reExerciseOrStep.MatchString(trimmedContent) && !reIndexDef.MatchString(trimmedContent) {
 			lineSentences := ExtractSentences(lineInfo.Content)
 			for sIdx, s := range lineSentences {
 				st := strings.TrimSpace(s)
@@ -336,56 +337,59 @@ func AuditStage1HardInvariants(
 		}
 
 		// 8. Knuth Micro-Syntax: Adjacent formulas without intervening words
-		adjLocs := reAdjacentCand.FindAllStringIndex(lineInfo.Content, -1)
-		for _, loc := range adjLocs {
-			cand := lineInfo.Content[loc[0]:loc[1]]
-			if !strings.Contains(cand, ",") {
-				if isAlgebraicProduct(cand) {
+		if profileName == "" || profileName == "paper" || profileName == "rfc" || profileName == "essay" {
+			adjLocs := reAdjacentCand.FindAllStringIndex(lineInfo.Content, -1)
+			for _, loc := range adjLocs {
+				cand := lineInfo.Content[loc[0]:loc[1]]
+				if !strings.Contains(cand, ",") {
+					if isAlgebraicProduct(cand) {
+						continue
+					}
+					if reRelationalOp.MatchString(cand) {
+						continue
+					}
+				}
+				if strings.Contains(cand, "...") || strings.Contains(cand, "…") || strings.Contains(cand, `\dots`) {
 					continue
 				}
-				if reRelationalOp.MatchString(cand) {
+				if strings.ContainsAny(cand, "↔⊆∩∪≼") {
 					continue
 				}
-			}
-			if strings.Contains(cand, "...") || strings.Contains(cand, "…") || strings.Contains(cand, `\dots`) {
-				continue
-			}
-			if strings.ContainsAny(cand, "↔⊆∩∪≼") {
-				continue
-			}
-			trailing := lineInfo.Content[loc[1]:]
-			if reAdjacentExcl.MatchString(trailing) {
-				continue
-			}
-			if isInsideParensOrBrackets(lineInfo.Content, loc[0], loc[1]) {
-				continue
-			}
-			prefix := strings.TrimSpace(lineInfo.Content[:loc[0]])
-			if prefix != "" {
-				r := []rune(prefix)
-				if reRelationalOp.MatchString(string(r[len(r)-1])) {
+				trailing := lineInfo.Content[loc[1]:]
+				if reAdjacentExcl.MatchString(trailing) {
 					continue
 				}
+				if isInsideParensOrBrackets(lineInfo.Content, loc[0], loc[1]) {
+					continue
+				}
+				prefix := strings.TrimSpace(lineInfo.Content[:loc[0]])
+				if prefix != "" {
+					r := []rune(prefix)
+					if reRelationalOp.MatchString(string(r[len(r)-1])) {
+						continue
+					}
+				}
+				if reAlgAssign.MatchString(lineInfo.Content[:loc[0]]) {
+					continue
+				}
+				if rePluralNounGovernor.MatchString(lineInfo.Content[:loc[0]]) {
+					continue
+				}
+				addViolation(
+					"Knuth Micro-Syntax (Formula Clumping)",
+					fmt.Sprintf("Adjacent mathematical formulas without intervening words: '%s'", lineInfo.Content[loc[0]:loc[1]]),
+					intPtr(lineInfo.Line),
+					strings.TrimSpace(lineInfo.Content),
+					"Separate with English words: 'where q < p', not '$S_q, q < p$'.",
+				)
+				break
 			}
-			if reAlgAssign.MatchString(lineInfo.Content[:loc[0]]) {
-				continue
-			}
-			if rePluralNounGovernor.MatchString(lineInfo.Content[:loc[0]]) {
-				continue
-			}
-			addViolation(
-				"Knuth Micro-Syntax (Formula Clumping)",
-				fmt.Sprintf("Adjacent mathematical formulas without intervening words: '%s'", lineInfo.Content[loc[0]:loc[1]]),
-				intPtr(lineInfo.Line),
-				strings.TrimSpace(lineInfo.Content),
-				"Separate with English words: 'where q < p', not '$S_q, q < p$'.",
-			)
-			break
 		}
 
 		// 9. Logic symbols in prose text
 		trimmedClean := strings.TrimSpace(lineClean)
-		if !reStandaloneDerivation.MatchString(trimmedClean) && !reIndexDef.MatchString(trimmedClean) && !reMetaMention.MatchString(lineClean) {
+		if (profileName == "" || profileName == "paper" || profileName == "rfc" || profileName == "essay") &&
+			!reStandaloneDerivation.MatchString(trimmedClean) && !reIndexDef.MatchString(trimmedClean) && !reMetaMention.MatchString(lineClean) {
 			mLogic := ""
 			if m := reAsciiLogicInProse.FindString(lineClean); m != "" {
 				mLogic = m

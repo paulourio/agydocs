@@ -56,7 +56,7 @@ func AuditDocumentWithLevel(text string, profileName string, level Level) (*Audi
 		})
 	}
 
-	AuditStage1HardInvariants(text, lines, proseLines, level, &violations)
+	AuditStage1HardInvariants(text, lines, proseLines, level, profileName, &violations)
 	AuditStage2ToleranceBands(text, prose, sentences, words, profile, level, &metrics, &violations)
 	AuditStage3CompositeScoring(profile, level, &metrics, &violations)
 

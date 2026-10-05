@@ -1273,3 +1273,43 @@ func TestDetectsNonMarkdownFileExtension(t *testing.T) {
 		t.Errorf("Expected Non-Markdown File Extension with SeverityWarn in strict mode, got: %v", repStrict.Violations)
 	}
 }
+
+func TestCanonicalMultiProfileBenchmarksPassQualityGate(t *testing.T) {
+	benchDir := "../../../analysis/writing/benchmark"
+	if _, err := os.Stat(benchDir); os.IsNotExist(err) {
+		t.Skip("Benchmark directory not present, skipping canonical multi-profile test")
+	}
+
+	targets := []struct {
+		relPath string
+		profile string
+	}{
+		{"briefing/feynman_challenger_appendix_f.md", "briefing"},
+		{"chat/linus_git_design.md", "chat"},
+		{"chat/linus_locking.md", "chat"},
+		{"essay/lamport_byzantine_generals.md", "essay"},
+		{"essay/lamport_paxos_simple.md", "essay"},
+		{"essay/lamport_time_clocks.md", "essay"},
+		{"rfc/raft_consensus.md", "rfc"},
+		{"rfc/rfc8446_tls13.md", "rfc"},
+		{"rfc/rfc9293_tcp.md", "rfc"},
+		{"tutorial/effective_go.md", "tutorial"},
+	}
+
+	for _, tc := range targets {
+		t.Run(tc.relPath, func(t *testing.T) {
+			path := filepath.Join(benchDir, tc.relPath)
+			rep, err := AuditFileWithLevel(path, tc.profile, LevelStrict, nil)
+			if err != nil {
+				t.Fatalf("AuditFileWithLevel failed for %s: %v", tc.relPath, err)
+			}
+			if !rep.Passed {
+				for _, v := range rep.Violations {
+					if v.Severity == SeverityError {
+						t.Errorf("Strict violation in %s: %s - %s", tc.relPath, v.Rule, v.Message)
+					}
+				}
+			}
+		})
+	}
+}

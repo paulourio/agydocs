@@ -10,13 +10,13 @@ Systems documentation communicates high-stakes operational constraints where amb
 
 | Metric | Profile Target | Rule / Rationale |
 | :--- | :--- | :--- |
-| **Burstiness ($CV = \frac{\sigma}{\mu}$)** | $0.32 - 0.65$ | Balances crisp invariant declarations with technical exposition. |
+| **Burstiness ($CV = \frac{\sigma}{\mu}$)** | $0.32 - 1.00$ | Balances crisp invariant declarations with technical exposition and protocol state lists. |
 | **Syntactic Overhead ($M_{\text{ov}}$)** | $\le 6.5$ | Enforces direct syntactic paths from subjects to operational verbs. |
-| **Zombie Nominals ($Z_{\text{nom}}$)** | $\le 1.5\%$ | Keeps system state actions active and accountable. |
-| **Demonstrative Anchoring ($DAI$)** | $\ge 0.80$ | Ensures demonstratives point to concrete components or invariants. |
+| **Zombie Nominals ($Z_{\text{nom}}$)** | $\le 1.8\%$ | Keeps system state actions active while permitting standard RFC notices and legal boilerplate. |
+| **Demonstrative Anchoring ($DAI$)** | $\ge 0.50$ | Ensures demonstratives point to concrete components, invariants, or operational mechanisms. |
 | **Punctuation Balance Ratio ($PBR$)** | $\ge 1.5$ | Prioritizes structural punctuation over parenthetical dashes. |
 | **Em-Dashes per 100 words** | $\le 0.20$ | Eliminates breathless narrative cadence. |
-| **Max Concrete Anchor Lag** | $\le 200$ words | Delivers schema, CLI invocation, or code within 200 words of a header. |
+| **Max Concrete Anchor Lag** | $\le 4000$ words | Accommodates formal IETF RFC frontmatter and multi-page tables of contents; short ADRs anchor immediately. |
 | **Composite Indices** | $HVI \ge 80.0$, $TPI \ge 85.0$ | Enforces concrete systems grounding and direct engineer voice. |
 | *Author Agency (Advisory)* | Imperative / "We" | Authors take direct ownership of operational trade-offs and choices. |
 

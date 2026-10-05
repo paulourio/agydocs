@@ -10,12 +10,12 @@ Developer guides reduce cognitive friction through early executable examples and
 
 | Metric | Profile Target | Rule / Rationale |
 | :--- | :--- | :--- |
-| **Burstiness ($CV = \frac{\sigma}{\mu}$)** | $0.30 - 0.60$ | Keeps instructional steps clear and rhythmically varied. |
+| **Burstiness ($CV = \frac{\sigma}{\mu}$)** | $0.30 - 0.65$ | Keeps instructional steps clear and rhythmically varied. |
 | **Syntactic Overhead ($M_{\text{ov}}$)** | $\le 4.5$ | Minimizes cognitive load during task execution. |
-| **Zombie Nominals ($Z_{\text{nom}}$)** | $\le 0.8\%$ | Emphasizes direct actions and concrete tools. |
-| **Concrete Anchor Lag** | $\le 150$ words | Delivers working code or schema within 150 words of a header. |
-| **Demonstrative Anchoring ($DAI$)** | $\ge 0.75$ | Grounds pronouns in immediate code or concepts. |
-| **Em-Dashes per 100 words** | $\le 0.15$ | Prevents meandering side notes in tutorial steps. |
+| **Zombie Nominals ($Z_{\text{nom}}$)** | $\le 1.0\%$ | Emphasizes direct actions and concrete tools. |
+| **Concrete Anchor Lag** | $\le 550$ words | Delivers working code or schema within 550 words of an introductory header (tutorials with short preambles aim for $\le 150$ words). |
+| **Demonstrative Anchoring ($DAI$)** | $\ge 0.70$ | Grounds pronouns in immediate code or concepts. |
+| **Em-Dashes per 100 words** | $\le 0.20$ | Prevents meandering side notes in tutorial steps. |
 | **Punctuation Balance Ratio ($PBR$)** | $\ge 1.0$ | Prioritizes structured explanation over casual pauses. |
 | **Composite Indices** | $HVI \ge 80.0$, $TPI \ge 75.0$ | Enforces executable examples and direct pedagogical voice. |
 | *Developer Address (Advisory)* | Directed ("you" / imperative) | Guides the developer through direct actions and verified observations. |

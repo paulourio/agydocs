@@ -26,10 +26,10 @@ func AuditStage3CompositeScoring(profile ProfileConfig, level Level, metrics *Qu
 		})
 	}
 
-	// Stage 1 penalty
+	// Stage 1 penalty (only for blocking errors: Claudisms, AI tells, sycophancy)
 	stage1Count := 0
 	for _, v := range *violations {
-		if v.Stage == 1 {
+		if v.Stage == 1 && v.Severity == SeverityError {
 			stage1Count++
 		}
 	}

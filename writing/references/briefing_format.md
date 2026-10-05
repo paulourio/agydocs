@@ -4,11 +4,27 @@ This guide establishes the structural invariants and editing standards for techn
 
 ---
 
-## 1. Structural Requirements of Technical Briefings
+## 1. Register Profile & Target Metrics
+
+Briefings convey critical facts under strict operational time constraints, requiring immediate clarity and quantitative precision.
+
+| Metric | Profile Target | Rule / Rationale |
+| :--- | :--- | :--- |
+| **Burstiness ($CV = \frac{\sigma}{\mu}$)** | $0.35 - 0.65$ | Balances rapid executive findings with quantitative operational impact. |
+| **Syntactic Overhead ($M_{\text{ov}}$)** | $\le 4.5$ | Minimizes reading latency during active triage or executive review. |
+| **Zombie Nominals ($Z_{\text{nom}}$)** | $\le 1.5\%$ | Replaces vague bureaucratic noun chains with active verbs and accountable actors. |
+| **Demonstrative Anchoring ($DAI$)** | $\ge 0.30$ | Connects findings to concrete components; permits empirical summaries (*"This was a model based on..."*). |
+| **Em-Dashes per 100 words** | $\le 0.10$ | Eliminates narrative sprawl in operational reporting. |
+| **Punctuation Balance Ratio ($PBR$)** | $\ge 1.5$ | Uses structured colons and semicolons for metric presentation. |
+| **Composite Indices** | $HVI \ge 80.0$, $TPI \ge 80.0$ | Enforces objective engineering voice and verifiable telemetry. |
+
+---
+
+## 2. Structural Requirements of Technical Briefings
 
 A technical briefing delivers critical system facts without rhetorical throat-clearing. Engineers read briefings under time constraints to allocate resources or tune operational parameters.
 
-### 1.1 Inverted Pyramid Structure
+### 2.1 Inverted Pyramid Structure
 Place the most critical production conclusion in the initial paragraph:
 1. **Executive Finding:** State the core production metric, outage cause, or infrastructure decision in the opening two sentences.
 2. **Operational Impact:** Report affected service level objectives (SLOs), error budgets, latency shifts, and dollar figures immediately following the finding.
@@ -17,7 +33,7 @@ Place the most critical production conclusion in the initial paragraph:
 
 ---
 
-## 2. Quantitative Precision over Narrative Fluff
+## 3. Quantitative Precision over Narrative Fluff
 
 Briefings fail when qualitative adjectives replace empirical telemetry. Replace subjective descriptions with concrete numbers and confidence intervals:
 
@@ -30,11 +46,11 @@ Briefings fail when qualitative adjectives replace empirical telemetry. Replace 
 
 ---
 
-## 3. Incident Briefing Standard Template
+## 4. Incident Briefing Standard Template
 
 When authoring a post-incident summary, organize findings under four canonical headings:
 
-### 3.1 Incident Summary
+### 4.1 Incident Summary
 Summarize the outage duration, impacted customer paths, and primary alert trigger.
 
 ```markdown
@@ -44,8 +60,8 @@ Summarize the outage duration, impacted customer paths, and primary alert trigge
 - **Resolution:** Restarted connection poolers with exponential backoff and jitter enabled.
 ```
 
-### 3.2 Timeline and Mechanical Root Cause
+### 4.2 Timeline and Mechanical Root Cause
 Trace the failure sequence from trigger to recovery. Reference physical machine telemetry, logs, and commit hashes. Avoid attributing failures to human error; document missing safety margins and guardrails instead.
 
-### 3.3 Permanent Corrective Safeguards
+### 4.3 Permanent Corrective Safeguards
 Assign every safeguard a tracking identifier, target milestone, and verification test. Eliminate vague commitments such as *"improve monitoring"*. Specify the exact metric threshold and alerting rule.

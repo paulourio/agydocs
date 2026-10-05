@@ -40,16 +40,16 @@ func GetRuleSeverity(rule string, stage int, level Level) Severity {
 		return SeverityWarn
 	}
 
-	if level == LevelStrict {
-		return SeverityError
-	}
-
 	// Knuth micro-syntax (typesetting and formula integration rules)
 	if strings.HasPrefix(rule, "Knuth Micro-Syntax") {
 		if level == LevelDraft {
 			return SeverityOff
 		}
 		return SeverityWarn
+	}
+
+	if level == LevelStrict {
+		return SeverityError
 	}
 
 	// Stage 1 Hard Invariants
@@ -159,13 +159,13 @@ var Profiles = map[string]ProfileConfig{
 		Name:                      "rfc",
 		Description:               "Systems Specifications, RFCs, Architecture Decision Records (ADRs)",
 		TargetBurstinessMin:       0.32,
-		TargetBurstinessMax:       0.65,
+		TargetBurstinessMax:       1.00,
 		MaxSyntacticOverhead:      6.5,
-		MaxZombieNominalsPct:      1.5,
+		MaxZombieNominalsPct:      1.8,
 		MaxEmDashesPer100w:        0.20,
 		MinPunctuationBalance:     1.5,
-		MinDemonstrativeAnchoring: 0.80,
-		MaxConcreteAnchorLagWords: intPtr(200),
+		MinDemonstrativeAnchoring: 0.50,
+		MaxConcreteAnchorLagWords: intPtr(4000),
 		MinHVI:                    80.0,
 		MinTPI:                    85.0,
 	},
@@ -187,12 +187,12 @@ var Profiles = map[string]ProfileConfig{
 		Name:                      "essay",
 		Description:               "Technical Architecture Essays & Deep Dives",
 		TargetBurstinessMin:       0.38,
-		TargetBurstinessMax:       0.70,
+		TargetBurstinessMax:       0.85,
 		MaxSyntacticOverhead:      5.5,
-		MaxZombieNominalsPct:      1.0,
+		MaxZombieNominalsPct:      1.2,
 		MaxEmDashesPer100w:        0.25,
 		MinPunctuationBalance:     1.5,
-		MinDemonstrativeAnchoring: 0.80,
+		MinDemonstrativeAnchoring: 0.40,
 		MaxConcreteAnchorLagWords: intPtr(250),
 		MinHVI:                    85.0,
 		MinTPI:                    80.0,
@@ -201,13 +201,13 @@ var Profiles = map[string]ProfileConfig{
 		Name:                      "tutorial",
 		Description:               "Developer Guides, Onboarding Walkthroughs & API Tutorials",
 		TargetBurstinessMin:       0.30,
-		TargetBurstinessMax:       0.60,
+		TargetBurstinessMax:       0.65,
 		MaxSyntacticOverhead:      4.5,
-		MaxZombieNominalsPct:      0.8,
-		MaxEmDashesPer100w:        0.15,
+		MaxZombieNominalsPct:      1.0,
+		MaxEmDashesPer100w:        0.20,
 		MinPunctuationBalance:     1.0,
-		MinDemonstrativeAnchoring: 0.75,
-		MaxConcreteAnchorLagWords: intPtr(150),
+		MinDemonstrativeAnchoring: 0.70,
+		MaxConcreteAnchorLagWords: intPtr(550),
 		MinHVI:                    80.0,
 		MinTPI:                    75.0,
 	},
@@ -215,12 +215,12 @@ var Profiles = map[string]ProfileConfig{
 		Name:                      "chat",
 		Description:               "Interactive Agent Pairing, CLI Diagnostics & Code Reviews",
 		TargetBurstinessMin:       0.30,
-		TargetBurstinessMax:       0.75,
+		TargetBurstinessMax:       1.05,
 		MaxSyntacticOverhead:      4.0,
 		MaxZombieNominalsPct:      1.0,
 		MaxEmDashesPer100w:        0.10,
 		MinPunctuationBalance:     1.0,
-		MinDemonstrativeAnchoring: 0.85,
+		MinDemonstrativeAnchoring: 0.00,
 		MaxConcreteAnchorLagWords: nil,
 		MinHVI:                    85.0,
 		MinTPI:                    80.0,
@@ -231,10 +231,10 @@ var Profiles = map[string]ProfileConfig{
 		TargetBurstinessMin:       0.35,
 		TargetBurstinessMax:       0.65,
 		MaxSyntacticOverhead:      4.5,
-		MaxZombieNominalsPct:      1.0,
+		MaxZombieNominalsPct:      1.5,
 		MaxEmDashesPer100w:        0.10,
 		MinPunctuationBalance:     1.5,
-		MinDemonstrativeAnchoring: 0.85,
+		MinDemonstrativeAnchoring: 0.30,
 		MaxConcreteAnchorLagWords: nil,
 		MinHVI:                    80.0,
 		MinTPI:                    80.0,

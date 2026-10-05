@@ -125,7 +125,7 @@ var AITells = []RulePattern{
 		Recommendation: "Detail the specific components or dimensions.",
 	},
 	{
-		Pattern:        regexp.MustCompile("(?i)\\bintertwined\\b"),
+		Pattern:        regexp.MustCompile(`(?i)\b(?:deeply|inextricably)\s+intertwined\b|\bintertwined\s+with\s+(?:the\s+fabric|destiny|human|our\s+lives|our\s+future)\b`),
 		Label:          "Generic AI Tell ('intertwined')",
 		Recommendation: "Specify the coupling or dependency relationship.",
 	},

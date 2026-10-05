@@ -10,10 +10,10 @@ Interactive chat pairing occurs under active development or outage pressure. The
 
 | Metric | Profile Target | Rule / Rationale |
 | :--- | :--- | :--- |
-| **Burstiness ($CV = \frac{\sigma}{\mu}$)** | $0.30 - 0.75$ | Accommodates short diagnostics and detailed diff explanations. |
+| **Burstiness ($CV = \frac{\sigma}{\mu}$)** | $0.30 - 1.05$ | Accommodates short diagnostics, raw commands, and detailed code review explanations. |
 | **Syntactic Overhead ($M_{\text{ov}}$)** | $\le 4.0$ | Keeps responses immediately readable under triage. |
 | **Zombie Nominals ($Z_{\text{nom}}$)** | $\le 1.0\%$ | Replaces abstract status descriptions with direct verbs. |
-| **Demonstrative Anchoring ($DAI$)** | $\ge 0.85$ | Binds demonstratives to specific files, functions, or lines. |
+| **Demonstrative Anchoring ($DAI$)** | Un-gated (`0.0`) | Permits natural spoken/chat transitions (*"This is why..."*, *"This will block..."*); code references remain concrete. |
 | **Em-Dashes per 100 words** | $\le 0.10$ | Eliminates narrative sprawl in triage dialog. |
 | **Punctuation Balance Ratio ($PBR$)** | $\ge 1.0$ | Uses direct colons and semicolons for code telemetry. |
 | **Composite Indices** | $HVI \ge 85.0$, $TPI \ge 80.0$ | Enforces authentic engineering voice and zero fluff. |
