@@ -857,6 +857,45 @@ func TestStandaloneSycophancy(t *testing.T) {
 	}
 }
 
+func TestSycophancyLegitimateInquiryNotFlagged(t *testing.T) {
+	legitimate := []string{
+		"That's a good question, but we won't worry about it right now.",
+		"This raises a good question regarding cache invalidation boundaries.",
+		"Whether the cluster scales linearly is a good question for benchmark profiling.",
+	}
+	for _, text := range legitimate {
+		rep, err := AuditDocument(text, "paper")
+		if err != nil {
+			t.Fatalf("AuditDocument err: %v", err)
+		}
+		for _, v := range rep.Violations {
+			if v.Rule == "Sycophancy" {
+				t.Errorf("Unexpected Sycophancy violation for legitimate inquiry '%s': %v", text, v.Message)
+			}
+		}
+	}
+}
+
+func TestMachineLearningDomainNounsPass(t *testing.T) {
+	mlNouns := []string{
+		"attention", "attentions",
+		"transduction", "transductions",
+		"dimensionality",
+		"regularization", "regularizations",
+		"parallelization", "parallelizations",
+		"summarization", "summarizations",
+		"perplexity", "perplexities",
+		"entailment", "entailments",
+		"multiplication", "multiplications",
+		"factorization", "factorizations",
+	}
+	for _, w := range mlNouns {
+		if IsZombieNominal(w) {
+			t.Errorf("Machine learning technical term '%s' should not be flagged as zombie nominal", w)
+		}
+	}
+}
+
 func TestCommonmarkNestedCodeFencesExcludedFromProse(t *testing.T) {
 	nested := "# Guide\n" +
 		"This is prose introducing a nested code example.\n" +
