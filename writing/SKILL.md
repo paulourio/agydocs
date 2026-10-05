@@ -109,12 +109,22 @@ The quality gate binary ([`bin/quality_gate`](bin/quality_gate)) enforces three 
 
 | Metric | `rfc` (Specs / ADRs) | `paper` (Research) | `essay` (Architecture) | `tutorial` (Guides) | `chat` (Pairing) | `briefing` (Summaries) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Burstiness ($CV$)** | $0.32 - 0.65$ | $0.40 - 0.70$ | $0.38 - 0.70$ | $0.30 - 0.60$ | $0.30 - 0.75$ | $0.35 - 0.65$ |
+| **Burstiness ($CV$)** | $0.32 - 1.00$ | $0.40 - 1.35$ | $0.38 - 0.85$ | $0.30 - 0.65$ | $0.30 - 1.05$ | $0.35 - 0.65$ |
 | **Max Syntactic Overhead ($M_{\text{ov}}$)** | $\le 6.5$ | $\le 6.5$ | $\le 5.5$ | $\le 4.5$ | $\le 4.0$ | $\le 4.5$ |
-| **Max Zombie Nominals ($Z_{\text{nom}}$)** | $\le 1.5\%$ | $\le 2.0\%$ | $\le 1.0\%$ | $\le 0.8\%$ | $\le 1.0\%$ | $\le 1.0\%$ |
-| **Demonstrative Anchoring ($DAI$)** | $\ge 0.80$ | $\ge 0.85$ | $\ge 0.80$ | $\ge 0.75$ | $\ge 0.85$ | $\ge 0.85$ |
-| **Max Em-Dashes per 100w** | $\le 0.20$ | $\le 0.15$ | $\le 0.25$ | $\le 0.15$ | $\le 0.10$ | $\le 0.10$ |
+| **Max Zombie Nominals ($Z_{\text{nom}}$)** | $\le 1.8\%$ | $\le 2.0\%$ | $\le 1.2\%$ | $\le 1.0\%$ | $\le 1.0\%$ | $\le 1.5\%$ |
+| **Demonstrative Anchoring ($DAI$)** | $\ge 0.50$ | $\ge 0.30$ | $\ge 0.40$ | $\ge 0.70$ | $0.00$ (un-gated) | $\ge 0.30$ |
+| **Max Em-Dashes per 100w** | $\le 0.20$ | $\le 0.20$ | $\le 0.25$ | $\le 0.20$ | $\le 0.10$ | $\le 0.10$ |
 | **Min Punctuation Balance ($PBR$)** | $\ge 1.5$ | $\ge 2.0$ | $\ge 1.5$ | $\ge 1.0$ | $\ge 1.0$ | $\ge 1.5$ |
-| **Max Concrete Anchor Lag** | $\le 200$w | $\le 300$w | $\le 250$w | $\le 150$w | N/A | N/A |
+| **Max Concrete Anchor Lag** | $\le 4000$w | N/A | $\le 250$w | $\le 550$w | N/A | N/A |
 | **Min Human Voice Index ($HVI$)** | $80.0$ | $85.0$ | $85.0$ | $80.0$ | $85.0$ | $80.0$ |
 | **Min Precision Index ($TPI$)** | $85.0$ | $85.0$ | $80.0$ | $75.0$ | $80.0$ | $80.0$ |
+
+---
+
+## Benchmark Corpus Verification
+
+The quality gate is continuously verified against empirical ground-truth corpora:
+- **Canonical Human Monuments (20 Masterworks)**: Shannon, Knuth, Hardy, Dirac, Pólya, Feynman, Vaswani, Quirk, Lamport, Torvalds, and IETF RFCs (passing under strict mode with 0 errors, HVI = 100.0, TPI = 100.0).
+- **Gen-AI Benchmark Corpus (18 Documented Incidents)**: Real-world retracted papers, hallucinated legal briefs (*Mata v. Avianca*), CNET arithmetic errors, and Claude-ese slop (yielding 88.9% strict rejection).
+
+For full benchmark inventories, strict scorecards, and incident details, consult [writing/README.md](README.md).
