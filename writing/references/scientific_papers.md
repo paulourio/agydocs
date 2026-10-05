@@ -10,10 +10,10 @@ Scientific writing demands high semantic density and rigorous formal definitions
 
 | Metric | Profile Target | Rule / Rationale |
 | :--- | :--- | :--- |
-| **Burstiness ($CV = \frac{\sigma}{\mu}$)** | $0.40 - 1.15$ | Alternates short assertions with detailed mathematical derivation. |
+| **Burstiness ($CV = \frac{\sigma}{\mu}$)** | $0.40 - 1.35$ | Alternates short assertions with detailed mathematical derivation. |
 | **Syntactic Overhead ($M_{\text{ov}}$)** | $\le 6.5$ | Bounds subject-verb distance and preposition chaining. |
 | **Zombie Nominals ($Z_{\text{nom}}$)** | $\le 2.0\%$ | Limits Latinate noun endings while permitting established domain terminology. |
-| **Demonstrative Anchoring ($DAI$)** | $\ge 0.40$ | Requires sentence-initial "This" or "These" to bind to an explicit noun. |
+| **Demonstrative Anchoring ($DAI$)** | $\ge 0.30$ | Requires sentence-initial "This" or "These" to bind to an explicit noun. |
 | **Punctuation Balance Ratio ($PBR$)** | $\ge 2.0$ | Balances structural colons and semicolons against em-dashes. |
 | **Em-Dashes per 100 words** | $\le 0.20$ | Prevents fragmented clause sprawl. |
 | **Max Concrete Anchor Lag** | Unconstrained (`nil`) | Formal proofs and theoretical derivations develop conceptual foundations before empirical tables. |

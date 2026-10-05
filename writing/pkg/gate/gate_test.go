@@ -1294,6 +1294,7 @@ func TestCanonicalMultiProfileBenchmarksPassQualityGate(t *testing.T) {
 		{"rfc/rfc8446_tls13.md", "rfc"},
 		{"rfc/rfc9293_tcp.md", "rfc"},
 		{"tutorial/effective_go.md", "tutorial"},
+		{"quirk1972.md", "paper"},
 	}
 
 	for _, tc := range targets {
